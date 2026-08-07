@@ -1,0 +1,37 @@
+:root {
+  /* Clinical Editorial Glass — cool clinical slate, not purple/cream defaults */
+  --limen-bg-deep: #0f1c24;
+  --limen-bg-mid: #17303a;
+  --limen-bg-soft: #1f3d48;
+  --limen-glass: color-mix(in srgb, #e8f2f4 8%, transparent);
+  --limen-glass-border: color-mix(in srgb, #d7e8ec 22%, transparent);
+  --limen-ink: #e8f2f4;
+  --limen-ink-muted: #9bb4bc;
+  --limen-accent: #3aa6a0;
+  --limen-accent-strong: #2f8f8a;
+  --limen-risk-green: #3d9b6e;
+  --limen-risk-yellow: #c9a227;
+  --limen-risk-orange: #d17a3a;
+  --limen-risk-red: #c44b4b;
+  --limen-font-display: "Source Serif 4", "Libre Baskerville", Georgia, serif;
+  --limen-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --limen-radius: 14px;
+  --limen-space-1: 0.25rem;
+  --limen-space-2: 0.5rem;
+  --limen-space-3: 1rem;
+  --limen-space-4: 1.5rem;
+  --limen-space-5: 2.5rem;
+  --limen-shadow: 0 18px 50px color-mix(in srgb, #02080b 45%, transparent);
+  --limen-max: 1120px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,68 @@
+"""Typed application settings loaded from environment / .env."""
+
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class ApplicationSettings(BaseSettings):
+    """Single typed settings object for LIMEN."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
+
+    app_env: str = Field(default="development", alias="APP_ENV")
+    app_host: str = Field(default="127.0.0.1", alias="APP_HOST")
+    app_port: int = Field(default=8000, alias="APP_PORT")
+    cors_origins: str = Field(
+        default="http://localhost:5173,http://127.0.0.1:5173",
+        alias="CORS_ORIGINS",
+    )
+
+    llm_provider: str = Field(default="stub", alias="LLM_PROVIDER")
+    llm_model: str = Field(default="stub-model", alias="LLM_MODEL")
+    llm_api_key: str = Field(default="", alias="LLM_API_KEY")
+    llm_base_url: str = Field(default="", alias="LLM_BASE_URL")
+
+    stt_provider: str = Field(default="stub", alias="STT_PROVIDER")
+    stt_model: str = Field(default="stub-stt", alias="STT_MODEL")
+    stt_api_key: str = Field(default="", alias="STT_API_KEY")
+
+    tts_provider: str = Field(default="stub", alias="TTS_PROVIDER")
+    tts_model: str = Field(default="stub-tts", alias="TTS_MODEL")
+    tts_voice: str = Field(default="default", alias="TTS_VOICE")
+
+    embedding_provider: str = Field(default="stub", alias="EMBEDDING_PROVIDER")
+    embedding_model: str = Field(default="stub-embedding", alias="EMBEDDING_MODEL")
+
+    database_path: Path = Field(default=Path("./runtime/db/limen.db"), alias="DATABASE_PATH")
+    vector_path: Path = Field(default=Path("./runtime/vectors"), alias="VECTOR_PATH")
+    document_path: Path = Field(default=Path("./runtime/documents"), alias="DOCUMENT_PATH")
+    log_path: Path = Field(default=Path("./runtime/logs"), alias="LOG_PATH")
+    audio_path: Path = Field(default=Path("./runtime/audio"), alias="AUDIO_PATH")
+
+    max_upload_mb: int = Field(default=25, alias="MAX_UPLOAD_MB")
+    log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+
+    def cors_origin_list(self) -> list[str]:
+        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+
+    def ensure_runtime_dirs(self) -> None:
+        for path in (
+            self.database_path.parent,
+            self.vector_path,
+            self.document_path,
+            self.log_path,
+            self.audio_path,
+        ):
+            path.mkdir(parents=True, exist_ok=True)
+
+
+@lru_cache
+def get_settings() -> ApplicationSettings:
+    return ApplicationSettings()

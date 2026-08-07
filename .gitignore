@@ -1,0 +1,63 @@
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.env/
+dist/
+build/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.dmypy.json
+dmypy.json
+
+# Node / frontend
+node_modules/
+apps/web/dist/
+apps/web/coverage/
+*.tsbuildinfo
+.npm/
+.vite/
+
+# LIMEN runtime (never commit)
+runtime/
+!runtime/.gitkeep
+
+# IDE / OS / local agent tooling (never publish)
+.idea/
+.vscode/
+.cursor/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs and local artifacts
+*.log
+logs/
+.cache/
+
+# Model weights and generated media
+*.gguf
+*.bin
+*.pt
+*.onnx
+*.wav
+*.mp3
+*.webm
+!docs/assets/**
+
+# Lock alternatives (uv.lock is committed)
+package-lock.json.bak
