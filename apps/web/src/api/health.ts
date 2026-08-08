@@ -1,22 +1,12 @@
-export type HealthResponse = {
-  status: string;
-  version: string;
-  app_env: string;
-  llm_provider: string;
-  llm_model: string;
-  database: {
-    database?: string;
-    schema_version?: string;
-    path?: string;
-  };
+import { apiRequest } from "./client";
+import type { HealthResponse } from "./types";
+
+export const healthKeys = {
+  root: ["health"] as const,
 };
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "";
-
-export async function fetchHealth(): Promise<HealthResponse> {
-  const response = await fetch(`${API_BASE}/health`);
-  if (!response.ok) {
-    throw new Error(`Health check failed (${response.status})`);
-  }
-  return (await response.json()) as HealthResponse;
+export function fetchHealth(signal?: AbortSignal): Promise<HealthResponse> {
+  return apiRequest<HealthResponse>("/health", { signal });
 }
+
+export type { HealthResponse };

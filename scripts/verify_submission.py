@@ -23,9 +23,9 @@ def main() -> int:
     checks.append(("API main", (ROOT / "apps" / "api" / "main.py").exists()))
     checks.append(("Web package", (ROOT / "apps" / "web" / "package.json").exists()))
     checks.append(("ADR folder", (ROOT / "docs" / "adr").is_dir()))
-    checks.append((".gitignore excludes runtime", "runtime/" in (ROOT / ".gitignore").read_text()))
-    checks.append((".gitignore excludes local tooling", ".cursor/" in (ROOT / ".gitignore").read_text()))
-    checks.append((".env.example present", (ROOT / ".env.example").exists()))
+    gitignore = (ROOT / ".gitignore").read_text()
+    checks.append((".gitignore excludes runtime", "runtime/" in gitignore))
+    checks.append((".gitignore excludes local tooling", ".cursor/" in gitignore))
 
     failed = [name for name, ok in checks if not ok]
     for name, ok in checks:

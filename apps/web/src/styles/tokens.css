@@ -1,37 +1,245 @@
-:root {
-  /* Clinical Editorial Glass — cool clinical slate, not purple/cream defaults */
-  --limen-bg-deep: #0f1c24;
-  --limen-bg-mid: #17303a;
-  --limen-bg-soft: #1f3d48;
-  --limen-glass: color-mix(in srgb, #e8f2f4 8%, transparent);
-  --limen-glass-border: color-mix(in srgb, #d7e8ec 22%, transparent);
-  --limen-ink: #e8f2f4;
-  --limen-ink-muted: #9bb4bc;
-  --limen-accent: #3aa6a0;
-  --limen-accent-strong: #2f8f8a;
-  --limen-risk-green: #3d9b6e;
-  --limen-risk-yellow: #c9a227;
-  --limen-risk-orange: #d17a3a;
-  --limen-risk-red: #c44b4b;
-  --limen-font-display: "Source Serif 4", "Libre Baskerville", Georgia, serif;
-  --limen-font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --limen-radius: 14px;
-  --limen-space-1: 0.25rem;
-  --limen-space-2: 0.5rem;
-  --limen-space-3: 1rem;
-  --limen-space-4: 1.5rem;
-  --limen-space-5: 2.5rem;
-  --limen-shadow: 0 18px 50px color-mix(in srgb, #02080b 45%, transparent);
-  --limen-max: 1120px;
+/* LIMEN — Clinical Editorial Glass design tokens.
+   Canonical source: FRONTEND.md sections 7-10.
+   Components must reference these variables; never raw hex.
+
+   Both themes expose the same token names, so components never branch on theme.
+   Content tokens are semantic ("brightest content"), not literal colours. */
+
+:root,
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Canvas — deep charcoal void. Enough depth for glass and light to read. */
+  --limen-bg-0: #05070b;
+  --limen-bg-1: #0a1018;
+  --limen-bg-2: #111925;
+  --limen-bg-3: #182333;
+
+  /* Intelligence / evidence / audit */
+  --limen-cyan: #2aa8a8;
+  --limen-teal: #1a7d7d;
+  --limen-violet: #7d6fd4;
+
+  /* Clinical signal */
+  --limen-green: #3db87e;
+  --limen-amber: #e5a83a;
+  --limen-coral: #e2555f;
+
+  /* Rare human accent */
+  --limen-apricot: #e8b89a;
+
+  /* Voice presence — speaker identity on the audio sphere only.
+     Never reuse these for clinical risk or document status. */
+  --limen-voice-patient: #4f8fff;
+  --limen-voice-patient-soft: #9dc0ff;
+  --limen-voice-agent: #f08a3c;
+  --limen-voice-agent-soft: #ffc28a;
+  --limen-voice-idle: #c8d0d8;
+
+  /* Atmosphere light — restrained, never a control color.
+     The `--atmo-*` mix ratios let one gradient definition serve both themes. */
+  --limen-beam: #6a8aaa;
+  --atmo-beam: 14%;
+  --atmo-cyan: 8%;
+  --atmo-teal: 10%;
+
+  /* Content — ordered by prominence, not by lightness. */
+  --limen-white: #f4f7f9;
+  --limen-ice: #e6eef2;
+  --limen-text-2: #9aadb8;
+  --limen-text-3: #657887;
+
+  /* Brand action — teal of the atmospheric glow (glass CTAs tint with this). */
+  --limen-action: #2aa8a8;
+  --limen-action-hover: #3ec0c0;
+  --limen-action-glass: color-mix(in oklab, var(--limen-action) 26%, transparent);
+  --limen-action-glass-hover: color-mix(
+    in oklab,
+    var(--limen-action) 40%,
+    transparent
+  );
+  --limen-action-glass-border: color-mix(
+    in oklab,
+    var(--limen-action) 58%,
+    transparent
+  );
+
+  /* High-contrast solid action: fill plus the ink that stays legible on it. */
+  --limen-inverse-fill: #f4f7f9;
+  --limen-inverse-ink: #05070b;
+  /* Ink on a saturated accent fill (action, coral). Stays light in both themes
+     because accent fills are mid-dark in both. */
+  --limen-ink-on-accent: #f7fafc;
+
+  /* Glass material — translucent enough that blur and atmosphere read clearly. */
+  --glass-solid: rgba(8, 12, 18, 0.78);
+  --glass-surface: rgba(16, 26, 40, 0.42);
+  --glass-surface-strong: rgba(12, 18, 28, 0.58);
+  --glass-inspector: rgba(12, 18, 28, 0.5);
+  --glass-modal: rgba(6, 10, 16, 0.72);
+  --glass-border: rgba(230, 240, 245, 0.14);
+  --glass-border-strong: rgba(230, 240, 245, 0.22);
+  --glass-highlight: rgba(255, 255, 255, 0.06);
+  --glass-sheen: rgba(255, 255, 255, 0.14);
+
+  --shadow-panel:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 18px 48px rgba(0, 0, 0, 0.28);
+  --shadow-float:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 28px 80px rgba(0, 0, 0, 0.36);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+/* Light theme — same structure, inverted ground. Clinical semantics keep their
+   meaning but darken so they stay legible on a bright canvas. */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --limen-bg-0: #eef2f6;
+  --limen-bg-1: #f7f9fb;
+  --limen-bg-2: #ffffff;
+  --limen-bg-3: #e4eaf1;
+
+  --limen-cyan: #157e7e;
+  --limen-teal: #106363;
+  --limen-violet: #5949ac;
+
+  --limen-green: #1d8b5c;
+  --limen-amber: #9a6a12;
+  --limen-coral: #c1323f;
+
+  --limen-apricot: #b8794f;
+
+  --limen-voice-patient: #2f6fe0;
+  --limen-voice-patient-soft: #7ba3ea;
+  --limen-voice-agent: #c96a1f;
+  --limen-voice-agent-soft: #e0a066;
+  --limen-voice-idle: #7b8894;
+
+  --limen-beam: #8aa8c4;
+  --atmo-beam: 26%;
+  --atmo-cyan: 9%;
+  --atmo-teal: 11%;
+
+  --limen-white: #060a11;
+  --limen-ice: #142030;
+  --limen-text-2: #47596a;
+  --limen-text-3: #6b7d8c;
+
+  --limen-action: #157e7e;
+  --limen-action-hover: #1d9696;
+  --limen-action-glass: color-mix(in oklab, var(--limen-action) 18%, transparent);
+  --limen-action-glass-hover: color-mix(
+    in oklab,
+    var(--limen-action) 28%,
+    transparent
+  );
+  --limen-action-glass-border: color-mix(
+    in oklab,
+    var(--limen-action) 48%,
+    transparent
+  );
+
+  --limen-inverse-fill: #142030;
+  --limen-inverse-ink: #f7f9fb;
+  --limen-ink-on-accent: #ffffff;
+
+  --glass-solid: rgba(255, 255, 255, 0.86);
+  --glass-surface: rgba(255, 255, 255, 0.55);
+  --glass-surface-strong: rgba(255, 255, 255, 0.74);
+  --glass-inspector: rgba(255, 255, 255, 0.68);
+  --glass-modal: rgba(247, 249, 251, 0.9);
+  --glass-border: rgba(20, 32, 48, 0.12);
+  --glass-border-strong: rgba(20, 32, 48, 0.2);
+  --glass-highlight: rgba(20, 32, 48, 0.05);
+  --glass-sheen: rgba(255, 255, 255, 0.8);
+
+  --shadow-panel:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 14px 36px rgba(18, 32, 48, 0.1);
+  --shadow-float:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 24px 64px rgba(18, 32, 48, 0.14);
+}
+
+:root {
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --font-ui:
+    "Manrope Variable", "Manrope", "Inter Variable", "Inter", system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-editorial: "Instrument Serif", Georgia, "Times New Roman", serif;
+
+  --rail-width: 256px;
+  --rail-width-collapsed: 88px;
+  --inspector-width: 360px;
+  --header-height: 64px;
+
+  --motion-fast: 180ms;
+  --motion-base: 220ms;
+  --motion-slow: 260ms;
+  --motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* The desktop breakpoint matches FRONTEND.md section 27 so the `xl:` utilities
+   and the `useIsDesktop` media query describe the same layout. */
+@theme {
+  --breakpoint-xl: 75rem;
+}
+
+/* Tailwind v4 theme bridge: utilities resolve to LIMEN tokens only.
+   Named colour utilities avoid ambiguous `text-[var(...)]` arbitrary values,
+   which Tailwind would otherwise resolve as a font size. */
+@theme inline {
+  --color-bg-0: var(--limen-bg-0);
+  --color-bg-1: var(--limen-bg-1);
+  --color-bg-2: var(--limen-bg-2);
+  --color-bg-3: var(--limen-bg-3);
+  --color-cyan: var(--limen-cyan);
+  --color-teal: var(--limen-teal);
+  --color-violet: var(--limen-violet);
+  --color-green: var(--limen-green);
+  --color-amber: var(--limen-amber);
+  --color-coral: var(--limen-coral);
+  --color-apricot: var(--limen-apricot);
+  --color-beam: var(--limen-beam);
+  --color-voice-patient: var(--limen-voice-patient);
+  --color-voice-agent: var(--limen-voice-agent);
+  --color-action: var(--limen-action);
+  --color-action-hover: var(--limen-action-hover);
+  --color-action-glass: var(--limen-action-glass);
+  --color-action-glass-hover: var(--limen-action-glass-hover);
+  --color-action-glass-border: var(--limen-action-glass-border);
+  --color-inverse-fill: var(--limen-inverse-fill);
+  --color-inverse-ink: var(--limen-inverse-ink);
+  --color-ink-on-accent: var(--limen-ink-on-accent);
+  --color-white-ice: var(--limen-white);
+  --color-ice: var(--limen-ice);
+  --color-text-2: var(--limen-text-2);
+  --color-text-3: var(--limen-text-3);
+  --color-glass-border: var(--glass-border);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-ui);
+  --font-serif: var(--font-editorial);
 }

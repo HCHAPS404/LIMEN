@@ -1,0 +1,222 @@
+@import "tailwindcss";
+
+@import "./tokens.css";
+@import "./typography.css";
+@import "./motion.css";
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--limen-ice);
+  background-color: var(--limen-bg-0);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* One light source behind the workspace, held far below the data layer.
+   Violet is absent here on purpose: it belongs to TRAZA, not to decoration. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      90% 70% at 12% -10%,
+      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      80% 60% at 100% 8%,
+      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      70% 50% at 50% 110%,
+      color-mix(in oklab, var(--limen-teal) var(--atmo-teal), transparent),
+      transparent 60%
+    ),
+    linear-gradient(180deg, var(--limen-bg-1) 0%, var(--limen-bg-0) 62%);
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+figure {
+  margin: 0;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Must stay in @layer base. An unlayered `a { color: inherit }` beats every
+   Tailwind utility on links, which is how inverse CTA labels went ice-on-ice
+   when Button rendered as a router Link. */
+@layer base {
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
+
+a.limen-link {
+  color: var(--limen-cyan);
+}
+
+a.limen-link:hover {
+  /* Mixing toward the brightest content token moves the link away from the
+     canvas in either theme instead of always lightening. */
+  color: color-mix(in oklab, var(--limen-cyan) 78%, var(--limen-white));
+}
+
+:focus-visible {
+  outline: 2px solid var(--limen-cyan);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+::selection {
+  background: color-mix(in oklab, var(--limen-cyan) 34%, transparent);
+  color: var(--limen-white);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--limen-ice) 10%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+/* Glass material levels — FRONTEND.md section 10.
+   Fills stay translucent so backdrop blur and atmosphere are visible. */
+@utility glass-0 {
+  background: var(--glass-solid);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(1.08);
+  -webkit-backdrop-filter: blur(18px) saturate(1.08);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility glass-1 {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(32px) saturate(1.2);
+  -webkit-backdrop-filter: blur(32px) saturate(1.2);
+  box-shadow: var(--shadow-panel);
+}
+
+@utility glass-2 {
+  background: var(--glass-inspector);
+  border: 1px solid var(--glass-border-strong);
+  backdrop-filter: blur(40px) saturate(1.28);
+  -webkit-backdrop-filter: blur(40px) saturate(1.28);
+  box-shadow: var(--shadow-float);
+}
+
+/* Single-pixel top sheen. Reads as a material edge, not as a glow. */
+@utility sheen-top {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--glass-sheen) 18%,
+      var(--glass-sheen) 82%,
+      transparent
+    );
+  }
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--limen-white) 5%, transparent),
+      transparent 28%
+    );
+  }
+}
+
+@utility hairline {
+  border: 1px solid var(--glass-border);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Environmental light. `atmosphere-soft` is the workspace strength; the landing
+   composes its own dominant beam on top of the same vocabulary. */
+@utility atmosphere-soft {
+  background:
+    radial-gradient(
+      110% 70% at 50% -15%,
+      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      60% 40% at 90% 20%,
+      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
+      transparent 55%
+    ),
+    transparent;
+}
+
+.limen-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Headline material: light falling off a surface, never a saturated gradient. */
+.text-riser {
+  background: linear-gradient(
+    180deg,
+    var(--limen-white) 0%,
+    color-mix(in oklab, var(--limen-white) 62%, var(--limen-text-2)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

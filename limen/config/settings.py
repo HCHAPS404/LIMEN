@@ -1,5 +1,6 @@
 """Typed application settings loaded from environment / .env."""
 
+from datetime import timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -48,6 +49,25 @@ class ApplicationSettings(BaseSettings):
 
     max_upload_mb: int = Field(default=25, alias="MAX_UPLOAD_MB")
     log_level: str = Field(default="INFO", alias="LOG_LEVEL")
+
+    # Client accounts (ADR-0004). The cookie is httpOnly in every environment;
+    # `AUTH_COOKIE_SECURE` only controls the HTTPS-only flag, which must be on
+    # in production and off for plain-HTTP local development.
+    auth_session_ttl_hours: int = Field(default=168, alias="AUTH_SESSION_TTL_HOURS")
+    auth_cookie_name: str = Field(default="limen_session", alias="AUTH_COOKIE_NAME")
+    auth_cookie_secure: bool = Field(default=False, alias="AUTH_COOKIE_SECURE")
+
+    # Optional local demo account created by bootstrap so a cold start can sign
+    # in immediately. Left empty means "create nothing".
+    demo_email: str = Field(default="", alias="LIMEN_DEMO_EMAIL")
+    demo_password: str = Field(default="", alias="LIMEN_DEMO_PASSWORD")
+    demo_display_name: str = Field(default="LIMEN Demo", alias="LIMEN_DEMO_NAME")
+
+    def auth_session_ttl(self) -> timedelta:
+        return timedelta(hours=self.auth_session_ttl_hours)
+
+    def has_demo_account(self) -> bool:
+        return bool(self.demo_email and self.demo_password)
 
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

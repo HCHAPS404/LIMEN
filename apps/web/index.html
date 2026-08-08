@@ -1,15 +1,31 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>LIMEN</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,650&display=swap"
-      rel="stylesheet"
+    <meta name="color-scheme" content="dark light" />
+    <meta name="theme-color" content="#05070b" />
+    <meta
+      name="description"
+      content="LIMEN — voice-first postoperative follow-up with explicit uncertainty, grounded evidence, and an auditable safety decision layer."
     />
+    <title>LIMEN — Clarity at the threshold of recovery</title>
+    <script>
+      // Applied before first paint so a stored light preference never flashes
+      // the dark canvas. React re-applies the same value on mount.
+      try {
+        var stored = localStorage.getItem("limen.theme");
+        if (stored === "light" || stored === "dark") {
+          document.documentElement.dataset.theme = stored;
+        }
+        var locale = localStorage.getItem("limen.locale");
+        if (locale === "es" || locale === "en") {
+          document.documentElement.lang = locale;
+        }
+      } catch (error) {
+        // Storage unavailable: defaults in the markup already apply.
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
