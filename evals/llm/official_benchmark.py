@@ -259,9 +259,7 @@ async def benchmark_official_model(
         )
         cache_path = run_dir / "cases" / cand_id.replace(":", "-") / f"{cache_key}.json"
         if resume_dir:
-            resume_path = (
-                resume_dir / "cases" / cand_id.replace(":", "-") / f"{cache_key}.json"
-            )
+            resume_path = resume_dir / "cases" / cand_id.replace(":", "-") / f"{cache_key}.json"
             cached = _load_cached_case(resume_path, cache_key)
             if cached:
                 case_results.append(cached)
@@ -421,10 +419,7 @@ def render_official_docs(summary: dict[str, Any]) -> str:
         "",
         "## Overall official results",
         "",
-        (
-            "| Model | Accuracy | Macro F1 | GREEN R | YELLOW R | RED R | "
-            "RED FN | Schema valid |"
-        ),
+        ("| Model | Accuracy | Macro F1 | GREEN R | YELLOW R | RED R | RED FN | Schema valid |"),
         "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for cand in summary.get("candidates") or []:
@@ -595,9 +590,7 @@ async def async_main(args: argparse.Namespace) -> int:
         try:
             import httpx
 
-            show_resp = httpx.post(
-                f"{base_url}/api/show", json={"name": tag}, timeout=30.0
-            )
+            show_resp = httpx.post(f"{base_url}/api/show", json={"name": tag}, timeout=30.0)
             if show_resp.status_code == 200:
                 show_payload = show_resp.json()
         except Exception:

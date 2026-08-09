@@ -406,9 +406,7 @@ def assert_no_ground_truth_in_prompt(prompt: str, record: dict[str, Any] | None 
     lowered = prompt.lower()
     for substring in PROHIBITED_PROMPT_SUBSTRINGS:
         if substring in lowered:
-            raise AssertionError(
-                f"prohibited ground-truth field leaked into prompt: {substring}"
-            )
+            raise AssertionError(f"prohibited ground-truth field leaked into prompt: {substring}")
     for gt_field in PROHIBITED_GROUND_TRUTH_FIELDS:
         if gt_field in TRAJECTORY_FIELD_TOKENS:
             continue

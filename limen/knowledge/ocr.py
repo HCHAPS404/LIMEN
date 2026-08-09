@@ -49,9 +49,7 @@ class UnavailableOCRProvider:
     """Explicit non-provider: never fabricates OCR success."""
 
     def extract_pages(self, path: Path) -> list[tuple[int, str]]:
-        raise OCRUnavailableError(
-            f"OCR required for {path.name} but no OCR provider is configured"
-        )
+        raise OCRUnavailableError(f"OCR required for {path.name} but no OCR provider is configured")
 
     def extract_page(self, path: Path, page_number: int) -> str:
         raise OCRUnavailableError(
@@ -93,9 +91,7 @@ class TesseractOCRProvider:
 
     def _ensure_runtime(self) -> None:
         if shutil.which("tesseract") is None:
-            raise OCRUnavailableError(
-                "OCR required but tesseract binary is not installed on PATH"
-            )
+            raise OCRUnavailableError("OCR required but tesseract binary is not installed on PATH")
         try:
             import pytesseract  # noqa: F401
             from PIL import Image  # noqa: F401

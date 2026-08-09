@@ -153,15 +153,9 @@ def knowledge_retrieval_dependency(settings: Settings) -> EvidenceRetriever:
 
 
 CallSvc = Annotated[CallService, Depends(call_service_dependency)]
-KnowledgeIngest = Annotated[
-    KnowledgeIngestionService, Depends(knowledge_ingestion_dependency)
-]
-KnowledgeDelete = Annotated[
-    KnowledgeDeletionService, Depends(knowledge_deletion_dependency)
-]
-KnowledgeRetrieve = Annotated[
-    EvidenceRetriever, Depends(knowledge_retrieval_dependency)
-]
+KnowledgeIngest = Annotated[KnowledgeIngestionService, Depends(knowledge_ingestion_dependency)]
+KnowledgeDelete = Annotated[KnowledgeDeletionService, Depends(knowledge_deletion_dependency)]
+KnowledgeRetrieve = Annotated[EvidenceRetriever, Depends(knowledge_retrieval_dependency)]
 
 
 def stt_dependency(request: Request, settings: Settings) -> STTProvider:

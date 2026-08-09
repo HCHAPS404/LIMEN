@@ -372,10 +372,7 @@ def wrapup_reply(*, display_name: str | None = None) -> str:
 
 def idle_check_reply() -> str:
     """Single presence check before idle hang-up."""
-    return (
-        "¿Sigue ahí? Si no necesita nada más por ahora, "
-        "cerramos la llamada en un momento."
-    )
+    return "¿Sigue ahí? Si no necesita nada más por ahora, cerramos la llamada en un momento."
 
 
 def idle_timeout_farewell() -> str:

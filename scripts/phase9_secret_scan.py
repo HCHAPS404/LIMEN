@@ -20,9 +20,7 @@ ALLOW_NAMES = {".env.example"}
 
 
 def main() -> int:
-    tracked = subprocess.check_output(
-        ["git", "ls-files"], cwd=ROOT, text=True
-    ).splitlines()
+    tracked = subprocess.check_output(["git", "ls-files"], cwd=ROOT, text=True).splitlines()
     findings: list[dict[str, str]] = []
     for rel in tracked:
         name = Path(rel).name

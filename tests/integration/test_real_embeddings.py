@@ -56,9 +56,7 @@ def test_e5_model_loads_and_prefixes_apply() -> None:
 def test_fingerprint_recreates_incompatible_collection(tmp_path: Path) -> None:
     reset_vector_store_for_tests()
     path = tmp_path / "vectors"
-    stub = QdrantVectorStore(
-        path, dimensions=64, fingerprint="stub|stub-d64|d64|cosine"
-    )
+    stub = QdrantVectorStore(path, dimensions=64, fingerprint="stub|stub-d64|d64|cosine")
     from limen.knowledge.contracts import EvidenceChunk
     from limen.knowledge.embeddings import StubEmbeddingProvider
 
@@ -70,9 +68,7 @@ def test_fingerprint_recreates_incompatible_collection(tmp_path: Path) -> None:
         source_name="a.txt",
         version_id="v1",
     )
-    stub.upsert_chunks(
-        account_id="a", chunks=[chunk], vectors=emb.embed_documents([chunk.text])
-    )
+    stub.upsert_chunks(account_id="a", chunks=[chunk], vectors=emb.embed_documents([chunk.text]))
     assert stub.count_document(account_id="a", document_id="d1") == 1
     stub.close()
     reset_vector_store_for_tests()

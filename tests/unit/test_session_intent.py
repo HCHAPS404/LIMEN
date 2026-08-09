@@ -46,9 +46,7 @@ def test_extract_preferred_name() -> None:
 
 
 def test_assistant_asked_preferred_name() -> None:
-    assert assistant_asked_preferred_name(
-        "Para continuar, ¿cómo prefiere que le diga?"
-    )
+    assert assistant_asked_preferred_name("Para continuar, ¿cómo prefiere que le diga?")
     assert not assistant_asked_preferred_name("¿Cómo se ve la herida?")
 
 

@@ -31,9 +31,7 @@ def main() -> int:
             present = hasattr(mod, attr)
             if not present:
                 ok = False
-            results.append(
-                {"module": module_name, "attr": attr, "ok": present}
-            )
+            results.append({"module": module_name, "attr": attr, "ok": present})
         except Exception as exc:  # noqa: BLE001
             ok = False
             results.append(

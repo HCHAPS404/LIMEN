@@ -78,8 +78,7 @@ def test_golden_full_system_green_yellow_red_and_knowledge(client: TestClient) -
 
     # --- G5-ish unique document ---
     payload = (
-        f"Protocolo golden: {UNIQUE_FACT}. "
-        "Tras cirugia observar herida y fiebre.\n"
+        f"Protocolo golden: {UNIQUE_FACT}. Tras cirugia observar herida y fiebre.\n"
     ).encode()
     upload = client.post(
         "/api/knowledge/documents",
@@ -201,8 +200,7 @@ def test_golden_full_system_green_yellow_red_and_knowledge(client: TestClient) -
     if red_structured:
         assert red_structured.get("escalated") is True
         assert (
-            red_structured.get("escalation_artifact")
-            or red_structured.get("reasons") is not None
+            red_structured.get("escalation_artifact") or red_structured.get("reasons") is not None
         )
 
     # --- Forget knowledge ---

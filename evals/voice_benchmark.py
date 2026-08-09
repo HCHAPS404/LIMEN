@@ -59,8 +59,11 @@ SCENARIOS: list[dict[str, Any]] = [
         "risk_hint": "GREEN_like",
     },
     {"id": "col_aire", "wav": "es_col_aire.wav", "expect_tokens": ["aire"]},
-    {"id": "col_aguita", "wav": "es_col_aguita.wav",
-     "expect_tokens": ["aguita", "agüita", "agua", "abuita"]},
+    {
+        "id": "col_aguita",
+        "wav": "es_col_aguita.wav",
+        "expect_tokens": ["aguita", "agüita", "agua", "abuita"],
+    },
     {"id": "col_arde", "wav": "es_col_arde.wav", "expect_tokens": ["arde"]},
     {"id": "col_abrio", "wav": "es_col_abrio.wav", "expect_tokens": ["abri"]},
     {"id": "col_vuelto", "wav": "es_col_vuelto.wav", "expect_tokens": ["vuelto", "nada"]},
@@ -211,9 +214,7 @@ async def run_benchmark(*, repeats: int, out_dir: Path) -> dict[str, Any]:
         STT_COMPUTE_TYPE=os.environ.get("STT_COMPUTE_TYPE", "default"),
         TTS_PROVIDER=os.environ.get("TTS_PROVIDER", "piper"),
         TTS_VOICE=os.environ.get("TTS_VOICE", "es_MX-claude-high"),
-        TTS_MODEL_PATH=os.environ.get(
-            "TTS_MODEL_PATH", str(ROOT / "runtime" / "models" / "piper")
-        ),
+        TTS_MODEL_PATH=os.environ.get("TTS_MODEL_PATH", str(ROOT / "runtime" / "models" / "piper")),
         LLM_PROVIDER=os.environ.get("LLM_PROVIDER", "ollama"),
         LLM_MODEL=os.environ.get("LLM_MODEL", "phi3.5"),
         EMBEDDING_PROVIDER=os.environ.get("EMBEDDING_PROVIDER", "stub"),
@@ -280,9 +281,7 @@ async def run_benchmark(*, repeats: int, out_dir: Path) -> dict[str, Any]:
     ]
     stt_l = [float(s["stt_ms"]) for s in warm if s.get("stt_ms") is not None]
     turn_l = [
-        float(s["turn_processing_ms"])
-        for s in warm
-        if s.get("turn_processing_ms") is not None
+        float(s["turn_processing_ms"]) for s in warm if s.get("turn_processing_ms") is not None
     ]
     tts_l = [float(s["tts_ms"]) for s in warm if s.get("tts_ms") is not None]
     llm_l = [float(s["llm_ms"]) for s in warm if s.get("llm_ms") is not None]

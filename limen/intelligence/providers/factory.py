@@ -63,4 +63,3 @@ def build_llm_provider(settings: ApplicationSettings) -> LLMProvider:
         _cached_provider = built
         _cached_key = key
         return built
-

@@ -97,7 +97,11 @@ async def test_case_a_progressive_pain_state() -> None:
     clinical = ClinicalState()
     ctx = ConversationContext(call_id="a")
     r1 = await orch.handle_text_turn(
-        call_id="a", account_id="acc", user_text="Me duele la herida.", clinical_state=clinical, conversation=ctx
+        call_id="a",
+        account_id="acc",
+        user_text="Me duele la herida.",
+        clinical_state=clinical,
+        conversation=ctx,
     )
     assert any(f.name == "pain" for f in r1.clinical_state.findings)
     r2 = await orch.handle_text_turn(

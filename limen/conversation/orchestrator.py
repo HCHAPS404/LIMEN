@@ -82,9 +82,7 @@ class ConversationOrchestrator:
         ctx = update_context_after_patient(
             ctx, user_text=user_text, max_recent_turns=self.recent_turns
         )
-        newly_answered = [
-            qid for qid in ctx.answered_question_ids if qid not in answered_before
-        ]
+        newly_answered = [qid for qid in ctx.answered_question_ids if qid not in answered_before]
 
         with timer.measure("clinical_extraction"):
             state = extract_from_utterance(user_text, clinical_state)

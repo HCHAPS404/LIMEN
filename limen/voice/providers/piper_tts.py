@@ -53,9 +53,7 @@ def _join_pcm_chunks(
         return b""
     if len(chunks) == 1:
         return chunks[0]
-    silence = _silence_pcm16(
-        sample_rate_hz=sample_rate_hz, duration_ms=sentence_silence_ms
-    )
+    silence = _silence_pcm16(sample_rate_hz=sample_rate_hz, duration_ms=sentence_silence_ms)
     out = bytearray(chunks[0])
     for chunk in chunks[1:]:
         out.extend(silence)
@@ -164,7 +162,7 @@ class PiperTTSProvider:
         noise_w_scale: float | None = None,
     ) -> dict[str, Any]:
         try:
-            from piper.config import SynthesisConfig  # type: ignore[import-not-found]
+            from piper.config import SynthesisConfig
 
             kwargs: dict[str, Any] = {
                 "length_scale": float(length_scale if length_scale is not None else _LENGTH_SCALE),
@@ -263,9 +261,7 @@ class PiperTTSProvider:
                 getattr(persona, "sentence_silence_ms", None) or _SENTENCE_SILENCE_MS
             ),
         )
-        pcm = _apply_edge_fade(
-            pcm, sample_rate_hz=self._sample_rate, fade_ms=_EDGE_FADE_MS
-        )
+        pcm = _apply_edge_fade(pcm, sample_rate_hz=self._sample_rate, fade_ms=_EDGE_FADE_MS)
         wav_bytes = write_pcm16_wav(pcm, sample_rate_hz=self._sample_rate, channels=1)
         latency = (time.perf_counter() - started) * 1000.0
         duration_ms = (len(pcm) / 2 / float(self._sample_rate)) * 1000.0 if pcm else None
@@ -296,8 +292,7 @@ class PiperTTSProvider:
                 "sample_rate_hz": self._sample_rate,
                 "reachable": True,
                 "personas": [
-                    normalize_persona_id(p)
-                    for p in ("elena", "nikolas", "anikka", "alex")
+                    normalize_persona_id(p) for p in ("elena", "nikolas", "anikka", "alex")
                 ],
             }
         except Exception as exc:  # noqa: BLE001

@@ -26,7 +26,7 @@ _log = get_telemetry_logger("limen.call")
 
 def _sticky_final_risk(prior: str | None, turn: Severity) -> str:
     """Call-level risk never decreases (severity is monotonic)."""
-    if prior in Severity.__members__:
+    if prior is not None and prior in Severity.__members__:
         return max(turn, Severity[prior]).name
     return turn.name
 
@@ -121,9 +121,7 @@ class CallService:
             str(blob.get("voice_persona")) if blob.get("voice_persona") else None
         )
 
-    def set_voice_persona(
-        self, account_id: str, call_id: str, persona_id: str
-    ) -> str:
+    def set_voice_persona(self, account_id: str, call_id: str, persona_id: str) -> str:
         """Update call-scoped persona mid-session (Settings override via WS)."""
         from limen.voice.personas import get_persona
 
@@ -189,9 +187,7 @@ class CallService:
             conversation.assistant_display_name = (
                 conversation.assistant_display_name or persona.display_name
             )
-            conversation.assistant_gender = (
-                conversation.assistant_gender or persona.gender
-            )
+            conversation.assistant_gender = conversation.assistant_gender or persona.gender
 
         if not conversation.patient_display_name:
             conversation.patient_display_name = display_name_for_speech(
@@ -428,9 +424,7 @@ class CallService:
             duration_ms=result.metrics.get("response_generation_ms"),
             payload={
                 "turn_metrics": result.metrics,
-                "generated_response_validated": response_meta.get(
-                    "generated_response_validated"
-                ),
+                "generated_response_validated": response_meta.get("generated_response_validated"),
                 "fallback": response_meta.get("fallback"),
                 "fallback_reason": response_meta.get("fallback_reason"),
                 "response_source": response_meta.get("response_source"),
@@ -649,18 +643,20 @@ class CallService:
                     reasons.append(str(reason))
         return reasons
 
-    def _collect_evidence_refs(
-        self, account_id: str, call_id: str
-    ) -> builtins.list[EvidenceChunk]:
+    def _collect_evidence_refs(self, account_id: str, call_id: str) -> builtins.list[EvidenceChunk]:
         """Rebuild evidence chunk refs from TRAZA retrieval events (no re-query)."""
         events = self._traces.list_events(account_id, call_id)
         seen: set[str] = set()
         chunks: builtins.list[EvidenceChunk] = []
         for event in events:
-            if event.get("event_type") not in {
-                "retrieval.evidence.selected",
-                "retrieval",
-            } and event.get("stage") != "retrieval":
+            if (
+                event.get("event_type")
+                not in {
+                    "retrieval.evidence.selected",
+                    "retrieval",
+                }
+                and event.get("stage") != "retrieval"
+            ):
                 continue
             for item in event.get("evidence") or []:
                 if not isinstance(item, dict):
@@ -730,104 +726,7 @@ class CallService:
         }
 
     @staticmethod
-    def _collect_safety_reasons(blob: dict[str, Any]) -> builtins.list[str]:
-        reasons: builtins.list[str] = []
-        last = blob.get("last_safety")
-        if isinstance(last, dict):
-            for reason in last.get("reasons") or []:
-                if reason and str(reason) not in reasons:
-                    reasons.append(str(reason))
-        artifact = blob.get("escalation_artifact")
-        if isinstance(artifact, dict):
-            for reason in artifact.get("reasons") or []:
-                if reason and str(reason) not in reasons:
-                    reasons.append(str(reason))
-        return reasons
-
-    def _collect_evidence_refs(
-        self, account_id: str, call_id: str
-    ) -> builtins.list[EvidenceChunk]:
-        """Rebuild evidence chunk refs from TRAZA retrieval events (no re-query)."""
-        events = self._traces.list_events(account_id, call_id)
-        seen: set[str] = set()
-        chunks: builtins.list[EvidenceChunk] = []
-        for event in events:
-            if event.get("event_type") not in {
-                "retrieval.evidence.selected",
-                "retrieval",
-            } and event.get("stage") != "retrieval":
-                continue
-            for item in event.get("evidence") or []:
-                if not isinstance(item, dict):
-                    continue
-                chunk_id = str(item.get("chunk_id") or "")
-                if not chunk_id or chunk_id in seen:
-                    continue
-                seen.add(chunk_id)
-                try:
-                    chunks.append(EvidenceChunk.model_validate(item))
-                except Exception:
-                    continue
-            metrics = event.get("metrics") or {}
-            if isinstance(metrics, dict):
-                for chunk_id in metrics.get("selected_chunk_ids") or []:
-                    cid = str(chunk_id)
-                    if cid in seen:
-                        continue
-                    seen.add(cid)
-                    docs = metrics.get("selected_document_ids") or []
-                    chunks.append(
-                        EvidenceChunk(
-                            document_id=str(docs[0]) if docs else "unknown",
-                            chunk_id=cid,
-                            text="",
-                            source_name="retrieved",
-                            page=None,
-                            score=0.0,
-                        )
-                    )
-        return chunks
-
-    @staticmethod
-    def _build_escalation_artifact(
-        *,
-        call_id: str,
-        row: Any,
-        clinical: ClinicalState,
-        safety: Any,
-        evidence_refs: builtins.list[EvidenceChunk],
-    ) -> dict[str, Any]:
-        from datetime import UTC, datetime
-
-        return {
-            "call_id": call_id,
-            "patient_alias": row["patient_alias"],
-            "procedure": row["procedure"],
-            "postoperative_day": row["postoperative_day"],
-            "severity": safety.severity.name,
-            "escalate": True,
-            "reasons": list(safety.reasons),
-            "timestamp": datetime.now(UTC).isoformat(),
-            "findings": [
-                {"name": f.name, "certainty": f.certainty.value, "notes": f.notes}
-                for f in clinical.findings
-            ],
-            "evidence_references": [
-                {
-                    "document_id": c.document_id,
-                    "chunk_id": c.chunk_id,
-                    "source_name": c.source_name,
-                    "page": c.page,
-                }
-                for c in evidence_refs
-            ],
-            "next_action": "Contactar atención médica de urgencia",
-        }
-
-    @staticmethod
-    def _load_conversation_context(
-        blob: dict[str, Any], *, call_id: str
-    ) -> ConversationContext:
+    def _load_conversation_context(blob: dict[str, Any], *, call_id: str) -> ConversationContext:
         raw = blob.get("conversation_context")
         if isinstance(raw, dict) and raw:
             try:

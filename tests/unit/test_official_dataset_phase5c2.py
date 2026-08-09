@@ -53,11 +53,81 @@ def _write_mini_official_xlsx(root: Path) -> None:
         ]
     )
     rows = [
-        (1, "caso_tray_a", "pac_1", 1, 1, "paciente", "me duele", "verde", "x", "mp", "ma", "capa1_limpia", "ts"),
-        (2, "caso_tray_a", "pac_1", 1, 2, "agente", "cuénteme más", "verde", "x", "mp", "ma", "capa1_limpia", "ts"),
-        (3, "caso_tray_a", "pac_1", 1, 1, "paciente", "me duele mucho", "verde", "x", "mp", "ma", "capa2_ruidosa", "ts"),
-        (4, "caso_tray_b", "pac_2", 2, 1, "paciente", "tengo fiebre", "rojo", "x", "mp", "ma", "capa1_limpia", "ts"),
-        (5, "caso_tray_b", "pac_2", 2, 1, "paciente", "tengo fiebre alta", "rojo", "x", "mp", "ma", "capa2_ruidosa", "ts"),
+        (
+            1,
+            "caso_tray_a",
+            "pac_1",
+            1,
+            1,
+            "paciente",
+            "me duele",
+            "verde",
+            "x",
+            "mp",
+            "ma",
+            "capa1_limpia",
+            "ts",
+        ),
+        (
+            2,
+            "caso_tray_a",
+            "pac_1",
+            1,
+            2,
+            "agente",
+            "cuénteme más",
+            "verde",
+            "x",
+            "mp",
+            "ma",
+            "capa1_limpia",
+            "ts",
+        ),
+        (
+            3,
+            "caso_tray_a",
+            "pac_1",
+            1,
+            1,
+            "paciente",
+            "me duele mucho",
+            "verde",
+            "x",
+            "mp",
+            "ma",
+            "capa2_ruidosa",
+            "ts",
+        ),
+        (
+            4,
+            "caso_tray_b",
+            "pac_2",
+            2,
+            1,
+            "paciente",
+            "tengo fiebre",
+            "rojo",
+            "x",
+            "mp",
+            "ma",
+            "capa1_limpia",
+            "ts",
+        ),
+        (
+            5,
+            "caso_tray_b",
+            "pac_2",
+            2,
+            1,
+            "paciente",
+            "tengo fiebre alta",
+            "rojo",
+            "x",
+            "mp",
+            "ma",
+            "capa2_ruidosa",
+            "ts",
+        ),
     ]
     for row in rows:
         ws.append(list(row))
@@ -106,8 +176,12 @@ def _write_mini_official_xlsx(root: Path) -> None:
             "generado_ts",
         ]
     )
-    ws3.append(["pac_1", "b1", "rt", "mod", "colecistectomía", "2026-01-01", 45, "F", "HTA", "none", "ts"])
-    ws3.append(["pac_2", "b2", "rt", "mod", "apendicectomía", "2026-01-02", 30, "M", "", "fever", "ts"])
+    ws3.append(
+        ["pac_1", "b1", "rt", "mod", "colecistectomía", "2026-01-01", 45, "F", "HTA", "none", "ts"]
+    )
+    ws3.append(
+        ["pac_2", "b2", "rt", "mod", "apendicectomía", "2026-01-02", 30, "M", "", "fever", "ts"]
+    )
     wb3.save(root / "perfiles_clinicos_pacientes_silver_contest.xlsx")
     wb3.close()
 
@@ -182,9 +256,24 @@ def test_firewall_blocks_trajectory_and_labels() -> None:
 
 def test_official_metrics_red_fn_and_orange() -> None:
     rows = [
-        {"ground_truth": "RED", "predicted": "YELLOW", "exact_match": False, "red_false_negative": True},
-        {"ground_truth": "RED", "predicted": "RED", "exact_match": True, "red_false_negative": False},
-        {"ground_truth": "GREEN", "predicted": "ORANGE", "exact_match": False, "red_false_negative": False},
+        {
+            "ground_truth": "RED",
+            "predicted": "YELLOW",
+            "exact_match": False,
+            "red_false_negative": True,
+        },
+        {
+            "ground_truth": "RED",
+            "predicted": "RED",
+            "exact_match": True,
+            "red_false_negative": False,
+        },
+        {
+            "ground_truth": "GREEN",
+            "predicted": "ORANGE",
+            "exact_match": False,
+            "red_false_negative": False,
+        },
     ]
     metrics = compute_official_metrics(rows)
     assert metrics["red_false_negatives"] == 1
@@ -200,12 +289,28 @@ def test_official_metrics_red_fn_and_orange() -> None:
 
 def test_macro_f1_and_degradation() -> None:
     clean_rows = [
-        {"ground_truth": "GREEN", "predicted": "GREEN", "exact_match": True, "layer": "capa1_limpia"},
+        {
+            "ground_truth": "GREEN",
+            "predicted": "GREEN",
+            "exact_match": True,
+            "layer": "capa1_limpia",
+        },
         {"ground_truth": "RED", "predicted": "RED", "exact_match": True, "layer": "capa1_limpia"},
     ]
     noisy_rows = [
-        {"ground_truth": "GREEN", "predicted": "YELLOW", "exact_match": False, "layer": "capa2_ruidosa"},
-        {"ground_truth": "RED", "predicted": "YELLOW", "exact_match": False, "red_false_negative": True, "layer": "capa2_ruidosa"},
+        {
+            "ground_truth": "GREEN",
+            "predicted": "YELLOW",
+            "exact_match": False,
+            "layer": "capa2_ruidosa",
+        },
+        {
+            "ground_truth": "RED",
+            "predicted": "YELLOW",
+            "exact_match": False,
+            "red_false_negative": True,
+            "layer": "capa2_ruidosa",
+        },
     ]
     summary = summarize_official_results(clean_rows + noisy_rows)
     assert summary["overall"]["n"] == 4
@@ -275,11 +380,20 @@ def test_scorecard_definitive_only_with_official_complete() -> None:
     }
     results = [
         {**base, "model_id": "llama3.2:3b"},
-        {**base, "model_id": "llama3.2:1b", "official_red_false_negatives": 2, "official_macro_f1": 0.5},
+        {
+            **base,
+            "model_id": "llama3.2:1b",
+            "official_red_false_negatives": 2,
+            "official_macro_f1": 0.5,
+        },
     ]
-    provisional = recommend_primary_fallback(results, official_red_available=True, official_eval_complete=False)
+    provisional = recommend_primary_fallback(
+        results, official_red_available=True, official_eval_complete=False
+    )
     assert provisional["STATUS"] == "PROVISIONAL"
-    definitive = recommend_primary_fallback(results, official_red_available=True, official_eval_complete=True)
+    definitive = recommend_primary_fallback(
+        results, official_red_available=True, official_eval_complete=True
+    )
     assert definitive["STATUS"] == "DEFINITIVE"
 
 

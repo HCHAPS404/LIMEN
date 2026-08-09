@@ -53,9 +53,7 @@ class StubSTTProvider:
 
 
 def _stt_cache_key(settings: ApplicationSettings) -> str:
-    allow = (
-        settings.stt_allow_cpu_fallback if "STT_ALLOW_CPU_FALLBACK" in os.environ else None
-    )
+    allow = settings.stt_allow_cpu_fallback if "STT_ALLOW_CPU_FALLBACK" in os.environ else None
     return "|".join(
         [
             settings.stt_provider.lower().strip(),
@@ -96,9 +94,7 @@ def build_stt_provider(settings: ApplicationSettings) -> STTProvider:
             from limen.voice.providers.faster_whisper_stt import FasterWhisperSTTProvider
 
             allow: bool | None = (
-                settings.stt_allow_cpu_fallback
-                if "STT_ALLOW_CPU_FALLBACK" in os.environ
-                else None
+                settings.stt_allow_cpu_fallback if "STT_ALLOW_CPU_FALLBACK" in os.environ else None
             )
             built = FasterWhisperSTTProvider(
                 model=settings.stt_model or "Systran/faster-whisper-small",
@@ -115,4 +111,3 @@ def build_stt_provider(settings: ApplicationSettings) -> STTProvider:
         _cached_provider = built
         _cached_key = key
         return built
-

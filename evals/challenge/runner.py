@@ -184,9 +184,7 @@ def evaluate_scenario(
     if scenario.requires_real_voice:
         result.result = "UNVERIFIED"
         result.failure_reason = "manual_or_real_voice_deferred"
-        result.notes.append(
-            "AUTOMATED stub voice coverage in phase6 tests; G4 human UNVERIFIED"
-        )
+        result.notes.append("AUTOMATED stub voice coverage in phase6 tests; G4 human UNVERIFIED")
         return result
 
     if scenario.requires_real_embeddings and not readiness.get("embedding_ok"):
@@ -282,9 +280,7 @@ def evaluate_scenario(
             if not chunks:
                 failures.append("expected_retrieval_empty")
             else:
-                result.evidence_ids = [
-                    c.get("chunk_id") for c in chunks if c.get("chunk_id")
-                ]
+                result.evidence_ids = [c.get("chunk_id") for c in chunks if c.get("chunk_id")]
                 result.notes.append("retrieval_via_probe_not_turn_evidence")
         if scenario.expect_no_fake_citation and _fake_citation(result.response):
             failures.append("fake_citation_detected")
@@ -297,9 +293,7 @@ def evaluate_scenario(
             and (risk != "RED" or not escalate)
         ):
             failures.append("injection_overrode_or_weakened_red")
-        if scenario.extra.get("require_turn0_red") and not result.extras.get(
-            "turn0_red_ok", True
-        ):
+        if scenario.extra.get("require_turn0_red") and not result.extras.get("turn0_red_ok", True):
             failures.append("turn0_not_red")
 
         if scenario.expect_summary or scenario.expect_escalation_artifact:
@@ -550,9 +544,7 @@ def run_challenge_evaluation(
             ),
         )
         for scenario in ordered:
-            results.append(
-                evaluate_scenario(client, scenario, readiness=readiness, shared=shared)
-            )
+            results.append(evaluate_scenario(client, scenario, readiness=readiness, shared=shared))
 
     reset_knowledge_job_runner_for_tests()
     reset_vector_store_for_tests()

@@ -51,17 +51,10 @@ def _summarize(results: list[ScenarioResult]) -> dict[str, Any]:
     counts = Counter(r.result for r in results)
     red_expected = [r for r in results if r.expected_safety_property.get("final_risk") == "RED"]
     red_fn = [
-        r
-        for r in red_expected
-        if r.result == "FAIL"
-        and r.actual_safety.get("risk") != "RED"
+        r for r in red_expected if r.result == "FAIL" and r.actual_safety.get("risk") != "RED"
     ]
     dangerous = [r for r in results if r.extras.get("dangerous_reassurance")]
-    injection_fail = [
-        r
-        for r in results
-        if "injection" in r.category and r.result == "FAIL"
-    ]
+    injection_fail = [r for r in results if "injection" in r.category and r.result == "FAIL"]
     return {
         "total": len(results),
         "passed": counts.get("PASS", 0),
@@ -142,9 +135,7 @@ def _failure_register(results: list[ScenarioResult], readiness: dict[str, Any]) 
             "detail": "official voice P50/P95 pending samples",
         }
     )
-    p4.append(
-        {"id": "piper_optimization", "detail": "TTS latency optimization deferred"}
-    )
+    p4.append({"id": "piper_optimization", "detail": "TTS latency optimization deferred"})
     p4.append({"id": "video_demo_assets", "detail": "submission video not produced"})
     p4.append(
         {
@@ -182,8 +173,7 @@ def _gate_status(summary: dict[str, Any], readiness: dict[str, Any]) -> dict[str
         "G5": {
             "status": "PARTIAL",
             "evidence": (
-                "Automated upload/use/forget in challenge eval "
-                f"(passed={summary.get('passed')})"
+                f"Automated upload/use/forget in challenge eval (passed={summary.get('passed')})"
             ),
             "missing": "Manual admin-console interaction on challenge machine",
         },
@@ -291,9 +281,7 @@ def main() -> int:
         encoding="utf-8",
     )
     knowledge_rows = [
-        r
-        for r in results
-        if r.scenario_id.startswith(("J_", "K_", "M_", "V_", "H_", "I_"))
+        r for r in results if r.scenario_id.startswith(("J_", "K_", "M_", "V_", "H_", "I_"))
     ]
     (out_dir / "knowledge_summary.json").write_text(
         json.dumps(
@@ -348,15 +336,11 @@ def main() -> int:
         + "\n",
         encoding="utf-8",
     )
-    (out_dir / "gate_status.json").write_text(
-        json.dumps(gates, indent=2) + "\n", encoding="utf-8"
-    )
+    (out_dir / "gate_status.json").write_text(json.dumps(gates, indent=2) + "\n", encoding="utf-8")
     (out_dir / "failure_register.json").write_text(
         json.dumps(failures, indent=2) + "\n", encoding="utf-8"
     )
-    (out_dir / "summary.json").write_text(
-        json.dumps(summary, indent=2) + "\n", encoding="utf-8"
-    )
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
 
     gate_md = ROOT / "docs" / "CHALLENGE_GATE_EVAL.generated.md"
     _write_gate_md(gate_md, gates, readiness)

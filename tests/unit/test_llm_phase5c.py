@@ -84,7 +84,7 @@ def test_recommendation_rationale_not_none_when_selected() -> None:
     assert rec["PRIMARY_MODEL"] == "llama3.2:3b"
     assert rec["STATUS"] == "PROVISIONAL"
     assert rec["reason"] is not None
-    assert "None" != rec["reason"]
+    assert rec["reason"] != "None"
     assert "PRIMARY=llama3.2:3b" in rec["rationale"]
     assert rec["candidate_roles"].get("llama3.2:1b") == "BASELINE_ONLY / NOT_RECOMMENDED"
 

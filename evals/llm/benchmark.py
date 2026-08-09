@@ -789,9 +789,7 @@ def _normalize_for_scorecard(cand: dict[str, Any]) -> dict[str, Any]:
 def render_markdown(report: dict[str, Any]) -> str:
     rec = report.get("recommendation") or {}
     official = report.get("official_dataset") or {}
-    commit = display(
-        (report.get("manifest") or {}).get("commit_sha") or report.get("commit_sha")
-    )
+    commit = display((report.get("manifest") or {}).get("commit_sha") or report.get("commit_sha"))
     lines = [
         "# LLM BENCHMARK (generated) — PHASE 5C",
         "",
@@ -842,10 +840,7 @@ def render_markdown(report: dict[str, Any]) -> str:
                 + "`"
             ),
             f"Resolved root: `{display(official.get('resolved_root'))}`",
-            (
-                "Resolution order: `"
-                f"{display(official.get('resolution_order'))}`"
-            ),
+            (f"Resolution order: `{display(official.get('resolution_order'))}`"),
             f"Files found: `{display(official.get('files_found', []))}`",
             f"Evaluation enabled: `{display(official.get('evaluation_enabled', False))}`",
             "",

@@ -217,9 +217,7 @@ def create_app(settings: ApplicationSettings | None = None) -> FastAPI:
                     "reachable": bool(stt_probe.get("reachable", stt_probe.get("ok"))),
                     "degraded_mode": bool(stt_probe.get("degraded", not stt_probe.get("ok"))),
                     "degraded": bool(stt_probe.get("degraded", not stt_probe.get("ok"))),
-                    "configured_device": stt_probe.get(
-                        "configured_device", settings.stt_device
-                    ),
+                    "configured_device": stt_probe.get("configured_device", settings.stt_device),
                     "requested_device": stt_probe.get("requested_device"),
                     "actual_device": stt_probe.get("actual_device"),
                     "compute_type": stt_probe.get("compute_type"),
@@ -229,9 +227,7 @@ def create_app(settings: ApplicationSettings | None = None) -> FastAPI:
                 }
             )
         except Exception as exc:  # noqa: BLE001
-            stt_health.update(
-                {"reachable": False, "degraded_mode": True, "last_error": str(exc)}
-            )
+            stt_health.update({"reachable": False, "degraded_mode": True, "last_error": str(exc)})
         try:
             tts_probe = await tts.health()
             tts_health.update(
@@ -242,9 +238,7 @@ def create_app(settings: ApplicationSettings | None = None) -> FastAPI:
                 }
             )
         except Exception as exc:  # noqa: BLE001
-            tts_health.update(
-                {"reachable": False, "degraded_mode": True, "last_error": str(exc)}
-            )
+            tts_health.update({"reachable": False, "degraded_mode": True, "last_error": str(exc)})
         vector_info: dict[str, object] = {
             "backend": settings.vector_store_backend,
             "path": str(settings.vector_path),

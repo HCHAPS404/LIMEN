@@ -12,9 +12,7 @@ from limen.safety.decision import SafetyDecision
 
 def test_patient_name_captured_from_utterance() -> None:
     ctx = ConversationContext(call_id="c1")
-    ctx = update_context_after_patient(
-        ctx, user_text="hola, me llamo Juan", max_recent_turns=6
-    )
+    ctx = update_context_after_patient(ctx, user_text="hola, me llamo Juan", max_recent_turns=6)
     assert ctx.patient_display_name == "Juan"
     assert ctx.asked_preferred_name is True
 

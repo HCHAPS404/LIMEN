@@ -132,9 +132,7 @@ def extract_from_utterance(text: str, prior: ClinicalState | None = None) -> Cli
         if prior_peak is not None:
             peak = max(peak, prior_peak)
         improving = current < peak
-        certainty = (
-            ClinicalCertainty.IMPROVING if improving else _ABNORMAL
-        )
+        certainty = ClinicalCertainty.IMPROVING if improving else _ABNORMAL
         note = (
             f"pico={peak}/10; actual={current}/10; "
             f"curso={'mejorando' if improving else 'estable'}; {text[:100]}"

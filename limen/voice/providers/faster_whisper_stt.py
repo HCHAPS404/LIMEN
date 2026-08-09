@@ -43,7 +43,7 @@ class FasterWhisperSTTProvider:
     @staticmethod
     def _cuda_available() -> bool:
         try:
-            import ctranslate2
+            import ctranslate2  # type: ignore[import-untyped]
 
             return int(ctranslate2.get_cuda_device_count()) > 0
         except Exception:  # noqa: BLE001

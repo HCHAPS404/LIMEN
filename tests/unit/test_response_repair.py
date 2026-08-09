@@ -14,13 +14,9 @@ from limen.voice.transcript_repair import repair_transcript_text
 
 
 def test_detects_significativs_truncation() -> None:
-    bad = (
-        "Entiendo que tu dolor ha disminuido significativs"
-    )
+    bad = "Entiendo que tu dolor ha disminuido significativs"
     assert looks_truncated_draft(bad)
-    assert trim_to_last_complete_sentence(
-        "El dolor bajó. Luego significativs"
-    ) == "El dolor bajó."
+    assert trim_to_last_complete_sentence("El dolor bajó. Luego significativs") == "El dolor bajó."
 
 
 def test_validator_rejects_truncated_and_informal() -> None:
@@ -52,9 +48,7 @@ def test_repair_estoy_name() -> None:
 
 
 def test_transcript_repairs_colombian_clinical_mishearings() -> None:
-    fixed = repair_transcript_text(
-        "me cuesta moverme boletas y tengo somareos y valores de cabeza"
-    )
+    fixed = repair_transcript_text("me cuesta moverme boletas y tengo somareos y valores de cabeza")
     assert "muletas" in fixed
     assert "mareos" in fixed
     assert "dolores de cabeza" in fixed

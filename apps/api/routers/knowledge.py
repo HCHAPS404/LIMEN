@@ -54,9 +54,7 @@ def _schedule_processing(
             SqliteKnowledgeRepository(db),
             settings,
             embeddings=embeddings,
-            vector_store=get_vector_store(
-                settings, dimensions=embeddings.dimensions
-            ),
+            vector_store=get_vector_store(settings, dimensions=embeddings.dimensions),
         )
         service.process_document(account_id=account_id, document_id=document_id)
     finally:
@@ -141,9 +139,7 @@ async def delete_document(
     deletion: KnowledgeDelete,
 ) -> KnowledgeDocumentResponse:
     try:
-        removed = deletion.delete(
-            account_id=account.account_id, document_id=document_id
-        )
+        removed = deletion.delete(account_id=account.account_id, document_id=document_id)
     except IncompletePurgeError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

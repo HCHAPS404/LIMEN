@@ -48,5 +48,9 @@ def repair_transcript_text(text: str) -> str:
 
     out = cleaned
     for pattern, replacement in _REPAIRS:
-        out = pattern.sub(lambda m, r=replacement: _preserve(m, r), out)
+
+        def _replacer(match: re.Match[str], *, _replacement: str = replacement) -> str:
+            return _preserve(match, _replacement)
+
+        out = pattern.sub(_replacer, out)
     return " ".join(out.split())

@@ -72,9 +72,12 @@ def apply_runtime_profile(*, force: bool = False) -> str:
         return profile
     for key, value in CHALLENGE_ENV_DEFAULTS.items():
         current = os.environ.get(key, "")
-        if force or current == "" or (
-            key in _PROVIDER_KEYS and current.lower() == "stub"
-        ) or key not in os.environ:
+        if (
+            force
+            or current == ""
+            or (key in _PROVIDER_KEYS and current.lower() == "stub")
+            or key not in os.environ
+        ):
             os.environ[key] = value
     # Prefer local E5 checkout when present and unset.
     if not os.environ.get("EMBEDDING_MODEL_PATH"):
@@ -82,9 +85,7 @@ def apply_runtime_profile(*, force: bool = False) -> str:
             ROOT / ".cache" / "models" / "multilingual-e5-small",
             ROOT / "runtime" / "models" / "multilingual-e5-small",
         ):
-            if (candidate / "model.safetensors").is_file() or (
-                candidate / "config.json"
-            ).is_file():
+            if (candidate / "model.safetensors").is_file() or (candidate / "config.json").is_file():
                 os.environ["EMBEDDING_MODEL_PATH"] = str(candidate)
                 break
     return profile

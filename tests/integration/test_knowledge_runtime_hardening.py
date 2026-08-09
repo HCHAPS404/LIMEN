@@ -119,7 +119,9 @@ def test_processing_failure_becomes_failed(client: TestClient) -> None:
     assert failed["failure_message"]
 
 
-def test_restart_policy_fails_processing_documents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_restart_policy_fails_processing_documents(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "restart.db"))
     monkeypatch.setenv("DOCUMENT_PATH", str(tmp_path / "docs"))
     monkeypatch.setenv("VECTOR_PATH", str(tmp_path / "vectors"))
@@ -198,9 +200,7 @@ def test_delete_during_processing_never_becomes_available(
     assert deleted is not None
     assert deleted["status"] == "REMOVED"
 
-    after = ingest.process_document(
-        account_id="acct", document_id=accepted["document_id"]
-    )
+    after = ingest.process_document(account_id="acct", document_id=accepted["document_id"])
     assert after is not None
     assert after["status"] == "REMOVED"
     hits = repo.retrieve(account_id="acct", query="ZXQ-417", limit=5)
@@ -278,9 +278,7 @@ def test_textless_pdf_invokes_ocr_and_preserves_provenance(tmp_path: Path) -> No
     assert "ZXQ-417" in parsed.pages[0].text
 
 
-def test_ocr_failure_never_available(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_ocr_failure_never_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "ocrfail.db"))
     monkeypatch.setenv("DOCUMENT_PATH", str(tmp_path / "docs"))
     monkeypatch.setenv("VECTOR_PATH", str(tmp_path / "vectors"))
@@ -329,9 +327,7 @@ def test_ocr_failure_never_available(
         "limen.knowledge.parsing.default_ocr_provider",
         lambda: BoomOCR(),
     )
-    result = ingest.process_document(
-        account_id="acct", document_id=accepted["document_id"]
-    )
+    result = ingest.process_document(account_id="acct", document_id=accepted["document_id"])
     assert result is not None
     assert result["status"] == "FAILED"
     assert result["failure_stage"] == "ocr"

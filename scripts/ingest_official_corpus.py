@@ -327,9 +327,7 @@ def _write_docs(result: dict[str, Any]) -> None:
     if not smoke:
         lines.append("_Not run (pass `--smoke`)._")
     for row in smoke:
-        lines.append(
-            f"- `{row['probe']}`: hits={row['hit_count']} query={row['query']!r}"
-        )
+        lines.append(f"- `{row['probe']}`: hits={row['hit_count']} query={row['query']!r}")
     lines.append("")
     docs.write_text("\n".join(lines), encoding="utf-8")
     print(f"Wrote {docs}")

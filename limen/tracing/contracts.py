@@ -214,9 +214,9 @@ class CallMetrics(BaseModel):
     # Voice speech_end → first_audio is not measurable yet.
     voice_latency_p50_ms: float | None = None
     voice_latency_p95_ms: float | None = None
-    voice_latency_status: Literal[
-        "not_implemented", "insufficient_samples", "measured"
-    ] = "not_implemented"
+    voice_latency_status: Literal["not_implemented", "insufficient_samples", "measured"] = (
+        "not_implemented"
+    )
     voice_latency_sample_count: int = 0
     voice_interruptions: int = 0
     stt_errors: int = 0

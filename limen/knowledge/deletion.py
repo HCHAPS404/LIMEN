@@ -42,10 +42,7 @@ class KnowledgeDeletionService:
         self._vectors.delete_document(account_id=account_id, document_id=document_id)
 
         lexical_ok = self._repository.verify_forgotten(account_id, document_id)
-        dense_ok = (
-            self._vectors.count_document(account_id=account_id, document_id=document_id)
-            == 0
-        )
+        dense_ok = self._vectors.count_document(account_id=account_id, document_id=document_id) == 0
         if not lexical_ok or not dense_ok:
             self._repository.mark_failed(
                 account_id,
@@ -56,9 +53,7 @@ class KnowledgeDeletionService:
                     f"(lexical_ok={lexical_ok}, dense_ok={dense_ok})"
                 ),
             )
-            raise IncompletePurgeError(
-                f"Purge verification failed for document_id={document_id}"
-            )
+            raise IncompletePurgeError(f"Purge verification failed for document_id={document_id}")
 
         removed = self._repository.mark_removed(account_id, document_id)
         if storage:

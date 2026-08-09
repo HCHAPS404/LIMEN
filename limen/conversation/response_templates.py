@@ -25,19 +25,14 @@ GREEN_TEMPLATE = (
 )
 # Shorter variants when greeting/boilerplate already happened.
 YELLOW_CONTINUE = (
-    "Queda información por precisar con su equipo de salud. "
-    "Avise si nota empeoramiento."
+    "Queda información por precisar con su equipo de salud. Avise si nota empeoramiento."
 )
-GREEN_CONTINUE = (
-    "De acuerdo. Continúe observando y avise si aparecen cambios nuevos."
-)
+GREEN_CONTINUE = "De acuerdo. Continúe observando y avise si aparecen cambios nuevos."
 NO_EVIDENCE_UNCERTAINTY = (
     "Todavía no tengo documentación adicional para confirmar eso; "
     "me baso en lo que usted ha descrito y en la decisión de seguridad actual."
 )
-NO_EVIDENCE_CONTINUE = (
-    "Sin documentación adicional nueva, sigo con lo que usted ya contó."
-)
+NO_EVIDENCE_CONTINUE = "Sin documentación adicional nueva, sigo con lo que usted ya contó."
 
 
 def _vocative_prefix(conversation: ConversationContext | None) -> str:
@@ -70,10 +65,7 @@ def deterministic_patient_reply(
             and conversation.pending_assistant_intent.safety_critical
             and conversation.pending_assistant_intent.interrupted
         ):
-            return (
-                "Sigo detectando señales de riesgo: busque atención médica "
-                "de urgencia ahora."
-            )
+            return "Sigo detectando señales de riesgo: busque atención médica de urgencia ahora."
         return RED_ESCALATION_TEMPLATE
 
     continuing = bool(conversation and conversation.greeting_done)
@@ -86,13 +78,9 @@ def deterministic_patient_reply(
         and not (safety.escalate or safety.severity >= Severity.RED)
     ):
         return opening_reply(
-            assistant_name=(
-                conversation.assistant_display_name if conversation else None
-            ),
+            assistant_name=(conversation.assistant_display_name if conversation else None),
             gender=conversation.assistant_gender if conversation else None,
-            display_name=(
-                conversation.patient_display_name if conversation else None
-            ),
+            display_name=(conversation.patient_display_name if conversation else None),
             user_text=last or "",
         )
 
@@ -130,8 +118,7 @@ def deterministic_patient_reply(
 ESCALATION_TEMPLATE = RED_ESCALATION_TEMPLATE
 FALLBACK_TEMPLATE = GREEN_TEMPLATE
 EVIDENCE_TEMPLATE = (
-    "Según la documentación disponible ({source}): {snippet} "
-    "¿Quiere que lo detalle un poco más?"
+    "Según la documentación disponible ({source}): {snippet} ¿Quiere que lo detalle un poco más?"
 )
 
 

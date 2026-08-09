@@ -45,7 +45,10 @@ def write_g4(evidence: dict[str, Any]) -> Path:
         "",
         "## Notes",
         "",
-        evidence.get("notes", "Operator must complete human mic smoke when automated N is insufficient."),
+        evidence.get(
+            "notes",
+            "Operator must complete human mic smoke when automated N is insufficient.",
+        ),
         "",
         "```json",
         json.dumps(evidence, indent=2, ensure_ascii=False),

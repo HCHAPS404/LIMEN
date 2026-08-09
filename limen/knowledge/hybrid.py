@@ -74,11 +74,7 @@ class HybridEvidenceRetriever:
             vector=query_vector,
             limit=dense_limit,
         )
-        dense = [
-            chunk
-            for chunk in dense
-            if chunk.score >= self._config.dense_min_score
-        ]
+        dense = [chunk for chunk in dense if chunk.score >= self._config.dense_min_score]
         dense_ms = (time.perf_counter() - t0) * 1000.0
 
         t1 = time.perf_counter()
@@ -88,8 +84,7 @@ class HybridEvidenceRetriever:
             limit=lexical_limit,
         )
         lexical = [
-            chunk.model_copy(update={"retrieval_modes": ["lexical"]})
-            for chunk in lexical_raw
+            chunk.model_copy(update={"retrieval_modes": ["lexical"]}) for chunk in lexical_raw
         ]
         lexical_ms = (time.perf_counter() - t1) * 1000.0
 
@@ -111,8 +106,6 @@ class HybridEvidenceRetriever:
             "final_evidence_count": len(fused),
             "selected_chunk_ids": [c.chunk_id for c in fused],
             "selected_document_ids": sorted({c.document_id for c in fused}),
-            "retrieval_modes": sorted(
-                {mode for chunk in fused for mode in chunk.retrieval_modes}
-            ),
+            "retrieval_modes": sorted({mode for chunk in fused for mode in chunk.retrieval_modes}),
         }
         return fused

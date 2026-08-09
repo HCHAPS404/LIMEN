@@ -66,9 +66,7 @@ def _clinical_profile_for_patient(
     return {}
 
 
-def _trajectory_for_case(
-    trajectories: list[dict[str, Any]], case_id: str
-) -> dict[str, Any] | None:
+def _trajectory_for_case(trajectories: list[dict[str, Any]], case_id: str) -> dict[str, Any] | None:
     expected_tray_id = case_id.removeprefix("caso_")
     for row in trajectories:
         tray_id = str(row.get("trayectoria_id") or "")

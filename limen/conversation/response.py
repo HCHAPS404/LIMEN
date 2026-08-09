@@ -97,9 +97,7 @@ async def build_assistant_response(
 
     if looks_like_farewell(user_text):
         raw_name = conversation.patient_display_name if conversation else None
-        assistant = (
-            conversation.assistant_display_name if conversation else None
-        )
+        assistant = conversation.assistant_display_name if conversation else None
         name = patient_display_name_safe(raw_name, assistant_name=assistant)
         text = farewell_reply(display_name=name)
         if conversation is not None:
@@ -157,9 +155,7 @@ async def build_assistant_response(
     # Force opening on the first patient turn even if greeting_done was wrongly set.
     assistant_addr = addresses_assistant_by_name(
         user_text,
-        assistant_name=(
-            conversation.assistant_display_name if conversation else None
-        ),
+        assistant_name=(conversation.assistant_display_name if conversation else None),
     )
     if (
         conversation is not None
@@ -315,8 +311,7 @@ async def build_assistant_response(
 
     # One novelty retry only — never loop.
     if previous and (
-        is_near_duplicate(text, previous)
-        or has_excessive_generic_opener(text, previous)
+        is_near_duplicate(text, previous) or has_excessive_generic_opener(text, previous)
     ):
         novelty_retry = True
         try:
@@ -325,9 +320,7 @@ async def build_assistant_response(
             if response2.prompt_tokens is not None or prompt_tokens is not None:
                 prompt_tokens = (prompt_tokens or 0) + (response2.prompt_tokens or 0)
             if response2.completion_tokens is not None or completion_tokens is not None:
-                completion_tokens = (completion_tokens or 0) + (
-                    response2.completion_tokens or 0
-                )
+                completion_tokens = (completion_tokens or 0) + (response2.completion_tokens or 0)
             if text2 and not is_near_duplicate(text2, previous):
                 text = text2
             else:
@@ -339,22 +332,16 @@ async def build_assistant_response(
             provider_meta["fallback"] = True
             provider_meta["fallback_reason"] = "novelty_retry_failed"
 
-    display_name = (
-        patient_display_name_safe(
-            conversation.patient_display_name if conversation else None,
-            assistant_name=(
-                conversation.assistant_display_name if conversation else None
-            ),
-        )
+    display_name = patient_display_name_safe(
+        conversation.patient_display_name if conversation else None,
+        assistant_name=(conversation.assistant_display_name if conversation else None),
     )
     validation = validate_patient_response(
         text,
         safety=safety,
         evidence=evidence,
         patient_display_name=display_name,
-        assistant_display_name=(
-            conversation.assistant_display_name if conversation else None
-        ),
+        assistant_display_name=(conversation.assistant_display_name if conversation else None),
     )
     if not validation.ok or not text:
         text = _template()

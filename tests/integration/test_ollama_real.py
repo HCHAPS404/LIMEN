@@ -77,11 +77,13 @@ async def test_one_request_per_available_g3_candidate() -> None:
         "phi3.5": ("phi3.5", "phi3.5:latest", "phi3.5:3.8b"),
     }
     ran = 0
-    for candidate_id, tags in aliases.items():
+    for _candidate_id, tags in aliases.items():
         resolved = None
         for tag in tags:
             for installed in health["models"]:
-                if installed.lower() == tag.lower() or installed.lower().startswith(f"{tag.lower()}@"):
+                lowered = installed.lower()
+                tag_l = tag.lower()
+                if lowered == tag_l or lowered.startswith(f"{tag_l}@"):
                     resolved = installed
                     break
             if resolved:

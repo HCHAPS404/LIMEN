@@ -317,9 +317,7 @@ async def test_temp_audio_cleanup_helpers(tmp_path: Path, monkeypatch: pytest.Mo
 
     settings = SimpleNamespace(log_path=str(tmp_path / "logs" / "app.log"))
     audio = silence_wav(duration_ms=100)
-    path = calls_router._write_transient_voice_wav(
-        settings, call_id="c1", turn_seq=1, audio=audio
-    )
+    path = calls_router._write_transient_voice_wav(settings, call_id="c1", turn_seq=1, audio=audio)
     assert path.is_file()
     calls_router._cleanup_transient_voice_wav(path)
     assert not path.exists()

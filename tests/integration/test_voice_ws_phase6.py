@@ -85,8 +85,7 @@ def test_websocket_binary_stub_stt_tts_yellow_path(client: TestClient) -> None:
         assert "call.safety" in types
         assert audio_frames >= 1
         assert any(
-            e["type"] == "call.state" and e["payload"].get("state") == "SPEAKING"
-            for e in events
+            e["type"] == "call.state" and e["payload"].get("state") == "SPEAKING" for e in events
         )
 
         # Simulate browser playback lifecycle (opens LISTENING after completed).
@@ -109,18 +108,15 @@ def test_websocket_binary_stub_stt_tts_yellow_path(client: TestClient) -> None:
             if message.get("bytes") is not None:
                 continue
             msg = json.loads(message["text"])
-            if (
-                msg["type"] == "call.metrics"
-                and "voice_response_latency_ms" in msg.get("payload", {})
+            if msg["type"] == "call.metrics" and "voice_response_latency_ms" in msg.get(
+                "payload", {}
             ):
                 assert msg["payload"]["voice_response_latency_ms"] == pytest.approx(800.0)
                 saw_latency = True
-            if (
-                msg["type"] == "call.state"
-                and msg["payload"].get("state") == "LISTENING"
-            ):
+            if msg["type"] == "call.state" and msg["payload"].get("state") == "LISTENING":
                 listening = True
                 break
+        assert saw_latency, "voice_response_latency_ms metric expected after playback"
         assert listening, "LISTENING must open after voice.playback.completed"
 
         ws.send_json({"type": "end"})
@@ -135,7 +131,7 @@ def test_websocket_red_escalation_uses_template_path(client: TestClient) -> None
         ws.send_json({"type": "text", "text": "no puedo respirar"})
         saw_red = False
         saw_ended = False
-        for _ in range(30):
+        for _ in range(40):
             message = ws.receive()
             if message.get("bytes") is not None:
                 continue
@@ -144,6 +140,15 @@ def test_websocket_red_escalation_uses_template_path(client: TestClient) -> None
                 assert event["payload"]["risk"] == "RED"
                 assert event["payload"]["escalate"] is True
                 saw_red = True
+            if event["type"] == "call.state" and event["payload"].get("state") == "SPEAKING":
+                turn_seq = event["payload"].get("turn_seq")
+                if turn_seq is not None:
+                    ws.send_json(
+                        {
+                            "type": "voice.playback.completed",
+                            "turn_seq": turn_seq,
+                        }
+                    )
             if event["type"] == "call.ended":
                 saw_ended = True
                 break

@@ -114,9 +114,7 @@ def _conversation_summary(ctx: ConversationContext | None) -> str:
         return "conversation=unavailable"
     pending = "ninguna"
     if ctx.pending_question is not None:
-        pending = (
-            f"{ctx.pending_question.intent}:{ctx.pending_question.text[:80]}"
-        )
+        pending = f"{ctx.pending_question.intent}:{ctx.pending_question.text[:80]}"
     recent = []
     for turn in ctx.recent_turns[-4:]:
         flag = " [interrupted]" if turn.interrupted else ""

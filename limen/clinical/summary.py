@@ -27,20 +27,10 @@ def build_call_summary(
     evidence: list[EvidenceChunk],
     metrics: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    reported = [
-        f.name
-        for f in state.findings
-        if f.certainty == ClinicalCertainty.KNOWN_ABNORMAL
-    ]
-    unknown = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.UNKNOWN
-    ]
-    conflicting = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.CONFLICTING
-    ]
-    negative = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.KNOWN_NORMAL
-    ]
+    reported = [f.name for f in state.findings if f.certainty == ClinicalCertainty.KNOWN_ABNORMAL]
+    unknown = [f.name for f in state.findings if f.certainty == ClinicalCertainty.UNKNOWN]
+    conflicting = [f.name for f in state.findings if f.certainty == ClinicalCertainty.CONFLICTING]
+    negative = [f.name for f in state.findings if f.certainty == ClinicalCertainty.KNOWN_NORMAL]
     risk = safety.severity.name if safety else None
     escalated = bool(safety and safety.escalate)
     metrics = metrics or {}

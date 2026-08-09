@@ -132,9 +132,7 @@ def test_qdrant_inactive_filter_and_delete(tmp_path: Path) -> None:
 
     store.delete_document(account_id="acc", document_id="doc-1")
     assert store.count_document(account_id="acc", document_id="doc-1") == 0
-    assert (
-        store.search(account_id="acc", vector=emb.embed_query("ZXQ-417"), limit=3) == []
-    )
+    assert store.search(account_id="acc", vector=emb.embed_query("ZXQ-417"), limit=3) == []
     store.close()
 
 

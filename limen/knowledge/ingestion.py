@@ -242,18 +242,13 @@ class KnowledgeIngestionService:
             )
 
             needs_dense_verify = not isinstance(self._vectors, NullVectorStore)
-            dense_ok = (
-                not needs_dense_verify
-                or self._vectors.verify_document_indexed(
-                    account_id=account_id,
-                    document_id=document_id,
-                    expected_chunks=len(evidence_chunks),
-                )
+            dense_ok = not needs_dense_verify or self._vectors.verify_document_indexed(
+                account_id=account_id,
+                document_id=document_id,
+                expected_chunks=len(evidence_chunks),
             )
             if not dense_ok:
-                raise RuntimeError(
-                    "Dense index verification failed: vector count mismatch"
-                )
+                raise RuntimeError("Dense index verification failed: vector count mismatch")
 
             if not self._ensure_processing(account_id, document_id):
                 self._compensate(account_id, document_id)
@@ -270,9 +265,7 @@ class KnowledgeIngestionService:
         except OCRUnavailableError as error:
             if dense_written:
                 self._compensate(account_id, document_id)
-            self._fail_if_processing(
-                account_id, document_id, stage="ocr", message=str(error)
-            )
+            self._fail_if_processing(account_id, document_id, stage="ocr", message=str(error))
             return self._repository.get_document(account_id, document_id)
         except Exception as error:  # noqa: BLE001 — surface as FAILED when still processing
             if dense_written:
@@ -292,9 +285,7 @@ class KnowledgeIngestionService:
                 stage = "verify"
             elif "index" in message.lower():
                 stage = "index"
-            self._fail_if_processing(
-                account_id, document_id, stage=stage, message=message
-            )
+            self._fail_if_processing(account_id, document_id, stage=stage, message=message)
             return self._repository.get_document(account_id, document_id)
 
     def ingest_upload(
@@ -305,9 +296,7 @@ class KnowledgeIngestionService:
         payload: bytes,
     ) -> dict[str, Any]:
         """Backward-compatible sync path: accept then process inline."""
-        accepted = self.accept_upload(
-            account_id=account_id, filename=filename, payload=payload
-        )
+        accepted = self.accept_upload(account_id=account_id, filename=filename, payload=payload)
         processed = self.process_document(
             account_id=account_id, document_id=accepted["document_id"]
         )
@@ -337,6 +326,4 @@ class KnowledgeIngestionService:
         message: str,
     ) -> None:
         if self._ensure_processing(account_id, document_id):
-            self._repository.mark_failed(
-                account_id, document_id, stage=stage, message=message
-            )
+            self._repository.mark_failed(account_id, document_id, stage=stage, message=message)

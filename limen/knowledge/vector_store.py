@@ -89,9 +89,10 @@ class QdrantVectorStore:
         if not path.is_file():
             return None
         try:
-            return json.loads(path.read_text(encoding="utf-8"))
+            payload = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
             return None
+        return payload if isinstance(payload, dict) else None
 
     def _write_meta(self, *, reindex_required: bool = False) -> None:
         payload = {
@@ -171,9 +172,7 @@ class QdrantVectorStore:
     ) -> None:
         qm = self._qm
         if len(vector) != self._dimensions:
-            raise ValueError(
-                f"vector dim {len(vector)} != collection dim {self._dimensions}"
-            )
+            raise ValueError(f"vector dim {len(vector)} != collection dim {self._dimensions}")
         payload: dict[str, Any] = {
             "account_id": account_id,
             "document_id": document_id,
@@ -264,12 +263,8 @@ class QdrantVectorStore:
                     document_id=str(payload.get("document_id", "")),
                     chunk_id=str(payload.get("chunk_id", "")),
                     text=str(payload.get("text", "")),
-                    source_name=str(
-                        payload.get("source_name") or payload.get("filename") or ""
-                    ),
-                    filename=str(
-                        payload.get("filename") or payload.get("source_name") or ""
-                    ),
+                    source_name=str(payload.get("source_name") or payload.get("filename") or ""),
+                    filename=str(payload.get("filename") or payload.get("source_name") or ""),
                     page=payload.get("page"),
                     section=payload.get("section"),
                     score=float(point.score or 0.0),
@@ -332,8 +327,7 @@ class QdrantVectorStore:
         if expected_chunks <= 0:
             return False
         return (
-            self.count_document(account_id=account_id, document_id=document_id)
-            == expected_chunks
+            self.count_document(account_id=account_id, document_id=document_id) == expected_chunks
         )
 
 
@@ -373,9 +367,7 @@ def get_vector_store(
     if backend in {"null", "none", "off"}:
         return NullVectorStore()
     if backend not in {"qdrant", "local"}:
-        raise ValueError(
-            f"Unsupported VECTOR_STORE_BACKEND={settings.vector_store_backend!r}"
-        )
+        raise ValueError(f"Unsupported VECTOR_STORE_BACKEND={settings.vector_store_backend!r}")
     dims = dimensions
     if dims is None:
         dims = build_embedding_provider(settings).dimensions
@@ -386,9 +378,7 @@ def get_vector_store(
         if existing is not None:
             return existing
         # Close any other store on the same path (Qdrant exclusive lock).
-        stale_keys = [
-            k for k in _stores if k.startswith(str(settings.vector_path.resolve()))
-        ]
+        stale_keys = [k for k in _stores if k.startswith(str(settings.vector_path.resolve()))]
         for stale in stale_keys:
             _stores.pop(stale).close()
         store = QdrantVectorStore(

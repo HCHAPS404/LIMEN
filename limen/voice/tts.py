@@ -82,9 +82,7 @@ def build_tts_provider(settings: ApplicationSettings) -> TTSProvider:
 
         provider = settings.tts_provider.lower().strip()
         if provider == "stub":
-            built: TTSProvider = StubTTSProvider(
-                model=settings.tts_model, voice=settings.tts_voice
-            )
+            built: TTSProvider = StubTTSProvider(model=settings.tts_model, voice=settings.tts_voice)
         elif provider == "piper":
             from limen.voice.providers.piper_tts import PiperTTSProvider
 
@@ -103,10 +101,8 @@ def build_tts_provider(settings: ApplicationSettings) -> TTSProvider:
             )
         else:
             raise ValueError(
-                f"Unsupported TTS_PROVIDER={settings.tts_provider!r}. "
-                "Use 'stub' or 'piper'."
+                f"Unsupported TTS_PROVIDER={settings.tts_provider!r}. Use 'stub' or 'piper'."
             )
         _cached_provider = built
         _cached_key = key
         return built
-

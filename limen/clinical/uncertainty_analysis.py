@@ -34,15 +34,9 @@ class UncertaintyReport(BaseModel):
 
 def analyze_uncertainty(state: ClinicalState) -> UncertaintyReport:
     """Classify findings and propose follow-up questions without inventing normals."""
-    conflicting = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.CONFLICTING
-    ]
-    unknown = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.UNKNOWN
-    ]
-    abnormal = [
-        f.name for f in state.findings if f.certainty == ClinicalCertainty.KNOWN_ABNORMAL
-    ]
+    conflicting = [f.name for f in state.findings if f.certainty == ClinicalCertainty.CONFLICTING]
+    unknown = [f.name for f in state.findings if f.certainty == ClinicalCertainty.UNKNOWN]
+    abnormal = [f.name for f in state.findings if f.certainty == ClinicalCertainty.KNOWN_ABNORMAL]
     finding_names_set = {f.name for f in state.findings}
     has_pain_severity = "pain_severity" in finding_names_set
 

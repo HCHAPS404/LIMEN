@@ -98,8 +98,9 @@ VOICE_PERSONAS: dict[PersonaId, VoicePersona] = {
 
 def normalize_persona_id(raw: str | None) -> PersonaId:
     key = (raw or "").strip().casefold()
-    if key in VOICE_PERSONAS:
-        return key  # type: ignore[return-value]
+    for persona_id in VOICE_PERSONAS:
+        if persona_id == key:
+            return persona_id
     return DEFAULT_PERSONA_ID
 
 

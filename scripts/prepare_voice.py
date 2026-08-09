@@ -92,6 +92,7 @@ def prepare_piper(*, force: bool = False) -> Path:
     print("Personas:", ", ".join(VOICE_PERSONAS))
     return PIPER_DIR / f"{PIPER_VOICE}.onnx"
 
+
 def prepare_whisper(*, download: bool = True) -> dict[str, object]:
     """Verify faster-whisper import; optionally trigger model download via load."""
     from limen.voice.cuda_runtime import ensure_cuda12_library_path
@@ -138,9 +139,11 @@ def prepare_whisper(*, download: bool = True) -> dict[str, object]:
 
     print(f"Loading Whisper model {WHISPER_ID} preferred={device}/{compute} …")
     last_error: Exception | None = None
-    for try_device, try_compute in [(device, compute)] + (
-        [("cuda", "int8_float16")] if device == "cuda" else []
-    ) + ([("cpu", "int8")] if device == "cuda" else []):
+    for try_device, try_compute in (
+        [(device, compute)]
+        + ([("cuda", "int8_float16")] if device == "cuda" else [])
+        + ([("cpu", "int8")] if device == "cuda" else [])
+    ):
         try:
             model = WhisperModel(WHISPER_ID, device=try_device, compute_type=try_compute)
             import numpy as np  # type: ignore[import-untyped]

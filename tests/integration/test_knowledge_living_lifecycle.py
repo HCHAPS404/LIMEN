@@ -166,9 +166,7 @@ def test_corrupt_pdf_becomes_failed(client: TestClient) -> None:
         files={"file": ("broken.pdf", b"%PDF-1.4 not-a-real-pdf", "application/pdf")},
     )
     assert uploaded.status_code == 201, uploaded.text
-    document = _wait_status(
-        client, uploaded.json()["document_id"], wanted={"FAILED"}, timeout=8.0
-    )
+    document = _wait_status(client, uploaded.json()["document_id"], wanted={"FAILED"}, timeout=8.0)
     assert document["failure_stage"]
     assert document["failure_message"]
 
@@ -220,10 +218,14 @@ def test_knowledge_events_emitted_for_lifecycle(client: TestClient) -> None:
 
     settings = settings_module.get_settings()
     repo = SqliteKnowledgeRepository(get_database(settings))
-    row = get_database(settings).connection.execute(
-        "SELECT account_id FROM documents WHERE document_id = ?",
-        (document_id,),
-    ).fetchone()
+    row = (
+        get_database(settings)
+        .connection.execute(
+            "SELECT account_id FROM documents WHERE document_id = ?",
+            (document_id,),
+        )
+        .fetchone()
+    )
     assert row is not None
     events = repo.list_events(row["account_id"], document_id)
     stages = [event["stage"] for event in events]

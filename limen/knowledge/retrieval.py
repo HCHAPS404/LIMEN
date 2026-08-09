@@ -23,10 +23,5 @@ class KnowledgeRetrievalService:
         query: str,
         limit: int = 5,
     ) -> list[EvidenceChunk]:
-        chunks = self._repository.retrieve(
-            account_id=account_id, query=query, limit=limit
-        )
-        return [
-            chunk.model_copy(update={"retrieval_modes": ["lexical"]})
-            for chunk in chunks
-        ]
+        chunks = self._repository.retrieve(account_id=account_id, query=query, limit=limit)
+        return [chunk.model_copy(update={"retrieval_modes": ["lexical"]}) for chunk in chunks]

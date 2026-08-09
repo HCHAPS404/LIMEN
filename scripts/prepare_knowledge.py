@@ -64,9 +64,7 @@ def write_seed() -> Path:
             "Use admin console for live G5 uploads."
         ),
     }
-    (SEED_DIR / "manifest.json").write_text(
-        json.dumps(meta, indent=2) + "\n", encoding="utf-8"
-    )
+    (SEED_DIR / "manifest.json").write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     return path
 
 

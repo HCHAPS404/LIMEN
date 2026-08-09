@@ -142,13 +142,24 @@ def test_websocket_text_turn_emits_safety_events(client: TestClient) -> None:
         assert first["type"] == "call.state"
         ws.send_json({"type": "text", "text": "tengo un poco de dolor"})
         types: list[str] = []
-        for _ in range(20):
+        turn_seq: int | None = None
+        for _ in range(40):
             event = _ws_json(ws.receive())
             if event is None:
                 continue
             types.append(event["type"])
             if event["type"] == "call.safety":
                 assert event["payload"]["risk"] in {"GREEN", "YELLOW", "ORANGE", "RED"}
+            if event["type"] == "call.state" and event["payload"].get("state") == "SPEAKING":
+                turn_seq = event["payload"].get("turn_seq")
+                # Browser must ack playback before LISTENING reopens.
+                if turn_seq is not None:
+                    ws.send_json(
+                        {
+                            "type": "voice.playback.completed",
+                            "turn_seq": turn_seq,
+                        }
+                    )
             if (
                 event["type"] == "call.state"
                 and event["payload"]["state"] == "LISTENING"

@@ -171,9 +171,7 @@ def compare_key(metrics: dict[str, Any]) -> tuple:
     red_recall = metrics.get("official_red_recall")
     red_recall_neg = -float(red_recall) if isinstance(red_recall, (int, float)) else 0.0
     official_macro_f1 = metrics.get("official_macro_f1")
-    macro_f1_neg = (
-        -float(official_macro_f1) if isinstance(official_macro_f1, (int, float)) else 0.0
-    )
+    macro_f1_neg = -float(official_macro_f1) if isinstance(official_macro_f1, (int, float)) else 0.0
     noisy_deg = metrics.get("official_noisy_degradation")
     # Prefer larger clean−noisy macro-F1 delta as worse (higher sort key).
     if isinstance(noisy_deg, dict):
@@ -396,9 +394,7 @@ def recommend_primary_fallback(
     else:
         # DEFINITIVE only when official eval completed with all configured models.
         status = (
-            "DEFINITIVE"
-            if official_eval_complete and official_red_available
-            else "PROVISIONAL"
+            "DEFINITIVE" if official_eval_complete and official_red_available else "PROVISIONAL"
         )
         rationale = build_recommendation_rationale(
             primary=primary,
@@ -420,7 +416,6 @@ def recommend_primary_fallback(
         "ranking": ranking,
         "candidate_roles": roles,
         "official_red_fn_available": official_red_available,
-        "official_eval_complete": official_eval_complete,
         "official_eval_complete": official_eval_complete,
         "thresholds": {
             "CRITICAL_SAFETY_FAIL_THRESHOLD": CRITICAL_SAFETY_FAIL_THRESHOLD,

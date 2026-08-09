@@ -242,8 +242,7 @@ class Database:
         self._apply_column_migrations()
         # Index that requires the `active` column — create after migrations.
         self._conn.execute(
-            "CREATE INDEX IF NOT EXISTS idx_chunks_active "
-            "ON document_chunks(account_id, active)"
+            "CREATE INDEX IF NOT EXISTS idx_chunks_active ON document_chunks(account_id, active)"
         )
         self._conn.execute(
             "INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)",

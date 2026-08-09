@@ -108,9 +108,7 @@ def main() -> int:
             reasons.append("stt_provider_is_stub")
         if settings.stt_device.lower() == "cuda" and stt_health.get("actual_device") != "cuda":
             ready = False
-            reasons.append(
-                f"stt_requested_cuda_actual_{stt_health.get('actual_device')}"
-            )
+            reasons.append(f"stt_requested_cuda_actual_{stt_health.get('actual_device')}")
         if not cuda12.get("ready"):
             ready = False
             reasons.append("cuda12_pip_libs_missing")
@@ -156,9 +154,7 @@ def main() -> int:
     emb_provider = os.environ.get("EMBEDDING_PROVIDER", "stub")
     report["embedding_provider"] = emb_provider
     report["embedding_status"] = (
-        "configured_stub"
-        if emb_provider == "stub"
-        else "configured_non_stub_not_probed_here"
+        "configured_stub" if emb_provider == "stub" else "configured_non_stub_not_probed_here"
     )
 
     report["reasons"] = reasons

@@ -79,9 +79,7 @@ class ConversationContext(BaseModel):
             "turn_index": self.turn_index,
             "phase": self.phase.value,
             "pending_question": (
-                self.pending_question.model_dump(mode="json")
-                if self.pending_question
-                else None
+                self.pending_question.model_dump(mode="json") if self.pending_question else None
             ),
             "answered_question_ids": list(self.answered_question_ids),
             "answered_intents": list(self.answered_intents),
@@ -90,9 +88,7 @@ class ConversationContext(BaseModel):
                 if self.pending_assistant_intent
                 else None
             ),
-            "recent_turn_ids": [
-                f"{t.role}:{t.turn_index}" for t in self.recent_turns
-            ],
+            "recent_turn_ids": [f"{t.role}:{t.turn_index}" for t in self.recent_turns],
             "previous_response_interrupted": self.previous_response_interrupted,
             "evidence_available": self.evidence_available,
             "greeting_done": self.greeting_done,
@@ -112,8 +108,7 @@ def infer_question_intent(question: str) -> tuple[str, list[str]]:
     q = question.casefold()
     # Intensity before course so "evolución + intensidad" counts as severity ask.
     if any(
-        tok in q
-        for tok in ("intens", "escala", "0 a 10", "0-10", "cuánto duele", "cuanto duele")
+        tok in q for tok in ("intens", "escala", "0 a 10", "0-10", "cuánto duele", "cuanto duele")
     ):
         return "pain_severity", ["pain_severity"]
     if any(tok in q for tok in ("empeor", "mejor", "evoluci", "sigue igual", "desde cu")):

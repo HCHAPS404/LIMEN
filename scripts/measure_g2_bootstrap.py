@@ -76,9 +76,7 @@ def _run(
             "cmd": cmd if isinstance(cmd, str) else " ".join(cmd),
             "exit_code": -1,
             "elapsed_s": round(elapsed, 2),
-            "stdout_tail": (exc.stdout or "")[-2000:]
-            if isinstance(exc.stdout, str)
-            else "",
+            "stdout_tail": (exc.stdout or "")[-2000:] if isinstance(exc.stdout, str) else "",
             "stderr_tail": f"TimeoutExpired:{timeout}",
             "ok": False,
         }
@@ -372,17 +370,27 @@ def main() -> int:
     report["g2_le_15_min"] = total_s <= 15 * 60
     report["success"] = success
     report["g2_status"] = (
-        "PASS" if success and report["g2_le_15_min"] and ready else "PARTIAL"
-        if success
-        else "FAIL"
+        "PASS" if success and report["g2_le_15_min"] and ready else "PARTIAL" if success else "FAIL"
     )
 
     _write_report(report, total_s=total_s, success=success)
     _cleanup(worktree, keep=args.keep_worktree, from_head=args.from_head)
-    print(json.dumps({k: report[k] for k in (
-        "total_s", "total_min", "g2_le_15_min", "READY_FOR_CHALLENGE_RUNTIME",
-        "g2_status", "success",
-    )}, indent=2))
+    print(
+        json.dumps(
+            {
+                k: report[k]
+                for k in (
+                    "total_s",
+                    "total_min",
+                    "g2_le_15_min",
+                    "READY_FOR_CHALLENGE_RUNTIME",
+                    "g2_status",
+                    "success",
+                )
+            },
+            indent=2,
+        )
+    )
     return 0 if success else 1
 
 

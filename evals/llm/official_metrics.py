@@ -114,9 +114,7 @@ def compute_official_metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
     per_class = _per_class_prf(NORMALIZED_LABELS, tp, fp, fn)
     f1_values = [v["f1"] for v in per_class.values() if v["f1"] is not None]
     macro_f1 = sum(f1_values) / len(f1_values) if f1_values else None
-    red_recall = (
-        (red_total - red_fn) / red_total if red_total else None
-    )
+    red_recall = (red_total - red_fn) / red_total if red_total else None
 
     return {
         "n": len(usable),
@@ -131,9 +129,7 @@ def compute_official_metrics(rows: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def compute_layer_metrics(
-    rows: list[dict[str, Any]], *, layer: str
-) -> dict[str, Any]:
+def compute_layer_metrics(rows: list[dict[str, Any]], *, layer: str) -> dict[str, Any]:
     subset = [r for r in rows if r.get("layer") == layer]
     metrics = compute_official_metrics(subset)
     metrics["layer"] = layer
@@ -144,6 +140,7 @@ def compute_degradation(
     clean_metrics: dict[str, Any], noisy_metrics: dict[str, Any]
 ) -> dict[str, Any]:
     """Clean → noisy degradation (positive = worse on noisy)."""
+
     def delta(key: str) -> float | None:
         a = clean_metrics.get(key)
         b = noisy_metrics.get(key)

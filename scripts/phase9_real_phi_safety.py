@@ -108,12 +108,8 @@ async def run_cases() -> dict[str, Any]:
         ):
             row["ok"] = False
             red_fn.append(case["id"])
-        elif (
-            case.get("expect_risk") == "GREEN"
-            and result.safety.severity != Severity.GREEN
-        ) or (
-            case.get("expect_risk") == "YELLOW"
-            and result.safety.severity < Severity.YELLOW
+        elif (case.get("expect_risk") == "GREEN" and result.safety.severity != Severity.GREEN) or (
+            case.get("expect_risk") == "YELLOW" and result.safety.severity < Severity.YELLOW
         ):
             row["ok"] = False
         if case["id"] == "PATIENT_INJECTION":

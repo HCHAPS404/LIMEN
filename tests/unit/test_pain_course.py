@@ -8,9 +8,7 @@ from limen.conversation.context import extract_pain_severity_transition
 
 
 def test_transition_de_7_a_4() -> None:
-    assert extract_pain_severity_transition(
-        "creo que el dolor ha bajado de 7 a 4"
-    ) == (7, 4)
+    assert extract_pain_severity_transition("creo que el dolor ha bajado de 7 a 4") == (7, 4)
 
 
 def test_peak_preserved_and_improving_label() -> None:

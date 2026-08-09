@@ -92,7 +92,8 @@ def ensure_cuda12_library_path() -> dict[str, object]:
     Safe to call multiple times. Does not modify global /usr libraries.
     """
     info = cuda12_libs_ready()
-    dirs = [Path(p) for p in (info.get("lib_dirs") or [])]  # type: ignore[union-attr]
+    raw_dirs = info.get("lib_dirs")
+    dirs = [Path(str(p)) for p in raw_dirs] if isinstance(raw_dirs, list) else []
     if not dirs:
         return {**info, "applied": False, "reason": "no_cuda12_pip_libs"}
 
@@ -115,8 +116,7 @@ def ensure_cuda12_library_path() -> dict[str, object]:
                     continue
                 # Prefer versioned CUDA 12 / cuDNN 9 sonames.
                 if not any(
-                    tag in lib.name
-                    for tag in ("cublas", "cudnn", "cudart", "nvrtc", "nvJitLink")
+                    tag in lib.name for tag in ("cublas", "cudnn", "cudart", "nvrtc", "nvJitLink")
                 ):
                     continue
                 try:

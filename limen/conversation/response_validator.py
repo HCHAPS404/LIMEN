@@ -202,13 +202,17 @@ def validate_patient_response(
         if not any(p.search(cleaned) for p in _ESCALATION_MARKERS):
             reasons.append("escalation_not_communicated")
 
-    if safety.severity >= Severity.YELLOW and not safety.escalate and any(
-        p.search(cleaned)
-        for p in (
-            _DOWNGRADE_OK_PATTERNS[0],
-            _DOWNGRADE_OK_PATTERNS[1],
-            _DOWNGRADE_OK_PATTERNS[5],
-            _DOWNGRADE_OK_PATTERNS[7],
+    if (
+        safety.severity >= Severity.YELLOW
+        and not safety.escalate
+        and any(
+            p.search(cleaned)
+            for p in (
+                _DOWNGRADE_OK_PATTERNS[0],
+                _DOWNGRADE_OK_PATTERNS[1],
+                _DOWNGRADE_OK_PATTERNS[5],
+                _DOWNGRADE_OK_PATTERNS[7],
+            )
         )
     ):
         reasons.append("yellow_downgrade_contradiction")
