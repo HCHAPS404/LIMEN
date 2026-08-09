@@ -15,6 +15,12 @@ from limen.conversation.context import (
     extract_pain_severity_mention,
     infer_question_intent,
 )
+from limen.conversation.session_intent import (
+    addresses_assistant_by_name,
+    assistant_asked_preferred_name,
+    extract_preferred_name,
+    is_assistant_persona_name,
+)
 from limen.safety.decision import SafetyDecision, Severity
 
 
@@ -117,6 +123,19 @@ def update_context_after_patient(
     )
     ctx.recent_turns = ctx.recent_turns[-max_recent_turns:]
 
+    # Preferred name is presentation-only (never a clinical finding).
+    # Never promote an assistant persona name (e.g. patient said "Hola Anika").
+    if not ctx.patient_display_name:
+        preferred = extract_preferred_name(user_text)
+        if preferred and not is_assistant_persona_name(preferred):
+            if not addresses_assistant_by_name(
+                user_text, assistant_name=ctx.assistant_display_name
+            ):
+                ctx.patient_display_name = preferred
+                ctx.asked_preferred_name = True
+    elif is_assistant_persona_name(ctx.patient_display_name):
+        ctx.patient_display_name = None
+
     pending = ctx.pending_question
     if pending is not None:
         answered = False
@@ -181,6 +200,9 @@ def update_context_after_assistant(
         )
     )
     ctx.recent_turns = ctx.recent_turns[-max_recent_turns:]
+
+    if assistant_asked_preferred_name(assistant_text):
+        ctx.asked_preferred_name = True
 
     asked: str | None = None
     if open_questions and not (safety.escalate or safety.severity >= Severity.RED):

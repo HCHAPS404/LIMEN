@@ -9,11 +9,11 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  /* Canvas — deep charcoal void. Enough depth for glass and light to read. */
-  --limen-bg-0: #05070b;
-  --limen-bg-1: #0a1018;
-  --limen-bg-2: #111925;
-  --limen-bg-3: #182333;
+  /* Canvas — luminous midnight, not flat black. Depth for glass + soft light. */
+  --limen-bg-0: #0c1422;
+  --limen-bg-1: #121c2e;
+  --limen-bg-2: #1a263c;
+  --limen-bg-3: #24334d;
 
   /* Intelligence / evidence / audit */
   --limen-cyan: #2aa8a8;
@@ -38,10 +38,10 @@
 
   /* Atmosphere light — restrained, never a control color.
      The `--atmo-*` mix ratios let one gradient definition serve both themes. */
-  --limen-beam: #6a8aaa;
-  --atmo-beam: 14%;
-  --atmo-cyan: 8%;
-  --atmo-teal: 10%;
+  --limen-beam: #7fa3c4;
+  --atmo-beam: 24%;
+  --atmo-cyan: 15%;
+  --atmo-teal: 16%;
 
   /* Content — ordered by prominence, not by lightness. */
   --limen-white: #f4f7f9;
@@ -66,28 +66,28 @@
 
   /* High-contrast solid action: fill plus the ink that stays legible on it. */
   --limen-inverse-fill: #f4f7f9;
-  --limen-inverse-ink: #05070b;
+  --limen-inverse-ink: #0c1422;
   /* Ink on a saturated accent fill (action, coral). Stays light in both themes
      because accent fills are mid-dark in both. */
   --limen-ink-on-accent: #f7fafc;
 
   /* Glass material — translucent enough that blur and atmosphere read clearly. */
-  --glass-solid: rgba(8, 12, 18, 0.78);
-  --glass-surface: rgba(16, 26, 40, 0.42);
-  --glass-surface-strong: rgba(12, 18, 28, 0.58);
-  --glass-inspector: rgba(12, 18, 28, 0.5);
-  --glass-modal: rgba(6, 10, 16, 0.72);
-  --glass-border: rgba(230, 240, 245, 0.14);
-  --glass-border-strong: rgba(230, 240, 245, 0.22);
-  --glass-highlight: rgba(255, 255, 255, 0.06);
-  --glass-sheen: rgba(255, 255, 255, 0.14);
+  --glass-solid: rgba(14, 22, 36, 0.55);
+  --glass-surface: rgba(24, 36, 56, 0.3);
+  --glass-surface-strong: rgba(18, 28, 44, 0.4);
+  --glass-inspector: rgba(18, 28, 44, 0.38);
+  --glass-modal: rgba(10, 16, 28, 0.62);
+  --glass-border: rgba(230, 240, 245, 0.12);
+  --glass-border-strong: rgba(230, 240, 245, 0.2);
+  --glass-highlight: rgba(255, 255, 255, 0.07);
+  --glass-sheen: rgba(255, 255, 255, 0.12);
 
   --shadow-panel:
     inset 0 1px 0 rgba(255, 255, 255, 0.07),
-    0 18px 48px rgba(0, 0, 0, 0.28);
+    0 14px 40px rgba(4, 10, 22, 0.16);
   --shadow-float:
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 28px 80px rgba(0, 0, 0, 0.36);
+    0 22px 64px rgba(4, 10, 22, 0.22);
 }
 
 /* Light theme — same structure, inverted ground. Clinical semantics keep their
@@ -188,7 +188,7 @@
   --rail-width: 256px;
   --rail-width-collapsed: 88px;
   --inspector-width: 360px;
-  --header-height: 64px;
+  --header-height: 72px;
 
   --motion-fast: 180ms;
   --motion-base: 220ms;

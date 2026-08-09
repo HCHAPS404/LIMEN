@@ -78,6 +78,102 @@ async def test_pipeline_skips_retrieval_naturally_without_findings() -> None:
     assert result.evidence == []
 
 
+async def test_pipeline_opening_greeting_not_clinical_boilerplate() -> None:
+    """Phatic first turn must not dump GREEN recovery + no-evidence hedging."""
+    from limen.conversation.context import ConversationContext
+
+    orch = ConversationOrchestrator(retrieval=_FakeRetrieval(), llm=None)
+    result = await orch.handle_text_turn(
+        call_id="call-greet",
+        account_id="acct-1",
+        user_text="Muy buenas tardes.",
+        clinical_state=ClinicalState(),
+        conversation=ConversationContext(
+            call_id="call-greet",
+            assistant_display_name="Anikka",
+            assistant_gender="female",
+        ),
+    )
+    assert "recuperación esperada" not in result.assistant_text
+    assert "documentación adicional" not in result.assistant_text
+    assert "Anikka" in result.assistant_text or "LIMEN" in result.assistant_text
+    assert result.response_meta.get("response_source") == "opening_template"
+
+
+async def test_pipeline_hola_anika_is_assistant_not_patient() -> None:
+    from limen.conversation.context import ConversationContext
+
+    orch = ConversationOrchestrator(retrieval=_FakeRetrieval(), llm=StubLLMProvider())
+    result = await orch.handle_text_turn(
+        call_id="call-anika",
+        account_id="acct-1",
+        user_text="Hola, Anika.",
+        clinical_state=ClinicalState(),
+        conversation=ConversationContext(
+            call_id="call-anika",
+            assistant_display_name="Anikka",
+            assistant_gender="female",
+            assistant_persona_id="anikka",
+        ),
+    )
+    assert result.response_meta.get("response_source") == "opening_template"
+    assert "Soy Anikka" in result.assistant_text
+    assert ", Anika" not in result.assistant_text
+    assert result.conversation is not None
+    assert result.conversation.patient_display_name is None
+
+
+async def test_pipeline_terminar_reunion_ends_session() -> None:
+    from limen.conversation.context import ConversationContext
+
+    orch = ConversationOrchestrator(retrieval=_FakeRetrieval(), llm=StubLLMProvider())
+    result = await orch.handle_text_turn(
+        call_id="call-bye",
+        account_id="acct-1",
+        user_text="Quiero terminar la reunión.",
+        clinical_state=ClinicalState(),
+        conversation=ConversationContext(
+            call_id="call-bye",
+            assistant_display_name="Anikka",
+            greeting_done=True,
+        ),
+    )
+    assert result.response_meta.get("response_source") == "farewell_template"
+    assert result.response_meta.get("end_session") is True
+    assert result.response_meta.get("call_end_reason") == "patient_farewell"
+    assert "Hasta pronto" in result.assistant_text
+
+
+async def test_pipeline_retrieves_for_knowledge_protocol_question() -> None:
+    """G5-style admin/protocol questions must retrieve even with empty clinical state."""
+    retrieval = _FakeRetrieval(
+        [
+            EvidenceChunk(
+                document_id="doc-g5",
+                chunk_id="chunk-g5",
+                text="El marcador administrativo es LUNA-73 (protocolo ZXQ-921).",
+                source_name="g5.txt",
+                page=1,
+                score=0.9,
+            )
+        ]
+    )
+    orch = ConversationOrchestrator(retrieval=retrieval, llm=StubLLMProvider())
+    result = await orch.handle_text_turn(
+        call_id="call-g5",
+        account_id="acct-1",
+        user_text="¿Cuál es el marcador administrativo del protocolo ZXQ-921?",
+        clinical_state=ClinicalState(),
+    )
+    assert result.clinical_state.findings == []
+    assert result.uncertainty is not None
+    assert result.uncertainty.should_retrieve is False
+    assert retrieval.calls == 1
+    assert result.metrics["rag_queries"] == 1
+    assert len(result.evidence) == 1
+    assert "LUNA-73" in result.evidence[0].text
+
+
 async def test_escalation_uses_template_not_llm() -> None:
     orch = ConversationOrchestrator(llm=StubLLMProvider())
     result = await orch.handle_text_turn(

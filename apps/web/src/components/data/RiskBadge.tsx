@@ -13,9 +13,9 @@ type RiskBadgeProps = {
 };
 
 const sizes: Record<RiskBadgeSize, string> = {
-  sm: "px-2 py-1 text-[0.6875rem] gap-1.5",
-  md: "px-2.5 py-1.5 text-[0.75rem] gap-2",
-  lg: "px-3.5 py-2 text-[0.875rem] gap-2.5",
+  sm: "px-2 py-1 type-label gap-1.5",
+  md: "px-2.5 py-1.5 type-label gap-2",
+  lg: "px-3.5 py-2 type-body-s gap-2.5 !normal-case !tracking-[-0.01em]",
 };
 
 const iconSizes: Record<RiskBadgeSize, number> = { sm: 12, md: 14, lg: 18 };
@@ -33,7 +33,7 @@ export function RiskBadge({
     <span className={cn("inline-flex items-center gap-2", className)}>
       <span
         className={cn(
-          "inline-flex items-center rounded-xs border font-semibold tracking-[0.09em] uppercase",
+          "inline-flex items-center rounded-sm border font-semibold tracking-[0.08em] uppercase",
           view.className,
           sizes[size],
         )}
@@ -45,7 +45,7 @@ export function RiskBadge({
         <span className="type-body-s text-text-2">{view.meaning}</span>
       )}
       <span className="sr-only">
-        Clinical risk {view.label}: {view.meaning}
+        Riesgo clínico {view.label}: {view.meaning}
       </span>
     </span>
   );

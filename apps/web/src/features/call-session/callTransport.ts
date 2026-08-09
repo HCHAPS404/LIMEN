@@ -33,7 +33,18 @@ function applyRealtimeEvent(event: RealtimeEvent, playback: AgentPlayback): void
   switch (event.type) {
     case "call.state": {
       const next = event.payload.state as CallPhase;
+      // Ignore premature LISTENING while TTS audio is still playing (echo guard).
+      if (next === "LISTENING" && playback.playing) {
+        (
+          playback as AgentPlayback & { _deferListening?: boolean }
+        )._deferListening = true;
+        break;
+      }
       store.applyServerPhase(next);
+      const displayName = event.payload.voice_display_name;
+      if (typeof displayName === "string" && displayName.trim()) {
+        store.setAssistantDisplayName(displayName.trim());
+      }
       break;
     }
     case "call.transcript":
@@ -71,6 +82,21 @@ function applyRealtimeEvent(event: RealtimeEvent, playback: AgentPlayback): void
       break;
     case "call.ended":
       store.applyServerPhase("ENDED");
+      // Farewell / idle / max-duration — manual hang-up plays its own cue.
+      {
+        const reason = String(event.payload.reason ?? event.payload.call_end_reason ?? "");
+        if (
+          reason === "patient_farewell" ||
+          reason === "patient_wrapup" ||
+          reason === "idle_prompt_timeout" ||
+          reason === "max_duration" ||
+          reason === "escalation"
+        ) {
+          void import("../../audio/call-cues").then(({ playCallEndCue }) => {
+            void playCallEndCue();
+          });
+        }
+      }
       break;
     default:
       break;
@@ -99,6 +125,19 @@ export function createCallTransport(playback: AgentPlayback): CallTransport {
     );
   };
   playback.onPlaybackCompleted = (meta) => {
+    const deferred = (
+      playback as AgentPlayback & { _deferListening?: boolean }
+    )._deferListening;
+    if (deferred) {
+      (
+        playback as AgentPlayback & { _deferListening?: boolean }
+      )._deferListening = false;
+    }
+    const store = useCallStore.getState();
+    // Local belt: if still SPEAKING when audio ends, open listening immediately.
+    if (store.phase === "SPEAKING" || deferred) {
+      store.applyServerPhase("LISTENING");
+    }
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
     socket.send(
       JSON.stringify({

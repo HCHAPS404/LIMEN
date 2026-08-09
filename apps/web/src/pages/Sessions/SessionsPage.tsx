@@ -40,6 +40,7 @@ export function SessionsPage() {
           <div className="p-5">
             {endpointMissing ? (
               <EmptyState
+                density="inline"
                 eyebrow={t("title")}
                 title={t("loadError")}
                 description={describeError(calls.error)}
@@ -57,6 +58,7 @@ export function SessionsPage() {
         {calls.isSuccess &&
           (calls.data.length === 0 ? (
             <EmptyState
+              density="inline"
               eyebrow={t("title")}
               title={t("emptyTitle")}
               description={t("emptyBody")}

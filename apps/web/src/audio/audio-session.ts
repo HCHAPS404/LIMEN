@@ -20,6 +20,10 @@ export type UtterancePayload = {
 export type AudioSession = {
   start: () => Promise<void>;
   stop: () => void;
+  /** Temporarily stop listening/playback without tearing down the call. */
+  pause: () => void;
+  resume: () => void;
+  readonly paused: boolean;
   onUtterance: ((payload: UtterancePayload) => void) | null;
   onBargeIn: (() => void) | null;
   readonly capture: MicrophoneCapture | null;
@@ -32,6 +36,11 @@ const LEVEL_POLL_MS = ENDPOINTING.levelPollMs;
 const MAX_UTTERANCE_MS = ENDPOINTING.maxUtteranceMs;
 const MIN_UTTERANCE_MS = ENDPOINTING.minUtteranceMs;
 const BARGE_IN_SPEECH_FRAMES = ENDPOINTING.bargeInSpeechFrames;
+const BARGE_IN_LEVEL = ENDPOINTING.bargeInSpeechThreshold;
+const POST_PLAYBACK_HOLDOFF_MS = ENDPOINTING.postPlaybackHoldoffMs;
+const POST_BARGE_SILENCE_FRAMES = ENDPOINTING.postBargeSilenceFrames;
+
+type BargeArm = "idle" | "wait_silence" | "armed";
 
 export function createAudioSession(): AudioSession {
   let capture: MicrophoneCapture | null = null;
@@ -47,12 +56,48 @@ export function createAudioSession(): AudioSession {
   let onBargeIn: (() => void) | null = null;
   let audioConstraintsApplied: Record<string, boolean | string> | null = null;
   let bargeSpeechRun = 0;
+  let ignoreSpeechUntil = 0;
+  let bargeArm: BargeArm = "idle";
+  let postBargeSilenceRun = 0;
+  let unsubPlayback: (() => void) | null = null;
+  /** Ring buffer of recent mic PCM so VAD open does not clip "Hola…". */
+  let preRoll: Float32Array[] = [];
+  let preRollSamples = 0;
+  let paused = false;
 
   const store = () => useCallStore.getState();
 
+  const setMicTracksEnabled = (enabled: boolean) => {
+    const stream = capture?.stream;
+    if (!stream) return;
+    for (const track of stream.getAudioTracks()) {
+      track.enabled = enabled;
+    }
+  };
+
+  const discardRecorder = () => {
+    recording = false;
+    pcmChunks = [];
+  };
+
+  const pushPreRoll = (chunk: Float32Array) => {
+    if (!capture) return;
+    const maxSamples = Math.ceil(
+      (capture.context.sampleRate * ENDPOINTING.preRollMs) / 1000,
+    );
+    preRoll.push(new Float32Array(chunk));
+    preRollSamples += chunk.length;
+    while (preRollSamples > maxSamples && preRoll.length > 0) {
+      const dropped = preRoll.shift();
+      if (dropped) preRollSamples -= dropped.length;
+    }
+  };
+
   const startRecorder = () => {
     if (!capture || recording) return;
-    pcmChunks = [];
+    pcmChunks = preRoll.length > 0 ? [...preRoll] : [];
+    preRoll = [];
+    preRollSamples = 0;
     utteranceStartedAt = performance.now();
     recording = true;
   };
@@ -73,40 +118,103 @@ export function createAudioSession(): AudioSession {
     }
   };
 
+  const beginPostPlaybackHoldoff = () => {
+    ignoreSpeechUntil = performance.now() + POST_PLAYBACK_HOLDOFF_MS;
+    if (recording) discardRecorder();
+  };
+
+  const triggerBargeIn = () => {
+    const levelNow = capture?.readLevel() ?? 0;
+    const alreadySpeaking =
+      store().patientSpeaking || levelNow >= BARGE_IN_LEVEL * 0.85;
+    playback.stop();
+    store().markLastAgentTurnInterrupted();
+    store().setPhase("INTERRUPTED");
+    onBargeIn?.();
+    store().setPhase("LISTENING");
+    bargeSpeechRun = 0;
+    // Keep capturing the interrupting utterance instead of forcing a silence gap.
+    if (alreadySpeaking) {
+      // Drop any TTS-bleed pre-roll; capture from the interrupt itself.
+      preRoll = [];
+      preRollSamples = 0;
+      bargeArm = "idle";
+      ignoreSpeechUntil = 0;
+      store().setPatientSpeaking(true);
+      if (!recording) startRecorder();
+    } else {
+      store().setPatientSpeaking(false);
+      discardRecorder();
+      bargeArm = "wait_silence";
+      postBargeSilenceRun = 0;
+      ignoreSpeechUntil = performance.now() + 120;
+    }
+  };
+
   const poll = () => {
-    if (!capture || !vad) return;
+    if (!capture || !vad || paused) return;
     const level = capture.readLevel();
     store().setMicLevel(level);
 
     const speaking = vad.push(level) === "speech";
     const previous = store().patientSpeaking;
     const phase = store().phase;
+    const now = performance.now();
+    // Treat local playback as SPEAKING even if the server already said LISTENING.
+    const agentAudible = phase === "SPEAKING" || playback.playing;
 
-    // While assistant is speaking, require sustained speech before barge-in
-    // (echo / brief spikes must not stop playback).
-    if (phase === "SPEAKING") {
-      if (speaking) {
+    // While assistant is speaking, require sustained energy before barge-in.
+    if (agentAudible) {
+      // New agent turn clears prior post-barge arming so the next interrupt works.
+      if (bargeArm !== "idle") {
+        bargeArm = "idle";
+        postBargeSilenceRun = 0;
+      }
+      const deliberate =
+        level >= BARGE_IN_LEVEL ||
+        (speaking && level >= ENDPOINTING.speechThreshold);
+      if (deliberate) {
         bargeSpeechRun += 1;
       } else {
         bargeSpeechRun = 0;
       }
       if (bargeSpeechRun >= BARGE_IN_SPEECH_FRAMES) {
-        playback.stop();
-        store().markLastAgentTurnInterrupted();
-        store().setPhase("INTERRUPTED");
-        onBargeIn?.();
-        store().setPhase("LISTENING");
-        store().setPatientSpeaking(true);
-        bargeSpeechRun = 0;
-        startRecorder();
+        triggerBargeIn();
       }
       return;
     }
 
     bargeSpeechRun = 0;
 
+    if (now < ignoreSpeechUntil) {
+      if (recording) discardRecorder();
+      return;
+    }
+
+    // Post-barge arming: silence first, then start on the next speech run.
+    if (bargeArm === "wait_silence") {
+      if (!speaking && level < ENDPOINTING.silenceThreshold) {
+        postBargeSilenceRun += 1;
+        if (postBargeSilenceRun >= POST_BARGE_SILENCE_FRAMES) {
+          bargeArm = "armed";
+          postBargeSilenceRun = 0;
+        }
+      } else {
+        postBargeSilenceRun = 0;
+      }
+      return;
+    }
+
+    if (bargeArm === "armed") {
+      if (speaking) {
+        bargeArm = "idle";
+        store().setPatientSpeaking(true);
+        startRecorder();
+      }
+      return;
+    }
+
     if (speaking === previous) {
-      // Still track recording end even if patientSpeaking flag unchanged.
       if (!speaking && recording && phase === "LISTENING") {
         stopRecorder();
       }
@@ -144,7 +252,11 @@ export function createAudioSession(): AudioSession {
     get audioConstraintsApplied() {
       return audioConstraintsApplied;
     },
+    get paused() {
+      return paused;
+    },
     async start() {
+      paused = false;
       store().setPhase("REQUESTING_MIC");
       try {
         capture = await openMicrophone();
@@ -161,8 +273,20 @@ export function createAudioSession(): AudioSession {
         const silent = ctx.createGain();
         silent.gain.value = 0;
         processor.onaudioprocess = (event) => {
-          if (!recording) return;
+          if (paused) return;
           const input = event.inputBuffer.getChannelData(0);
+          if (!recording) {
+            // Do not buffer TTS bleed as "leading speech" for the next utterance.
+            const agentAudible =
+              store().phase === "SPEAKING" || playback.playing;
+            if (agentAudible) {
+              preRoll = [];
+              preRollSamples = 0;
+            } else {
+              pushPreRoll(input);
+            }
+            return;
+          }
           pcmChunks.push(new Float32Array(input));
           if (performance.now() - utteranceStartedAt > MAX_UTTERANCE_MS) {
             stopRecorder();
@@ -171,6 +295,11 @@ export function createAudioSession(): AudioSession {
         micSource.connect(processor);
         processor.connect(silent);
         silent.connect(ctx.destination);
+
+        unsubPlayback?.();
+        unsubPlayback = playback.subscribe((playing) => {
+          if (!playing) beginPostPlaybackHoldoff();
+        });
 
         store().setPhase("LISTENING");
         timer = setInterval(poll, LEVEL_POLL_MS);
@@ -186,9 +315,42 @@ export function createAudioSession(): AudioSession {
         });
       }
     },
+    pause() {
+      if (!capture || paused) return;
+      paused = true;
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+      discardRecorder();
+      preRoll = [];
+      preRollSamples = 0;
+      bargeSpeechRun = 0;
+      bargeArm = "idle";
+      playback.stop();
+      setMicTracksEnabled(false);
+      store().setMicLevel(0);
+      store().setPatientSpeaking(false);
+    },
+    resume() {
+      if (!capture || !paused) return;
+      paused = false;
+      setMicTracksEnabled(true);
+      vad?.reset();
+      if (!timer) {
+        timer = setInterval(poll, LEVEL_POLL_MS);
+      }
+      const phase = store().phase;
+      if (phase !== "ENDED" && phase !== "ERROR" && phase !== "IDLE") {
+        store().setPhase("LISTENING");
+      }
+    },
     stop() {
+      paused = false;
       if (timer) clearInterval(timer);
       timer = null;
+      unsubPlayback?.();
+      unsubPlayback = null;
       if (recording) stopRecorder();
       try {
         processor?.disconnect();
@@ -204,6 +366,9 @@ export function createAudioSession(): AudioSession {
       capture = null;
       audioConstraintsApplied = null;
       bargeSpeechRun = 0;
+      bargeArm = "idle";
+      postBargeSilenceRun = 0;
+      ignoreSpeechUntil = 0;
       store().setMicLevel(0);
       store().setPatientSpeaking(false);
     },

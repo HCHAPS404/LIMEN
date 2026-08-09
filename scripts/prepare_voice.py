@@ -16,19 +16,24 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-PIPER_VOICE = "es_MX-claude-high"
+from limen.voice.personas import VOICE_PERSONAS, list_personas  # noqa: E402
+
+PIPER_VOICE = "es_MX-claude-high"  # default / Elena
 PIPER_DIR = ROOT / "runtime" / "models" / "piper"
-# Official rhasspy/piper-voices (MIT) — Mexican Spanish female, high quality.
-PIPER_FILES = {
-    f"{PIPER_VOICE}.onnx": (
-        "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/"
-        f"es/es_MX/claude/high/{PIPER_VOICE}.onnx"
-    ),
-    f"{PIPER_VOICE}.onnx.json": (
-        "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/"
-        f"es/es_MX/claude/high/{PIPER_VOICE}.onnx.json"
-    ),
-}
+HF_BASE = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0"
+
+
+def _piper_files() -> dict[str, str]:
+    files: dict[str, str] = {}
+    for persona in list_personas():
+        stem = persona.piper_voice
+        sub = persona.huggingface_subdir
+        files[f"{stem}.onnx"] = f"{HF_BASE}/{sub}/{stem}.onnx"
+        files[f"{stem}.onnx.json"] = f"{HF_BASE}/{sub}/{stem}.onnx.json"
+    return files
+
+
+PIPER_FILES = _piper_files()
 WHISPER_ID = "Systran/faster-whisper-small"
 
 
@@ -38,6 +43,23 @@ def _download(url: str, dest: Path) -> None:
     print(f"Downloading {url} → {dest}")
     urllib.request.urlretrieve(url, tmp)  # noqa: S310 — fixed HTTPS model URLs
     tmp.replace(dest)
+    if dest.name.endswith(".onnx.json"):
+        _normalize_piper_config(dest)
+
+
+def _normalize_piper_config(path: Path) -> None:
+    """Some upstream JSONs ship invalid enum strings for newer piper-tts."""
+    import json
+
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return
+    raw = data.get("phoneme_type")
+    if isinstance(raw, str) and raw.startswith("PhonemeType."):
+        data["phoneme_type"] = raw.split(".", 1)[-1].lower()
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(f"Normalized phoneme_type in {path.name}")
 
 
 def prepare_piper(*, force: bool = False) -> Path:
@@ -49,12 +71,26 @@ def prepare_piper(*, force: bool = False) -> Path:
             continue
         _download(url, path)
         print(f"OK downloaded: {path} ({path.stat().st_size} bytes)")
-    onnx = PIPER_DIR / f"{PIPER_VOICE}.onnx"
-    cfg = PIPER_DIR / f"{PIPER_VOICE}.onnx.json"
-    if not onnx.is_file() or not cfg.is_file():
-        raise SystemExit("Piper voice assets incomplete")
-    return onnx
-
+    missing = [
+        p.id
+        for p in list_personas()
+        if not (PIPER_DIR / f"{p.piper_voice}.onnx").is_file()
+        or not (PIPER_DIR / f"{p.piper_voice}.onnx.json").is_file()
+    ]
+    if missing:
+        raise SystemExit(f"Piper voice assets incomplete for personas: {missing}")
+    note = PIPER_DIR / "LICENSE_NOTE.txt"
+    note.write_text(
+        "Piper voices from rhasspy/piper-voices (see each MODEL_CARD for license).\n"
+        "Personas: "
+        + ", ".join(f"{p.display_name}→{p.piper_voice}" for p in list_personas())
+        + "\n"
+        "Source: https://huggingface.co/rhasspy/piper-voices\n"
+        "Do not commit *.onnx weights to git.\n",
+        encoding="utf-8",
+    )
+    print("Personas:", ", ".join(VOICE_PERSONAS))
+    return PIPER_DIR / f"{PIPER_VOICE}.onnx"
 
 def prepare_whisper(*, download: bool = True) -> dict[str, object]:
     """Verify faster-whisper import; optionally trigger model download via load."""
@@ -131,7 +167,10 @@ def prepare_whisper(*, download: bool = True) -> dict[str, object]:
 
 def write_license_note(path: Path) -> None:
     path.write_text(
-        "Piper voice es_MX-claude-high from rhasspy/piper-voices (MIT).\n"
+        "Piper voices from rhasspy/piper-voices (see each MODEL_CARD for license).\n"
+        "Personas: "
+        + ", ".join(f"{p.display_name}→{p.piper_voice}" for p in list_personas())
+        + "\n"
         "Source: https://huggingface.co/rhasspy/piper-voices\n"
         "Do not commit *.onnx weights to git.\n",
         encoding="utf-8",

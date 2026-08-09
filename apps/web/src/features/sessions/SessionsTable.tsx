@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 
 import type { CallSummary } from "../../api/types";
 import { RiskBadge } from "../../components/data/RiskBadge";
-import { StatusChip } from "../../components/data/StatusChip";
 import { formatDuration, formatTimestamp } from "../../lib/format";
 
 export function SessionsTable({ calls }: { calls: CallSummary[] }) {
@@ -30,7 +29,7 @@ export function SessionsTable({ calls }: { calls: CallSummary[] }) {
               <th
                 key={header || `spacer-${index}`}
                 scope="col"
-                className="type-label border-b border-glass-border px-3 py-2.5 whitespace-nowrap"
+                className="type-label border-b border-[color-mix(in_oklab,var(--glass-border)_55%,transparent)] px-4 py-3 whitespace-nowrap"
               >
                 {header}
               </th>
@@ -41,49 +40,49 @@ export function SessionsTable({ calls }: { calls: CallSummary[] }) {
           {calls.map((call) => (
             <tr
               key={call.call_id}
-              className="border-b border-glass-border align-middle transition-colors duration-[var(--motion-fast)] last:border-b-0 hover:bg-[var(--glass-highlight)]"
+              className="border-b border-[color-mix(in_oklab,var(--glass-border)_40%,transparent)] align-middle transition-colors duration-[var(--motion-fast)] last:border-b-0 hover:bg-[var(--glass-highlight)]"
             >
-              <td className="type-body-s max-w-[8rem] truncate tabular px-3 py-3 text-text-2">
+              <td className="type-body-s max-w-[8rem] truncate tabular px-4 py-4 text-text-2">
                 {call.call_id.slice(0, 8)}
               </td>
-              <td className="type-body px-3 py-3 text-ice">
+              <td className="type-body px-4 py-4 text-ice">
                 {call.patient_alias}
               </td>
-              <td className="type-body-s px-3 py-3 text-text-2">
+              <td className="type-body-s px-4 py-4 text-text-2">
                 {call.procedure ?? t("unknown")}
               </td>
-              <td className="type-body-s tabular px-3 py-3 text-text-2">
+              <td className="type-body-s tabular px-4 py-4 text-text-2">
                 {call.postoperative_day ?? "—"}
               </td>
-              <td className="type-body-s px-3 py-3 text-text-2">
+              <td className="type-body-s px-4 py-4 text-text-2">
                 {formatTimestamp(call.started_at)}
               </td>
-              <td className="px-3 py-3">
+              <td className="px-4 py-4">
                 <RiskBadge risk={call.final_risk} size="sm" />
               </td>
-              <td className="px-3 py-3">
+              <td className="px-4 py-4">
                 {call.escalated ? (
-                  <StatusChip tone="escalation">{t("yes")}</StatusChip>
+                  <span className="type-body-s font-medium text-coral">
+                    {t("yes")}
+                  </span>
                 ) : (
-                  <StatusChip>{t("no")}</StatusChip>
+                  <span className="type-body-s text-text-3">{t("no")}</span>
                 )}
               </td>
-              <td className="type-body-s tabular px-3 py-3 text-text-2">
+              <td className="type-body-s tabular px-4 py-4 text-text-2">
                 {call.duration_seconds !== null &&
                 call.duration_seconds !== undefined
                   ? formatDuration(call.duration_seconds)
                   : "—"}
               </td>
-              <td className="px-3 py-3 text-right">
-                <div className="flex flex-col items-end gap-1 sm:flex-row sm:justify-end sm:gap-3">
-                  <Link
-                    to={`/trace/${call.call_id}`}
-                    className="type-body-s inline-flex items-center gap-1 text-violet"
-                  >
-                    {t("openTrace")}
-                    <ChevronRight aria-hidden size={14} />
-                  </Link>
-                </div>
+              <td className="px-4 py-4 text-right">
+                <Link
+                  to={`/trace/${call.call_id}`}
+                  className="type-body-s inline-flex items-center gap-1 text-violet"
+                >
+                  {t("openTrace")}
+                  <ChevronRight aria-hidden size={14} />
+                </Link>
               </td>
             </tr>
           ))}

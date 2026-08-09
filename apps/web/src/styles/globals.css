@@ -19,7 +19,7 @@ body,
 body {
   margin: 0;
   font-family: var(--font-ui);
-  font-size: 0.9375rem;
+  font-size: 1rem;
   line-height: 1.55;
   color: var(--limen-ice);
   background-color: var(--limen-bg-0);
@@ -28,7 +28,8 @@ body {
 }
 
 /* One light source behind the workspace, held far below the data layer.
-   Violet is absent here on purpose: it belongs to TRAZA, not to decoration. */
+   Violet is absent here on purpose: it belongs to TRAZA, not to decoration.
+   Multi-stop fades only — hard mid-stops read as a horizontal “cut”. */
 body::before {
   content: "";
   position: fixed;
@@ -37,21 +38,29 @@ body::before {
   pointer-events: none;
   background:
     radial-gradient(
-      90% 70% at 12% -10%,
-      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent),
-      transparent 55%
+      100% 90% at 18% -8%,
+      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent) 0%,
+      color-mix(in oklab, var(--limen-beam) 9%, transparent) 42%,
+      transparent 78%
     ),
     radial-gradient(
-      80% 60% at 100% 8%,
-      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
-      transparent 58%
+      90% 80% at 100% 6%,
+      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent) 0%,
+      color-mix(in oklab, var(--limen-cyan) 6%, transparent) 45%,
+      transparent 78%
     ),
     radial-gradient(
-      70% 50% at 50% 110%,
-      color-mix(in oklab, var(--limen-teal) var(--atmo-teal), transparent),
-      transparent 60%
+      90% 70% at 50% 115%,
+      color-mix(in oklab, var(--limen-teal) var(--atmo-teal), transparent) 0%,
+      color-mix(in oklab, var(--limen-teal) 6%, transparent) 48%,
+      transparent 82%
     ),
-    linear-gradient(180deg, var(--limen-bg-1) 0%, var(--limen-bg-0) 62%);
+    linear-gradient(
+      180deg,
+      var(--limen-bg-1) 0%,
+      var(--limen-bg-0) 48%,
+      var(--limen-bg-0) 100%
+    );
 }
 
 h1,
@@ -187,19 +196,20 @@ a.limen-link:hover {
   font-variant-numeric: tabular-nums;
 }
 
-/* Environmental light. `atmosphere-soft` is the workspace strength; the landing
-   composes its own dominant beam on top of the same vocabulary. */
+/* Environmental light. Soft multi-stop fades — never a hard mid band. */
 @utility atmosphere-soft {
   background:
     radial-gradient(
-      110% 70% at 50% -15%,
-      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent),
-      transparent 58%
+      130% 110% at 50% -18%,
+      color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent) 0%,
+      color-mix(in oklab, var(--limen-beam) 9%, transparent) 38%,
+      transparent 76%
     ),
     radial-gradient(
-      60% 40% at 90% 20%,
-      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
-      transparent 55%
+      80% 70% at 92% 18%,
+      color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent) 0%,
+      color-mix(in oklab, var(--limen-cyan) 5%, transparent) 42%,
+      transparent 74%
     ),
     transparent;
 }

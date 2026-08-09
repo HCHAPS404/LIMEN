@@ -99,7 +99,10 @@ class ConversationOrchestrator:
         evidence: list[EvidenceChunk] = []
         rag_queries = 0
         with timer.measure("retrieval"):
-            if report.should_retrieve and self.retrieval is not None:
+            from limen.conversation.retrieval_gate import should_run_retrieval
+
+            # Clinical uncertainty OR knowledge-seeking text (G5 live docs).
+            if should_run_retrieval(report, user_text) and self.retrieval is not None:
                 evidence = self.retrieval.retrieve(
                     account_id=account_id,
                     query=user_text,
@@ -212,6 +215,8 @@ class ConversationOrchestrator:
             "degraded_llm_mode": llm_meta.get("degraded_mode"),
             "provider_usage": llm_meta.get("provider_usage"),
             "response_source": llm_meta.get("response_source"),
+            "end_session": bool(llm_meta.get("end_session")),
+            "call_end_reason": llm_meta.get("call_end_reason"),
             "novelty_retry": llm_meta.get("novelty_retry"),
             "conversation_debug": ctx.debug_view(),
             "recent_turns_included": len(ctx.recent_turns),

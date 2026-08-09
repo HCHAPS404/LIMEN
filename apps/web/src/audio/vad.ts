@@ -1,20 +1,29 @@
-/** Endpointing defaults measured for pause-heavy Spanish (PHASE 6.3).
+/** Endpointing defaults measured for pause-heavy / talkative Spanish.
  *
- * LEVEL_POLL_MS = 60 → silenceFrames 28 ≈ 1680 ms silence before end-of-turn.
- * Prefer natural turn-taking over minimum latency.
+ * LEVEL_POLL_MS = 60 → silenceFrames 32 ≈ 1920 ms silence before end-of-turn.
+ * Prefer letting storytellers finish a thought over snappy cutoffs.
  */
 export const ENDPOINTING = {
   levelPollMs: 60,
-  /** ~240 ms of speech before opening a segment. */
-  speechFrames: 4,
-  /** ~1680 ms silence to end (pause-heavy Spanish). */
-  silenceFrames: 28,
-  speechThreshold: 0.045,
-  silenceThreshold: 0.02,
-  minUtteranceMs: 320,
-  maxUtteranceMs: 45_000,
-  /** Sustained speech frames while SPEAKING before barge-in (~480 ms). */
-  bargeInSpeechFrames: 8,
+  /** ~120 ms of speech before opening a segment (keep leading "Hola"). */
+  speechFrames: 2,
+  /** ~1920 ms silence to end — talkative patients pause mid-story. */
+  silenceFrames: 32,
+  speechThreshold: 0.040,
+  silenceThreshold: 0.018,
+  minUtteranceMs: 280,
+  /** Allow longer patient narratives without hard cut. */
+  maxUtteranceMs: 90_000,
+  /** Sustained energy while SPEAKING before barge-in (~540 ms). */
+  bargeInSpeechFrames: 9,
+  /** Slightly above speechThreshold — intentional speech, not TTS room bleed. */
+  bargeInSpeechThreshold: 0.055,
+  /** Ignore mic speech briefly after TTS ends (acoustic echo tail). */
+  postPlaybackHoldoffMs: 550,
+  /** After barge-in, wait for silence then new speech before recording. */
+  postBargeSilenceFrames: 4,
+  /** Keep ~360 ms of audio before VAD opens so leading syllables are not cut. */
+  preRollMs: 360,
 } as const;
 
 /** Energy-threshold voice activity detection.

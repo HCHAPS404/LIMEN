@@ -52,9 +52,12 @@ async def synthesize_with_timing(
     *,
     voice: str,
 ) -> tuple[AudioResult, VoiceTurnTiming]:
+    from limen.voice.speech_text import prepare_speech_text
+
+    spoken = prepare_speech_text(text)
     timer = StageTimer()
     timer.mark("tts_start")
-    audio = await tts.synthesize(text, voice)
+    audio = await tts.synthesize(spoken, voice)
     timer.mark("tts_end")
     # Synthesis ready ≠ browser first audible sample.
     return audio, VoiceTurnTiming(

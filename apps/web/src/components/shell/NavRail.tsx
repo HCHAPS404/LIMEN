@@ -14,14 +14,15 @@ import {
   type NavItem,
 } from "./navItems";
 
+/** Quiet selected pill — weight + tint. No inset ring, no left bar. */
 const linkClass = (isActive: boolean, expanded: boolean) =>
   cn(
-    "group relative flex items-center rounded-sm",
+    "group relative flex items-center rounded-md",
     "transition-[background-color,color] duration-[var(--motion-fast)] ease-[var(--motion-ease)]",
-    expanded ? "h-12 gap-3.5 px-3.5" : "h-12 w-12 justify-center px-0",
+    expanded ? "h-11 gap-3 px-3" : "h-11 w-11 justify-center px-0",
     isActive
-      ? "bg-[var(--glass-highlight)] text-ice"
-      : "text-text-2 hover:bg-[var(--glass-highlight)] hover:text-ice",
+      ? "bg-[color-mix(in_oklab,var(--limen-ice)_8%,transparent)] text-ice"
+      : "text-text-2 hover:bg-[color-mix(in_oklab,var(--limen-ice)_4%,transparent)] hover:text-ice",
   );
 
 function NavItemLink({
@@ -46,28 +47,21 @@ function NavItemLink({
     >
       {({ isActive }) => (
         <>
-          {isActive && (
-            <span
-              aria-hidden
-              className={cn(
-                "absolute top-1/2 -translate-y-1/2 rounded-full bg-ice",
-                expanded ? "left-0 h-6 w-[2px]" : "left-1 h-6 w-[2px]",
-              )}
-            />
-          )}
           <Icon
             aria-hidden
-            size={expanded ? 19 : 22}
-            strokeWidth={isActive ? 1.85 : 1.6}
+            size={expanded ? 18 : 20}
+            strokeWidth={isActive ? 1.9 : 1.6}
             className={cn(
               "shrink-0 transition-colors duration-[var(--motion-fast)]",
-              isActive ? "text-ice" : "text-text-3 group-hover:text-text-2",
+              isActive
+                ? "text-cyan"
+                : "text-text-3 group-hover:text-text-2",
             )}
           />
           {expanded && (
             <span
               className={cn(
-                "truncate text-[0.975rem] tracking-[-0.012em]",
+                "type-body truncate tracking-[-0.014em]",
                 isActive
                   ? "font-semibold text-ice"
                   : "font-medium text-text-2 group-hover:text-ice",
@@ -94,30 +88,32 @@ export function NavRail() {
     <nav
       aria-label={t("workspace")}
       className={cn(
-        "hidden shrink-0 flex-col md:flex",
-        "border-r border-glass-border",
-        "bg-[var(--glass-surface-strong)] backdrop-blur-[32px] saturate-[1.15]",
+        "relative hidden shrink-0 flex-col md:flex",
+        "bg-[color-mix(in_oklab,var(--limen-bg-1)_18%,transparent)] backdrop-blur-[18px]",
         "transition-[width] duration-[var(--motion-base)] ease-[var(--motion-ease)]",
         railExpanded
           ? "w-[var(--rail-width)]"
           : "w-[var(--rail-width-collapsed)]",
       )}
     >
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 right-0 w-px bg-[linear-gradient(180deg,transparent_6%,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_22%,color-mix(in_oklab,var(--limen-ice)_8%,transparent)_78%,transparent_94%)]"
+      />
+
       <div
         className={cn(
-          "flex min-h-0 flex-1 flex-col",
-          railExpanded ? "px-3 pt-5 pb-4" : "items-center px-3 pt-5 pb-4",
+          "relative z-[1] flex min-h-0 flex-1 flex-col",
+          railExpanded ? "px-3 pt-5 pb-4" : "items-center px-2.5 pt-5 pb-4",
         )}
       >
         {railExpanded ? (
-          <div className="mb-6 flex items-center gap-2.5 px-3">
+          <div className="mb-7 flex items-center gap-2.5 px-2.5">
             <LimenMark size={18} />
-            <span className="text-[0.8125rem] font-semibold tracking-[0.22em] text-ice uppercase">
-              LIMEN
-            </span>
+            <span className="type-eyebrow m-0 text-ice">LIMEN</span>
           </div>
         ) : (
-          <div className="mb-8 flex h-12 w-12 items-center justify-center">
+          <div className="mb-7 flex h-11 w-11 items-center justify-center">
             <LimenMark size={20} />
           </div>
         )}
@@ -125,7 +121,7 @@ export function NavRail() {
         <ul
           className={cn(
             "m-0 flex list-none flex-col p-0",
-            railExpanded ? "gap-1.5" : "items-center gap-5",
+            railExpanded ? "gap-1" : "items-center gap-3",
           )}
         >
           {primaryNavItems.map((item) => (
@@ -140,15 +136,18 @@ export function NavRail() {
 
         <div
           className={cn(
-            "mt-auto flex flex-col border-t border-glass-border",
-            railExpanded
-              ? "gap-2 px-0 pt-4"
-              : "items-center gap-5 pt-5",
+            "mt-auto flex flex-col",
+            railExpanded ? "gap-2 pt-5" : "items-center gap-3 pt-5",
           )}
         >
           <div
-            className={railExpanded ? undefined : "flex justify-center"}
-          >
+            aria-hidden
+            className={cn(
+              "mb-1 h-px w-full bg-[linear-gradient(90deg,transparent,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_35%,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_65%,transparent)]",
+              !railExpanded && "w-8",
+            )}
+          />
+          <div className={railExpanded ? undefined : "flex justify-center"}>
             <NavItemLink {...settingsNavItem} expanded={railExpanded} />
           </div>
           <div
@@ -159,7 +158,7 @@ export function NavRail() {
           >
             <IconButton
               label={railExpanded ? t("rail.collapse") : t("rail.expand")}
-              className={railExpanded ? undefined : "h-12 w-12"}
+              className={railExpanded ? undefined : "h-11 w-11"}
               icon={
                 railExpanded ? (
                   <PanelLeftClose aria-hidden size={18} strokeWidth={1.6} />
@@ -185,7 +184,8 @@ export function NavBarMobile() {
       aria-label={t("workspace")}
       className={cn(
         "fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden",
-        "border-t border-glass-border bg-[var(--glass-surface-strong)] backdrop-blur-[28px] saturate-[1.15]",
+        "bg-[color-mix(in_oklab,var(--limen-bg-1)_40%,transparent)] backdrop-blur-[20px]",
+        "shadow-[0_-1px_0_color-mix(in_oklab,var(--limen-ice)_8%,transparent)]",
       )}
     >
       {navItems.map(({ to, labelKey, icon: Icon }) => (
@@ -194,10 +194,10 @@ export function NavBarMobile() {
           to={to}
           className={({ isActive }) =>
             cn(
-              "flex min-h-[3.25rem] flex-1 flex-col items-center justify-center gap-1.5 rounded-sm px-1 py-1.5",
+              "flex min-h-[3.25rem] flex-1 flex-col items-center justify-center gap-1.5 rounded-md px-1 py-1.5",
               "transition-colors duration-[var(--motion-fast)] ease-[var(--motion-ease)]",
               isActive
-                ? "bg-[var(--glass-highlight)] text-ice"
+                ? "bg-[color-mix(in_oklab,var(--limen-ice)_8%,transparent)] text-ice"
                 : "text-text-3",
             )
           }
@@ -208,10 +208,11 @@ export function NavBarMobile() {
                 aria-hidden
                 size={18}
                 strokeWidth={isActive ? 1.75 : 1.5}
+                className={isActive ? "text-cyan" : undefined}
               />
               <span
                 className={cn(
-                  "text-[0.625rem] tracking-[0.08em] uppercase",
+                  "type-label !tracking-[0.06em]",
                   isActive ? "font-semibold text-ice" : "font-medium",
                 )}
               >

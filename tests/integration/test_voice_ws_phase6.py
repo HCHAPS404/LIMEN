@@ -66,28 +66,30 @@ def test_websocket_binary_stub_stt_tts_yellow_path(client: TestClient) -> None:
 
         events = []
         audio_frames = 0
-        # Drain until LISTENING after SPEAKING or error.
+        # Drain until TTS audio arrives; LISTENING opens only after playback.completed.
         for _ in range(40):
             message = ws.receive()
             if message.get("bytes") is not None:
                 audio_frames += 1
                 assert message["bytes"][:4] == b"RIFF"
+                if any(e["type"] == "call.transcript" for e in events):
+                    break
                 continue
             event = json.loads(message["text"])
             events.append(event)
-            if (
-                event["type"] == "call.state"
-                and event["payload"].get("state") == "LISTENING"
-                and any(e["type"] == "call.transcript" for e in events)
-            ):
+            if audio_frames >= 1 and any(e["type"] == "call.transcript" for e in events):
                 break
 
         types = [e["type"] for e in events]
         assert "call.transcript" in types
         assert "call.safety" in types
         assert audio_frames >= 1
+        assert any(
+            e["type"] == "call.state" and e["payload"].get("state") == "SPEAKING"
+            for e in events
+        )
 
-        # Simulate browser playback ack for latency sample.
+        # Simulate browser playback lifecycle (opens LISTENING after completed).
         turn_seq = next(
             (e["payload"].get("turn_seq") for e in events if e["type"] == "call.audio"),
             1,
@@ -99,15 +101,27 @@ def test_websocket_binary_stub_stt_tts_yellow_path(client: TestClient) -> None:
                 "agent_audio_started_monotonic": 10.8,
             }
         )
-        # May receive metrics event
-        for _ in range(5):
-            try:
-                msg = ws.receive_json()
-            except Exception:  # noqa: BLE001
-                break
-            if msg["type"] == "call.metrics" and "voice_response_latency_ms" in msg["payload"]:
+        ws.send_json({"type": "voice.playback.completed", "turn_seq": turn_seq})
+        listening = False
+        saw_latency = False
+        for _ in range(20):
+            message = ws.receive()
+            if message.get("bytes") is not None:
+                continue
+            msg = json.loads(message["text"])
+            if (
+                msg["type"] == "call.metrics"
+                and "voice_response_latency_ms" in msg.get("payload", {})
+            ):
                 assert msg["payload"]["voice_response_latency_ms"] == pytest.approx(800.0)
+                saw_latency = True
+            if (
+                msg["type"] == "call.state"
+                and msg["payload"].get("state") == "LISTENING"
+            ):
+                listening = True
                 break
+        assert listening, "LISTENING must open after voice.playback.completed"
 
         ws.send_json({"type": "end"})
 

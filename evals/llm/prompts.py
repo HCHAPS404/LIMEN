@@ -95,3 +95,20 @@ def official_advisory_user_prompt(transcript: str, profile: dict[str, object]) -
         f"PERFIL CLÍNICO PERMITIDO:\n{profile_block}\n\n"
         f"CONVERSACIÓN:\n{transcript}\n"
     )
+
+
+def official_advisory_user_prompt(transcript: str, profile: dict[str, object]) -> str:
+    """Official benchmark prompt: transcript + allowed clinical profile only."""
+    profile_lines = [
+        f"- {key}: {value}"
+        for key, value in sorted(profile.items())
+        if value is not None and str(value).strip()
+    ]
+    profile_block = "\n".join(profile_lines) if profile_lines else "(sin perfil clínico adicional)"
+    return (
+        "Evalúa el riesgo asesor de esta conversación postoperatoria completa. "
+        "Usa únicamente el diálogo y el perfil clínico permitido. "
+        "No inventes datos clínicos.\n\n"
+        f"PERFIL CLÍNICO PERMITIDO:\n{profile_block}\n\n"
+        f"CONVERSACIÓN:\n{transcript}\n"
+    )

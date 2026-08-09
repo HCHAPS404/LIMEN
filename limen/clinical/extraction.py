@@ -6,7 +6,10 @@ import re
 
 from limen.clinical.state import ClinicalState, Finding
 from limen.clinical.uncertainty import ClinicalCertainty
-from limen.conversation.context import extract_pain_severity_mention
+from limen.conversation.context import (
+    extract_pain_severity_mention,
+    extract_pain_severity_transition,
+)
 
 _ABNORMAL = ClinicalCertainty.KNOWN_ABNORMAL
 _NORMAL = ClinicalCertainty.KNOWN_NORMAL
@@ -17,6 +20,16 @@ _PATTERNS: list[tuple[str, re.Pattern[str], ClinicalCertainty]] = [
     ("bleeding", re.compile(r"\b(sangrado|sangre|hemorragia)\b", re.I), _ABNORMAL),
     ("breathing", re.compile(r"\b(respir|ahogo|falta de aire)\b", re.I), _ABNORMAL),
     ("nausea", re.compile(r"\b(n[aá]usea|v[oó]mito)\b", re.I), _ABNORMAL),
+    ("dizziness", re.compile(r"\b(mareo|mareos|v[eé]rtigo)\b", re.I), _ABNORMAL),
+    (
+        "mood_distress",
+        re.compile(
+            r"\b(ansios[oa]?|ansiedad|triste(?:za)?|deprimid[oa]|miedo|asustad[oa]|"
+            r"llor\w*|desesper\w*|angustia(?:d[oa])?|sin\s+ganas)\b",
+            re.I,
+        ),
+        _ABNORMAL,
+    ),
 ]
 
 # Explicit Spanish negation windows — preserve denied symptoms as KNOWN_NORMAL.
@@ -27,8 +40,14 @@ _NEGATIONS: list[tuple[str, re.Pattern[str]]] = [
         re.compile(
             r"\bno\s+(?:tengo|tiene|tenía|present[oa]|estoy\s+con)\s+"
             r"(?:la\s+)?(?:fiebre|febril)\b"
-            r"|\bsin\s+fiebre\b"
-            r"|\bno\s+hay\s+fiebre\b",
+            r"|\bsin\s+(?:efecto\s+(?:de\s+)?)?fiebre\b"
+            r"|\bno\s+hay\s+fiebre\b"
+            # "no me está causando un efecto de fiebre" / "no me da fiebre"
+            r"|\bno\s+(?:me\s+)?(?:está|esta|estoy|estaba)\s+"
+            r"(?:causando|dando|generando|produciendo).{0,48}\bfiebre\b"
+            r"|\bno\s+(?:me\s+)?(?:da|dio|causa|causó)\s+"
+            r"(?:un\s+)?(?:efecto\s+de\s+)?fiebre\b"
+            r"|\bno\s+.{0,40}\befecto\s+de\s+fiebre\b",
             re.I,
         ),
     ),
@@ -100,13 +119,31 @@ def extract_from_utterance(text: str, prior: ClinicalState | None = None) -> Cli
             _upsert_finding(state, name=name, certainty=certainty, notes=text)
 
     score = extract_pain_severity_mention(text)
+    transition = extract_pain_severity_transition(text)
     if score is not None:
-        note = f"severity={score}/10; {text[:120]}"
-        _upsert_finding(state, name="pain", certainty=_ABNORMAL, notes=note)
+        peak = score
+        current = score
+        if transition is not None:
+            peak, current = transition
+            if peak < current:
+                peak, current = current, peak
+        # Preserve historical peak from prior notes when patient reports a drop.
+        prior_peak = _peak_from_findings(state)
+        if prior_peak is not None:
+            peak = max(peak, prior_peak)
+        improving = current < peak
+        certainty = (
+            ClinicalCertainty.IMPROVING if improving else _ABNORMAL
+        )
+        note = (
+            f"pico={peak}/10; actual={current}/10; "
+            f"curso={'mejorando' if improving else 'estable'}; {text[:100]}"
+        )
+        _upsert_finding(state, name="pain", certainty=certainty, notes=note)
         _upsert_finding(
             state,
             name="pain_severity",
-            certainty=_ABNORMAL,
+            certainty=certainty,
             notes=note,
         )
 
@@ -117,3 +154,25 @@ def extract_from_utterance(text: str, prior: ClinicalState | None = None) -> Cli
         _upsert_finding(state, name="wound_heat", certainty=_ABNORMAL, notes=text)
 
     return state
+
+
+def _peak_from_findings(state: ClinicalState) -> int | None:
+    import re
+
+    for finding in state.findings:
+        if finding.name not in {"pain", "pain_severity"}:
+            continue
+        notes = finding.notes or ""
+        for pattern in (
+            r"pico=(\d+)/10",
+            r"actual=(\d+)/10",
+            r"severity=(\d+)/10",
+            r"intensidad=(\d+)/10",
+        ):
+            m = re.search(pattern, notes)
+            if m:
+                try:
+                    return int(m.group(1))
+                except ValueError:
+                    continue
+    return None

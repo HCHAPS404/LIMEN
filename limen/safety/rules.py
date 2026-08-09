@@ -28,8 +28,13 @@ _EXPLICIT_NEGATIONS: dict[str, re.Pattern[str]] = {
     "fever": re.compile(
         r"\bno\s+(?:tengo|tiene|tenía|present[oa]|estoy\s+con)\s+"
         r"(?:la\s+)?(?:fiebre|febril)\b"
-        r"|\bsin\s+fiebre\b"
-        r"|\bno\s+hay\s+fiebre\b",
+        r"|\bsin\s+(?:efecto\s+(?:de\s+)?)?fiebre\b"
+        r"|\bno\s+hay\s+fiebre\b"
+        r"|\bno\s+(?:me\s+)?(?:está|esta|estoy|estaba)\s+"
+        r"(?:causando|dando|generando|produciendo).{0,48}\bfiebre\b"
+        r"|\bno\s+(?:me\s+)?(?:da|dio|causa|causó)\s+"
+        r"(?:un\s+)?(?:efecto\s+de\s+)?fiebre\b"
+        r"|\bno\s+.{0,40}\befecto\s+de\s+fiebre\b",
         re.IGNORECASE,
     ),
     "nausea": re.compile(

@@ -1,6 +1,6 @@
 # PHASE 9 Gate Status (generated)
 
-Generated: 2026-08-09T04:17:28.790184+00:00
+Generated: 2026-08-09T05:34:35+00:00
 Verdict: **PASS WITH WARNINGS**
 
 ## G1
@@ -19,19 +19,19 @@ Verdict: **PASS WITH WARNINGS**
 - missing: None
 
 ## G4
-- status: **PARTIAL**
-- evidence: docs/G4_VOICE_GATE.generated.md
-- missing: Human mic + audible playback proof
+- status: **PASS WITH WARNINGS**
+- evidence: docs/G4_VOICE_GATE.generated.md + operator confirm
+- missing: ≥20 warm latency samples; subsequent barge-in still PARTIAL
 
 ## G5
-- status: **PARTIAL**
-- evidence: docs/G5_LIVE_KNOWLEDGE.generated.md
-- missing: Admin UI upload→use→delete→forget
+- status: **PASS**
+- evidence: docs/G5_LIVE_KNOWLEDGE.generated.md + operator UI confirm (LUNA-73 / ZXQ-921)
+- missing: None
 
 ## Remaining P0
 
-- G4 human voice evidence incomplete
-- G5 admin UI evidence incomplete
+- Warm P50/P95 browser samples (≥20) still unmeasured
+- Subsequent barge-in reliability polish
 
 ## Remaining P1
 
@@ -39,5 +39,4 @@ Verdict: **PASS WITH WARNINGS**
 
 ## Operator tasks
 
-- Complete browser mic smoke + optional ≥20 samples
-- Upload/use/delete via /knowledge UI; record evidence.json
+- Complete browser mic smoke + optional ≥20 samples (G4)

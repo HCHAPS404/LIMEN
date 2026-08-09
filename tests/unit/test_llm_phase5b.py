@@ -15,7 +15,6 @@ from evals.llm.official_dataset import (
     filter_model_input_fields,
 )
 from evals.llm.preflight import G3_LOCAL_CANDIDATES, run_preflight
-from evals.llm.schemas import BenchmarkInterpretation
 from evals.llm.scorecard import (
     compare_key,
     disqualification_reasons,
@@ -25,6 +24,7 @@ from evals.llm.scoring import latency_summary
 
 from limen.intelligence.providers.ollama import is_g3_allowed_ollama_model
 from limen.intelligence.structured_output import parse_structured
+from evals.llm.schemas import BenchmarkInterpretation
 from limen.telemetry.percentiles import p50, p95
 
 

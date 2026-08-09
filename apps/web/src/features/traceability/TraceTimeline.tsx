@@ -41,13 +41,19 @@ export function TraceTimeline({
               onClick={() => onSelect(event)}
               aria-current={selected || undefined}
               className={cn(
-                "mb-1.5 flex flex-1 flex-col gap-1 rounded-xs px-3 py-2.5 text-left",
+                "relative mb-1.5 flex flex-1 flex-col gap-1 rounded-sm px-3 py-3 text-left",
                 "transition-colors duration-[var(--motion-fast)] ease-[var(--motion-ease)]",
                 selected
                   ? "bg-[color-mix(in_oklab,var(--limen-violet)_10%,transparent)]"
                   : "hover:bg-[var(--glass-highlight)]",
               )}
             >
+              {selected && (
+                <span
+                  aria-hidden
+                  className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-violet"
+                />
+              )}
               <span className="flex flex-wrap items-center gap-2">
                 <span
                   className="type-label m-0"

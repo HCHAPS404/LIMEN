@@ -11,10 +11,13 @@ from limen.safety.governor import SafetyGovernor
 from limen.safety.rules import evaluate_state_rules, evaluate_text_rules
 
 
-def test_no_tengo_fiebre_is_not_yellow_from_lexical_token() -> None:
-    decision = evaluate_text_rules("No tengo fiebre.")
-    assert decision.severity < Severity.YELLOW
-    assert not any("fiebre" in r for r in decision.reasons)
+def test_efecto_de_fiebre_negation_is_not_abnormal() -> None:
+    text = "No me está causando un efecto de fiebre, pero sí me da mareo"
+    state = extract_from_utterance(text)
+    fever = next(f for f in state.findings if f.name == "fever")
+    assert fever.certainty == ClinicalCertainty.KNOWN_NORMAL
+    decision = evaluate_text_rules(text)
+    assert not any("yellow_pattern:\\bfiebre\\b" in r for r in decision.reasons)
 
 
 def test_sin_fiebre_is_not_yellow_from_lexical_token() -> None:

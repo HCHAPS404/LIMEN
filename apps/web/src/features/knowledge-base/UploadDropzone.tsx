@@ -1,5 +1,6 @@
 import { Upload } from "lucide-react";
 import { useId, useRef, useState, type DragEvent } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Button } from "../../components/primitives/Button";
 import { cn } from "../../lib/cn";
@@ -17,6 +18,7 @@ export function UploadDropzone({
   disabled?: boolean;
   disabledReason?: string;
 }) {
+  const { t } = useTranslation("knowledge");
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
@@ -41,23 +43,41 @@ export function UploadDropzone({
       onDragLeave={() => setDragging(false)}
       onDrop={onDrop}
       className={cn(
-        "flex flex-col items-center gap-5 rounded-md border border-dashed px-7 py-9 text-center",
+        "flex flex-col gap-4 rounded-md px-1 py-1",
         "transition-colors duration-[var(--motion-fast)] ease-[var(--motion-ease)]",
-        dragging
-          ? "border-[color-mix(in_oklab,var(--limen-cyan)_50%,transparent)] bg-[color-mix(in_oklab,var(--limen-cyan)_8%,transparent)]"
-          : "border-glass-border",
+        dragging &&
+          "bg-[color-mix(in_oklab,var(--limen-cyan)_7%,transparent)]",
         disabled && "opacity-60",
       )}
     >
-      <Upload aria-hidden size={19} strokeWidth={1.5} className="text-text-3" />
-      <div className="flex flex-col gap-2">
-        <label htmlFor={inputId} className="type-h3 m-0 text-ice">
-          Add clinical source
-        </label>
-        <p className="type-body m-0 max-w-[44ch] text-text-2">
-          Drop a PDF here, or choose a file. Scanned pages fall back to OCR during
-          ingestion.
-        </p>
+      <div className="flex items-start gap-3">
+        <Upload
+          aria-hidden
+          size={18}
+          strokeWidth={1.5}
+          className={cn(
+            "mt-0.5 shrink-0",
+            dragging ? "text-cyan" : "text-text-3",
+          )}
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <label htmlFor={inputId} className="type-h3 m-0 text-ice">
+            {t("upload.title")}
+          </label>
+          <p className="type-body-s m-0 max-w-[48ch] text-text-2">
+            {t("upload.body")}
+          </p>
+        </div>
+        <Button
+          variant="inverse"
+          size="sm"
+          loading={busy}
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+          className="shrink-0"
+        >
+          {t("upload.choose")}
+        </Button>
       </div>
       <input
         id={inputId}
@@ -72,18 +92,18 @@ export function UploadDropzone({
           event.target.value = "";
         }}
       />
-      <Button
-        variant="inverse"
-        size="sm"
-        loading={busy}
-        disabled={disabled}
-        onClick={() => inputRef.current?.click()}
-      >
-        Choose file
-      </Button>
       {disabled && disabledReason && (
         <p className="type-body-s m-0 text-amber">{disabledReason}</p>
       )}
+      <div
+        aria-hidden
+        className={cn(
+          "h-px w-full",
+          dragging
+            ? "bg-[color-mix(in_oklab,var(--limen-cyan)_40%,transparent)]"
+            : "bg-[color-mix(in_oklab,var(--glass-border)_55%,transparent)]",
+        )}
+      />
     </div>
   );
 }

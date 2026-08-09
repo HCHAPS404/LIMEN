@@ -17,8 +17,27 @@ from limen.conversation.response_templates import (
     EVIDENCE_TEMPLATE,
     FALLBACK_TEMPLATE,
     deterministic_patient_reply,
+    evidence_grounded_reply,
+)
+from limen.conversation.response_repair import (
+    looks_truncated_draft,
+    repair_identity_phrasing,
+    trim_to_last_complete_sentence,
 )
 from limen.conversation.response_validator import validate_patient_response
+from limen.conversation.session_intent import (
+    addresses_assistant_by_name,
+    everyday_phatic_reply,
+    farewell_reply,
+    looks_like_everyday_phatic,
+    looks_like_farewell,
+    looks_like_greeting_only,
+    looks_like_wrapup,
+    opening_reply,
+    patient_display_name_safe,
+    short_greeting_ack,
+    wrapup_reply,
+)
 from limen.intelligence.contracts import LLMProvider, LLMRequest
 from limen.intelligence.llm_status import get_llm_runtime_status
 from limen.intelligence.prompts.patient_response import build_patient_response_messages
@@ -76,6 +95,135 @@ async def build_assistant_response(
             },
         )
 
+    if looks_like_farewell(user_text):
+        raw_name = conversation.patient_display_name if conversation else None
+        assistant = (
+            conversation.assistant_display_name if conversation else None
+        )
+        name = patient_display_name_safe(raw_name, assistant_name=assistant)
+        text = farewell_reply(display_name=name)
+        if conversation is not None:
+            from limen.conversation.context import ConversationPhase
+
+            conversation.phase = ConversationPhase.CLOSING
+        return (
+            text,
+            0,
+            None,
+            None,
+            {
+                "used_llm": False,
+                "generated_response_validated": True,
+                "fallback": True,
+                "fallback_reason": "patient_farewell",
+                "degraded_mode": degraded,
+                "response_source": "farewell_template",
+                "end_session": True,
+                "call_end_reason": "patient_farewell",
+            },
+        )
+
+    if (
+        conversation is not None
+        and looks_like_wrapup(user_text)
+        and not (safety.escalate or safety.severity >= Severity.RED)
+    ):
+        name = patient_display_name_safe(
+            conversation.patient_display_name,
+            assistant_name=conversation.assistant_display_name,
+        )
+        text = wrapup_reply(display_name=name)
+        from limen.conversation.context import ConversationPhase
+
+        conversation.phase = ConversationPhase.CLOSING
+        return (
+            text,
+            0,
+            None,
+            None,
+            {
+                "used_llm": False,
+                "generated_response_validated": True,
+                "fallback": True,
+                "fallback_reason": "patient_wrapup",
+                "degraded_mode": degraded,
+                "response_source": "wrapup_template",
+                "end_session": True,
+                "call_end_reason": "patient_wrapup",
+            },
+        )
+
+    # Opening phatic turn: never dump GREEN clinical boilerplate.
+    # Force opening on the first patient turn even if greeting_done was wrongly set.
+    assistant_addr = addresses_assistant_by_name(
+        user_text,
+        assistant_name=(
+            conversation.assistant_display_name if conversation else None
+        ),
+    )
+    if (
+        conversation is not None
+        and (looks_like_greeting_only(user_text) or assistant_addr)
+        and not (safety.escalate or safety.severity >= Severity.RED)
+    ):
+        first_turn = conversation.turn_index <= 1
+        if not conversation.greeting_done or first_turn or assistant_addr:
+            text = opening_reply(
+                assistant_name=conversation.assistant_display_name,
+                gender=conversation.assistant_gender,
+                display_name=patient_display_name_safe(
+                    conversation.patient_display_name,
+                    assistant_name=conversation.assistant_display_name,
+                ),
+                user_text=user_text,
+            )
+            source = "opening_template"
+            reason = "opening_greeting"
+        else:
+            text = short_greeting_ack(
+                assistant_name=conversation.assistant_display_name,
+            )
+            source = "greeting_ack_template"
+            reason = "repeat_greeting_ack"
+        return (
+            text,
+            0,
+            None,
+            None,
+            {
+                "used_llm": False,
+                "generated_response_validated": True,
+                "fallback": True,
+                "fallback_reason": reason,
+                "degraded_mode": degraded,
+                "response_source": source,
+            },
+        )
+
+    # Everyday chit-chat (e.g. "tengo sueño") — empathize briefly, no wrong vocative.
+    if (
+        conversation is not None
+        and looks_like_everyday_phatic(user_text)
+        and not (safety.escalate or safety.severity >= Severity.RED)
+    ):
+        text = everyday_phatic_reply(
+            assistant_name=conversation.assistant_display_name,
+        )
+        return (
+            text,
+            0,
+            None,
+            None,
+            {
+                "used_llm": False,
+                "generated_response_validated": True,
+                "fallback": True,
+                "fallback_reason": "everyday_phatic",
+                "degraded_mode": degraded,
+                "response_source": "everyday_phatic_template",
+            },
+        )
+
     if llm is None or degraded:
         text = _template()
         return (
@@ -108,8 +256,8 @@ async def build_assistant_response(
             LLMRequest(
                 prompt=prompt,
                 system=system,
-                temperature=0.2,
-                max_tokens=120,
+                temperature=0.35,
+                max_tokens=320,
                 metadata={"purpose": "patient_response"},
             )
         )
@@ -191,7 +339,23 @@ async def build_assistant_response(
             provider_meta["fallback"] = True
             provider_meta["fallback_reason"] = "novelty_retry_failed"
 
-    validation = validate_patient_response(text, safety=safety, evidence=evidence)
+    display_name = (
+        patient_display_name_safe(
+            conversation.patient_display_name if conversation else None,
+            assistant_name=(
+                conversation.assistant_display_name if conversation else None
+            ),
+        )
+    )
+    validation = validate_patient_response(
+        text,
+        safety=safety,
+        evidence=evidence,
+        patient_display_name=display_name,
+        assistant_display_name=(
+            conversation.assistant_display_name if conversation else None
+        ),
+    )
     if not validation.ok or not text:
         text = _template()
         return (
@@ -209,6 +373,27 @@ async def build_assistant_response(
                 "degraded_mode": degraded,
                 "novelty_retry": novelty_retry,
                 "response_source": "template",
+            },
+        )
+
+    # If evidence was retrieved but the draft stays evasive/system-access hedging,
+    # surface the documented fact instead of a non-answer.
+    if evidence and _is_evasive_despite_evidence(text):
+        text = evidence_grounded_reply(evidence)
+        return (
+            text,
+            llm_calls,
+            prompt_tokens,
+            completion_tokens,
+            {
+                **provider_meta,
+                "used_llm": True,
+                "generated_response_validated": True,
+                "fallback": True,
+                "fallback_reason": "evasive_with_evidence",
+                "degraded_mode": degraded,
+                "novelty_retry": novelty_retry,
+                "response_source": "evidence_template",
             },
         )
 
@@ -253,14 +438,49 @@ async def build_assistant_response(
 def _sanitize_llm_text(raw: str) -> str:
     text = raw.strip()
     if text.startswith("[stub:"):
-        marker = "Escribe solo la respuesta breve para el paciente:"
-        if marker in text:
-            text = text.split(marker, 1)[-1].strip()
+        for marker in (
+            "Escribe solo la respuesta hablada para el paciente",
+            "Escribe solo la respuesta breve para el paciente:",
+        ):
+            if marker in text:
+                text = text.split(marker, 1)[-1].strip()
+                break
         else:
             return ""
     text = " ".join(text.split())
-    if len(text) > 320:
-        text = text[:317].rstrip() + "…"
+    text = repair_identity_phrasing(text)
+    if looks_truncated_draft(text):
+        trimmed = trim_to_last_complete_sentence(text)
+        text = trimmed
+    # Prefer a sentence boundary over a mid-word cut for TTS.
+    if len(text) > 520:
+        cut = text[:520]
+        for sep in (". ", "? ", "! "):
+            idx = cut.rfind(sep)
+            if idx >= 120:
+                text = cut[: idx + 1].strip()
+                break
+        else:
+            text = cut.rstrip() + "…"
+    if looks_truncated_draft(text):
+        return ""
     if len(text) < 8:
         return ""
     return text
+
+
+_EVASIVE_DESPITE_EVIDENCE = (
+    "no tengo acceso",
+    "no puedo proporcionar",
+    "espera un momento",
+    "sistema adecuado",
+    "contacta a la fuente",
+    "contacte a la fuente",
+    "no puedo darte esa información",
+    "una vez tenga acceso",
+)
+
+
+def _is_evasive_despite_evidence(text: str) -> bool:
+    folded = (text or "").casefold()
+    return any(marker in folded for marker in _EVASIVE_DESPITE_EVIDENCE)

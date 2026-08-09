@@ -65,7 +65,7 @@ export function AuthLayout({
             <h1 className="type-h2 m-0 text-ice">{title}</h1>
             <p className="type-body mt-3 text-text-2">{subtitle}</p>
             <div className="mt-8">{children}</div>
-            <div className="mt-7 border-t border-glass-border pt-5">
+            <div className="mt-7 pt-5">
               {footer}
             </div>
           </div>

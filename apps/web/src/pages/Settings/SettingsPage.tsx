@@ -8,6 +8,10 @@ import { ApiError, API_BASE, describeError } from "../../api/client";
 import { fetchProviders, fetchReady } from "../../api/health";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useTheme, type Theme } from "../../app/providers/ThemeProvider";
+import {
+  useVoicePersona,
+  type VoicePersonaId,
+} from "../../app/providers/VoicePersonaProvider";
 import { KeyValue, KeyValueList } from "../../components/data/KeyValue";
 import { StatusChip } from "../../components/data/StatusChip";
 import { ErrorState } from "../../components/feedback/ErrorState";
@@ -51,6 +55,7 @@ export function SettingsPage() {
     isDeletingAccount,
   } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { personaId, setPersonaId, personas } = useVoicePersona();
   const navigate = useNavigate();
   const { t } = useTranslation("shell");
   const { t: tCommon } = useTranslation("common");
@@ -112,6 +117,48 @@ export function SettingsPage() {
                   >
                     <Icon aria-hidden size={16} strokeWidth={1.6} />
                     <span className="text-[0.875rem] font-medium">{label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-4 border-b border-glass-border px-6 py-5">
+            <div className="flex flex-col gap-1">
+              <h3 className="type-label m-0 tracking-[0.14em]">
+                {t("preferences.voice")}
+              </h3>
+              <p className="type-body-s m-0 text-text-3">
+                {t("preferences.voiceHint")}
+              </p>
+            </div>
+            <div
+              className="grid grid-cols-1 gap-2 sm:grid-cols-2"
+              role="radiogroup"
+              aria-label={t("preferences.voice")}
+            >
+              {personas.map((persona) => {
+                const selected = personaId === persona.id;
+                return (
+                  <button
+                    key={persona.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setPersonaId(persona.id as VoicePersonaId)}
+                    className={cn(
+                      "flex flex-col gap-1 rounded-lg border px-3.5 py-3 text-left transition-colors",
+                      selected
+                        ? "border-action-glass-border bg-action-glass text-ice"
+                        : "border-glass-border bg-[var(--glass-surface)] text-text-2 hover:border-[var(--glass-border-strong)] hover:text-ice",
+                    )}
+                  >
+                    <span className="text-[0.875rem] font-medium">
+                      {persona.displayName}
+                    </span>
+                    <span className="type-body-s m-0 text-text-3">
+                      {persona.blurb}
+                    </span>
                   </button>
                 );
               })}

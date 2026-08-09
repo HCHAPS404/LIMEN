@@ -6,6 +6,7 @@ def test_certainty_states_are_explicit() -> None:
     assert values == {
         "KNOWN_NORMAL",
         "KNOWN_ABNORMAL",
+        "IMPROVING",
         "UNKNOWN",
         "CONFLICTING",
     }

@@ -9,6 +9,7 @@ from typing import Any
 from limen.voice.audio_codec import normalize_transcript_text, wav_to_mono_16k_float32
 from limen.voice.contracts import Transcript
 from limen.voice.cuda_runtime import ensure_cuda12_library_path
+from limen.voice.transcript_repair import STT_INITIAL_PROMPT_ES, repair_transcript_text
 
 
 class FasterWhisperSTTProvider:
@@ -180,8 +181,11 @@ class FasterWhisperSTTProvider:
         segments, info = model.transcribe(
             array,
             language=language or "es",
-            beam_size=1,
+            beam_size=3,
+            best_of=3,
             vad_filter=False,
+            condition_on_previous_text=False,
+            initial_prompt=STT_INITIAL_PROMPT_ES,
         )
         parts: list[str] = []
         confidences: list[float] = []
@@ -193,7 +197,7 @@ class FasterWhisperSTTProvider:
             if isinstance(prob, (int, float)):
                 confidences.append(max(0.0, min(1.0, 1.0 + float(prob) / 5.0)))
         raw = " ".join(parts).strip()
-        normalized = normalize_transcript_text(raw)
+        normalized = repair_transcript_text(normalize_transcript_text(raw))
         latency = (time.perf_counter() - started) * 1000.0
         confidence = sum(confidences) / len(confidences) if confidences else None
         detected = getattr(info, "language", None) or language

@@ -14,29 +14,29 @@ export type RiskPresentation = {
 /** Risk is never encoded by color alone: each level carries a label and an icon. */
 export const riskPresentation: Record<RiskLevel, RiskPresentation> = {
   GREEN: {
-    label: "GREEN",
-    meaning: "Expected recovery",
+    label: "VERDE",
+    meaning: "Recuperación esperada",
     className:
       "border-[color-mix(in_oklab,var(--limen-green)_45%,transparent)] bg-[color-mix(in_oklab,var(--limen-green)_15%,transparent)] text-green",
     icon: ShieldCheck,
   },
   YELLOW: {
-    label: "YELLOW",
-    meaning: "Uncertain — review",
+    label: "AMARILLO",
+    meaning: "Incertidumbre — revisar",
     className:
       "border-[color-mix(in_oklab,var(--limen-amber)_45%,transparent)] bg-[color-mix(in_oklab,var(--limen-amber)_15%,transparent)] text-amber",
     icon: TriangleAlert,
   },
   ORANGE: {
-    label: "ORANGE",
-    meaning: "Elevated concern",
+    label: "NARANJA",
+    meaning: "Preocupación elevada",
     className:
       "border-[color-mix(in_oklab,var(--limen-coral)_38%,var(--limen-amber))] bg-[color-mix(in_oklab,var(--limen-amber)_10%,transparent)] text-[color-mix(in_oklab,var(--limen-amber)_55%,var(--limen-coral))]",
     icon: TriangleAlert,
   },
   RED: {
-    label: "RED",
-    meaning: "Escalate to clinician",
+    label: "ROJO",
+    meaning: "Escalar a clínico",
     className:
       "border-[color-mix(in_oklab,var(--limen-coral)_50%,transparent)] bg-[color-mix(in_oklab,var(--limen-coral)_16%,transparent)] text-coral",
     icon: ShieldAlert,
@@ -45,8 +45,8 @@ export const riskPresentation: Record<RiskLevel, RiskPresentation> = {
 
 /** Shown when no safety decision exists. Absence is stated, never assumed safe. */
 export const unassessedRisk: RiskPresentation = {
-  label: "NOT ASSESSED",
-  meaning: "No safety decision recorded",
+  label: "SIN EVALUAR",
+  meaning: "Aún no hay decisión de seguridad",
   className: "border-glass-border bg-[var(--glass-highlight)] text-text-2",
   icon: ShieldAlert,
 };

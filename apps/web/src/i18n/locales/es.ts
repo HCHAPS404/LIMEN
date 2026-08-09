@@ -80,6 +80,9 @@ export const es = {
       account: "Cuenta",
       themeHint: "Oscuro es el modo por defecto del workspace clínico.",
       languageHint: "Cambia las etiquetas de la interfaz. La voz del paciente sigue en español.",
+      voice: "Voz del asistente",
+      voiceHint:
+        "Elige la persona de voz. En la conversación solo cambia el género gramatical y el nombre con el que se presenta. Cambia la voz y luego inicia una llamada nueva.",
       microphone: "Micrófono",
       microphoneHint:
         "Comprueba el permiso y el nivel de entrada antes de una llamada.",
@@ -248,6 +251,12 @@ export const es = {
     },
     start: "Iniciar llamada",
     end: "Terminar sesión",
+    hangUp: "Colgar",
+    pause: "Pausar llamada",
+    resume: "Reanudar",
+    controls: "Controles de llamada",
+    pausedBadge: "en pausa",
+    pausedHint: "Llamada en pausa. Reanude para seguir hablando con LIMEN.",
     liveContext: "Contexto en vivo",
     transcript: "Transcripción",
     turns_one: "{{count}} turno",
@@ -256,8 +265,54 @@ export const es = {
     silenceBody:
       "Los turnos del paciente y del agente aparecen aquí a medida que avanza la sesión.",
     hint: "El azul reacciona a tu voz. El naranja marca al agente. Habla y suelta para enviar el turno.",
+    voiceActive: "Voz: {{name}}",
     blocked: "Sesión de voz bloqueada",
     retryMic: "Pedir micrófono de nuevo",
+    live: {
+      safetyDecision: "Decisión de seguridad",
+      safetyPending: "El gobernador de seguridad aún no ha evaluado un turno.",
+      escalated: "Se solicitó escalada humana.",
+      openUnknowns: "Incógnitas abiertas",
+      openUnknownsHint: "Hallazgos sin respuesta resuelta",
+      sourcesCited: "Fuentes citadas",
+      sourcesCitedHint: "Fragmentos de evidencia de este turno",
+      clinicalState: "Estado clínico",
+      evidence: "Evidencia",
+      noEvidenceTitle: "Sin evidencia recuperada",
+      noEvidenceBody:
+        "Los fragmentos aparecen aquí con documento, página y proveniencia.",
+    },
+    clinical: {
+      emptyTitle: "Aún no hay estado clínico",
+      emptyBody:
+        "Los hallazgos aparecen cuando el paciente responde. Nada se asume normal antes de reportarse.",
+      openQuestions: "Preguntas pendientes",
+      findings: {
+        pain: "Dolor",
+        painSeverity: "Intensidad del dolor",
+        wound: "Herida",
+        woundHeat: "Calor en la herida",
+        fever: "Fiebre",
+        bleeding: "Sangrado",
+        breathing: "Respiración",
+        nausea: "Náuseas",
+      },
+      certainty: {
+        knownNormal: "Normal conocido",
+        knownAbnormal: "Anormal conocido",
+        improving: "Indicando mejoría",
+        unknown: "Desconocido",
+        conflicting: "En conflicto",
+      },
+    },
+    risk: {
+      meaning: {
+        green: "Recuperación esperada",
+        yellow: "Incertidumbre — revisar",
+        orange: "Preocupación elevada",
+        red: "Escalar a clínico",
+      },
+    },
     phases: {
       IDLE: { label: "En espera", description: "Sin sesión activa. Inicia una llamada para abrir el micrófono." },
       REQUESTING_MIC: { label: "Solicitando micrófono", description: "Esperando permiso del navegador." },
@@ -272,8 +327,51 @@ export const es = {
   },
 
   knowledge: {
+    title: "Base de conocimiento",
+    selectedSource: "Fuente seleccionada",
+    availableCount_one: "{{count}} disponible",
+    availableCount_other: "{{count}} disponibles",
+    refresh: "Actualizar lista de documentos",
+    openSelected: "Abrir fuente seleccionada",
+    upload: {
+      title: "Añadir fuente clínica",
+      body: "Suelta un PDF aquí o elige un archivo. Las páginas escaneadas usan OCR durante la ingestión.",
+      choose: "Elegir archivo",
+      disabled501:
+        "La ingestión de conocimiento está marcada como no implementada (HTTP 501).",
+    },
+    uploadFailed: "Falló la subida",
+    dismiss: "Descartar",
+    loading: "Cargando fuentes",
+    emptyApiTitle: "API de conocimiento no implementada",
+    loadError: "No se pudieron cargar las fuentes",
+    emptyEyebrow: "Vacío",
+    emptyTitle: "Sin fuentes clínicas aún",
+    emptyBody:
+      "Añade un protocolo o una instrucción de alta en PDF. El agente solo puede citar documentos en estado AVAILABLE.",
     emptyApi: "No se pudo cargar el conocimiento",
     notFound: "Documento no encontrado",
+    inspector: {
+      emptyEyebrow: "Umbral",
+      emptyTitle: "Ninguna fuente seleccionada",
+      emptyBody:
+        "Elige un documento para inspeccionar procedencia, estado de ingestión y recuperación.",
+      probeLabel: "Sonda de recuperación",
+      probePlaceholder: "Pregunta qué debería responder esta fuente",
+      probeHint:
+        "Ejecuta una consulta real. Tras borrarla no debe devolver fragmentos de esta fuente.",
+      verify: "Verificar recuperación",
+      delete: "Eliminar fuente",
+      deleteTitle: "¿Eliminar esta fuente?",
+      deleteBody:
+        "{{name}} y todos sus fragmentos e embeddings se eliminarán. El agente clínico ya no recuperará nada de ella.",
+      keep: "Conservar fuente",
+      deleteNamed: "Eliminar {{name}}",
+      deleteFailed: "Falló la eliminación",
+      probeUnavailable: "Sonda de recuperación no disponible",
+      noChunks:
+        "No se devolvieron fragmentos para esta consulta. Esta fuente no aporta evidencia ahora.",
+    },
   },
 
   trace: {
@@ -287,6 +385,9 @@ export const es = {
     emptyEvents: "Sin pasos registrados",
     loadError: "No se pudo cargar la traza",
     escalated: "Escalada",
+    emptyInspectTitle: "Ningún paso seleccionado",
+    emptyInspectBody:
+      "Elige un paso de la línea de tiempo para ver la decisión, la evidencia y el coste medido.",
   },
 
   sessions: {

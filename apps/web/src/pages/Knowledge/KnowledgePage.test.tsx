@@ -73,7 +73,7 @@ describe("Knowledge console", () => {
     expect(screen.getByText("Available")).toBeInTheDocument();
     expect(screen.getByText("Indexing")).toBeInTheDocument();
     expect(screen.getByText("Failed")).toBeInTheDocument();
-    expect(screen.getByText("1 available")).toBeInTheDocument();
+    expect(screen.getByText("1 disponible")).toBeInTheDocument();
   });
 
   it("exposes provenance and the failure reason for a selected source", async () => {
@@ -95,10 +95,10 @@ describe("Knowledge console", () => {
     renderRoute("/knowledge");
 
     expect(
-      await screen.findByText(/Knowledge API not implemented/i),
+      await screen.findByText(/API de conocimiento no implementada/i),
     ).toBeInTheDocument();
     expect(screen.queryByText("Available")).not.toBeInTheDocument();
-    expect(screen.getByText("0 available")).toBeInTheDocument();
+    expect(screen.getByText("0 disponibles")).toBeInTheDocument();
   });
 
   it("disables ingestion when the upload endpoint does not exist", async () => {
@@ -108,11 +108,11 @@ describe("Knowledge console", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByRole("button", { name: /choose file/i }),
+        screen.getByRole("button", { name: /elegir archivo/i }),
       ).toBeDisabled(),
     );
     expect(
-      screen.getByText(/not implemented \(HTTP 501\)/i),
+      screen.getByText(/no implementada \(HTTP 501\)/i),
     ).toBeInTheDocument();
   });
 
@@ -123,13 +123,13 @@ describe("Knowledge console", () => {
 
     fireEvent.click(await screen.findByText("protocolo-alta.pdf"));
     fireEvent.click(
-      await screen.findByRole("button", { name: /delete source/i }),
+      await screen.findByRole("button", { name: /eliminar fuente/i }),
     );
 
     const dialog = await screen.findByRole("dialog", {
-      name: /delete this source/i,
+      name: /eliminar esta fuente/i,
     });
     expect(dialog).toHaveTextContent("protocolo-alta.pdf");
-    expect(dialog).toHaveTextContent(/no longer retrieve anything from it/i);
+    expect(dialog).toHaveTextContent(/ya no recuperará nada de ella/i);
   });
 });

@@ -105,11 +105,17 @@ export function createAgentPlayback(): AgentPlayback {
     stop() {
       generation += 1;
       if (!element) return;
+      const seq = activeTurnSeq;
+      const wasPlaying = playing;
       element.pause();
       element.currentTime = 0;
       releaseUrl();
       emit(false);
       activeTurnSeq = null;
+      // Barge-in path: notify completion so holdoffs / server LISTENING stay aligned.
+      if (wasPlaying) {
+        onPlaybackCompleted?.({ turnSeq: seq });
+      }
     },
     get playing() {
       return playing;
@@ -120,7 +126,11 @@ export function createAgentPlayback(): AgentPlayback {
     },
     dispose() {
       generation += 1;
-      element?.pause();
+      try {
+        element?.pause();
+      } catch {
+        // jsdom may not implement HTMLMediaElement.pause.
+      }
       releaseUrl();
       listeners.clear();
       playing = false;

@@ -90,6 +90,9 @@ export const en: Resources = {
       themeHint: "Dark is the default for the clinical workspace.",
       languageHint:
         "Changes interface labels. The patient voice loop stays in Spanish.",
+      voice: "Assistant voice",
+      voiceHint:
+        "Choose the voice persona. In chat this only changes grammatical gender and how the assistant introduces itself. Change the voice, then start a new call.",
       microphone: "Microphone",
       microphoneHint: "Check permission and input level before a call.",
       diagnostics: "Runtime diagnostics",
@@ -255,6 +258,12 @@ export const en: Resources = {
     },
     start: "Start call",
     end: "End session",
+    hangUp: "Hang up",
+    pause: "Pause call",
+    resume: "Resume",
+    controls: "Call controls",
+    pausedBadge: "paused",
+    pausedHint: "Call paused. Resume to keep talking with LIMEN.",
     liveContext: "Live context",
     transcript: "Transcript",
     turns_one: "{{count}} turn",
@@ -263,8 +272,54 @@ export const en: Resources = {
     silenceBody:
       "Patient and agent turns appear here as the session progresses.",
     hint: "Blue reacts to your voice. Orange marks the agent. Speak, then pause to send the turn.",
+    voiceActive: "Voice: {{name}}",
     blocked: "Voice session blocked",
     retryMic: "Request microphone again",
+    live: {
+      safetyDecision: "Safety decision",
+      safetyPending: "The Safety Governor has not evaluated a turn yet.",
+      escalated: "Human escalation requested.",
+      openUnknowns: "Open unknowns",
+      openUnknownsHint: "Findings without a resolved answer",
+      sourcesCited: "Sources cited",
+      sourcesCitedHint: "Distinct evidence chunks this turn",
+      clinicalState: "Clinical state",
+      evidence: "Evidence",
+      noEvidenceTitle: "No evidence retrieved",
+      noEvidenceBody:
+        "Retrieved chunks appear here with document, page, and version provenance.",
+    },
+    clinical: {
+      emptyTitle: "No clinical state yet",
+      emptyBody:
+        "Findings appear as the patient answers. Nothing is assumed normal before it is reported.",
+      openQuestions: "Unresolved questions",
+      findings: {
+        pain: "Pain",
+        painSeverity: "Pain severity",
+        wound: "Wound",
+        woundHeat: "Wound heat",
+        fever: "Fever",
+        bleeding: "Bleeding",
+        breathing: "Breathing",
+        nausea: "Nausea",
+      },
+      certainty: {
+        knownNormal: "Known normal",
+        knownAbnormal: "Known abnormal",
+        improving: "Improving",
+        unknown: "Unknown",
+        conflicting: "Conflicting",
+      },
+    },
+    risk: {
+      meaning: {
+        green: "Expected recovery",
+        yellow: "Uncertain — review",
+        orange: "Elevated concern",
+        red: "Escalate to clinician",
+      },
+    },
     phases: {
       IDLE: { label: "Idle", description: "No active session. Start a call to open the microphone." },
       REQUESTING_MIC: { label: "Requesting microphone", description: "Waiting for browser microphone permission." },
@@ -279,8 +334,51 @@ export const en: Resources = {
   },
 
   knowledge: {
+    title: "Knowledge base",
+    selectedSource: "Selected source",
+    availableCount_one: "{{count}} available",
+    availableCount_other: "{{count}} available",
+    refresh: "Refresh document list",
+    openSelected: "Open selected source",
+    upload: {
+      title: "Add clinical source",
+      body: "Drop a PDF here, or choose a file. Scanned pages fall back to OCR during ingestion.",
+      choose: "Choose file",
+      disabled501:
+        "Knowledge ingestion is marked not implemented (HTTP 501).",
+    },
+    uploadFailed: "Upload failed",
+    dismiss: "Dismiss",
+    loading: "Loading sources",
+    emptyApiTitle: "Knowledge API not implemented",
+    loadError: "Could not load sources",
+    emptyEyebrow: "Empty",
+    emptyTitle: "No clinical sources yet",
+    emptyBody:
+      "Add a protocol or discharge instruction PDF. The agent can only cite documents that reach AVAILABLE.",
     emptyApi: "Could not load knowledge",
     notFound: "Document not found",
+    inspector: {
+      emptyEyebrow: "Threshold",
+      emptyTitle: "No source selected",
+      emptyBody:
+        "Choose a document to inspect its provenance, ingestion state, and retrieval behavior.",
+      probeLabel: "Retrieval probe",
+      probePlaceholder: "Ask what this source should answer",
+      probeHint:
+        "Runs a real retrieval query. After deletion it should return no chunks from this source.",
+      verify: "Verify retrieval",
+      delete: "Delete source",
+      deleteTitle: "Delete this source?",
+      deleteBody:
+        "{{name}} and all of its chunks and embeddings will be removed. The clinical agent will no longer retrieve anything from it.",
+      keep: "Keep source",
+      deleteNamed: "Delete {{name}}",
+      deleteFailed: "Deletion failed",
+      probeUnavailable: "Retrieval probe unavailable",
+      noChunks:
+        "No chunks returned for this query. This source contributes no evidence right now.",
+    },
   },
 
   trace: {
@@ -294,6 +392,9 @@ export const en: Resources = {
     emptyEvents: "No recorded steps",
     loadError: "Could not load trace",
     escalated: "Escalated",
+    emptyInspectTitle: "No step selected",
+    emptyInspectBody:
+      "Pick a timeline step to see the decision, the evidence behind it, and the measured cost of that turn.",
   },
 
   sessions: {

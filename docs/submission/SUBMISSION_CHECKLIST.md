@@ -45,8 +45,8 @@
 | G1 | PARTIAL | Package draft; video/screenshots pending |
 | G2 | PASS* | `docs/G2_BOOTSTRAP.generated.md` (293.85s); strict clone `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE` |
 | G3 | PASS | phi3.5 / challenge profile |
-| G4 | PARTIAL | `FINAL_EVIDENCE_REQUIRED:G4_P50` `FINAL_EVIDENCE_REQUIRED:G4_P95` + human mic |
-| G5 | PARTIAL | `FINAL_EVIDENCE_REQUIRED:G5_UI` |
+| G4 | PASS WITH WARNINGS | Operator browser confirm 2026-08-09; barge-in subsequent PARTIAL; P50/P95 unmeasured |
+| G5 | PASS | Operator UI confirm 2026-08-09 (LUNA-73 / ZXQ-921) + `docs/G5_LIVE_KNOWLEDGE.generated.md` |
 
 \*Host caches may have been warm during measurement.
 

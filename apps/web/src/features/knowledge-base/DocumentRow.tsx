@@ -20,18 +20,24 @@ export function DocumentRow({
       onClick={onSelect}
       aria-current={selected || undefined}
       className={cn(
-        "flex w-full items-center gap-3 rounded-xs px-3 py-3 text-left",
+        "relative flex w-full items-center gap-3 rounded-sm px-3 py-3.5 text-left",
         "transition-colors duration-[var(--motion-fast)] ease-[var(--motion-ease)]",
         selected
-          ? "bg-[color-mix(in_oklab,var(--limen-cyan)_9%,transparent)]"
+          ? "bg-[color-mix(in_oklab,var(--limen-cyan)_10%,transparent)]"
           : "hover:bg-[var(--glass-highlight)]",
       )}
     >
+      {selected && (
+        <span
+          aria-hidden
+          className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-cyan"
+        />
+      )}
       <FileText
         aria-hidden
         size={16}
         strokeWidth={1.5}
-        className="shrink-0 text-text-3"
+        className={cn("shrink-0", selected ? "text-cyan" : "text-text-3")}
       />
       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="type-body truncate text-ice">

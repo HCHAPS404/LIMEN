@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { useIsMobile } from "../../hooks/useMediaQuery";
 import { cn } from "../../lib/cn";
+import { WorkspaceAtmosphere } from "../atmosphere/WorkspaceAtmosphere";
 import { NavBarMobile, NavRail } from "./NavRail";
 
 /** Full-viewport application shell: header, rail, workspace.
@@ -18,19 +19,24 @@ export function AppShell({
   const isMobile = useIsMobile();
 
   return (
-    <div className="flex h-dvh min-h-0 flex-col overflow-hidden">
-      {header}
-      <div className="flex min-h-0 flex-1">
-        {!isMobile && <NavRail />}
-        <main
-          className={cn(
-            "atmosphere-soft flex min-h-0 min-w-0 flex-1 flex-col",
-            isMobile && "pb-14",
-          )}
-        >
-          {children}
-        </main>
+    <div className="relative flex h-dvh min-h-0 flex-col overflow-hidden">
+      <WorkspaceAtmosphere />
+
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        {header}
+        <div className="flex min-h-0 flex-1">
+          {!isMobile && <NavRail />}
+          <main
+            className={cn(
+              "flex min-h-0 min-w-0 flex-1 flex-col bg-transparent",
+              isMobile && "pb-14",
+            )}
+          >
+            {children}
+          </main>
+        </div>
       </div>
+
       {isMobile && <NavBarMobile />}
     </div>
   );
@@ -83,10 +89,7 @@ export function WorkspaceSplit({
         </div>
         {inspector && (
           <aside
-            className={cn(
-              "flex flex-col",
-              !pageScroll && "min-h-0",
-            )}
+            className={cn("flex flex-col", !pageScroll && "min-h-0")}
           >
             {inspector}
           </aside>

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderRoute } from "../../test/renderRoute";
 import { setViewportWidth } from "../../test/setup";
+import { useCallStore } from "../../state/call-store";
 
 const healthPayload = {
   status: "ok",
@@ -76,7 +77,7 @@ describe("application shell routing", () => {
     expect(
       await screen.findByRole("button", { name: /iniciar llamada|start call/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("NOT ASSESSED")).not.toBeInTheDocument();
+    expect(screen.queryByText(/NOT ASSESSED|SIN EVALUAR/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/sin turnos|no turns/i)).not.toBeInTheDocument();
   });
 
@@ -118,13 +119,83 @@ describe("application shell routing", () => {
     }
     vi.stubGlobal("WebSocket", MockWebSocket);
 
+    // jsdom has no mic: stub just enough Web Audio + getUserMedia for session.start().
+    const fakeTrack = { stop: () => undefined, enabled: true } as MediaStreamTrack;
+    const fakeStream = {
+      getTracks: () => [fakeTrack],
+      getAudioTracks: () => [fakeTrack],
+    } as MediaStream;
+    vi.stubGlobal(
+      "navigator",
+      {
+        ...navigator,
+        mediaDevices: {
+          getUserMedia: vi.fn(async () => fakeStream),
+          enumerateDevices: vi.fn(async () => []),
+        },
+      } as unknown as Navigator,
+    );
+    class FakeAudioContext {
+      state = "running";
+      destination = {};
+      sampleRate = 48000;
+      currentTime = 0;
+      createMediaStreamSource() {
+        return { connect: () => undefined, disconnect: () => undefined };
+      }
+      createAnalyser() {
+        return {
+          fftSize: 2048,
+          smoothingTimeConstant: 0.38,
+          frequencyBinCount: 1024,
+          connect: () => undefined,
+          disconnect: () => undefined,
+          getFloatTimeDomainData: (buf: Float32Array) => buf.fill(0),
+        };
+      }
+      createGain() {
+        return {
+          gain: { value: 0 },
+          connect: () => undefined,
+          disconnect: () => undefined,
+        };
+      }
+      createOscillator() {
+        return {
+          type: "sine",
+          frequency: { value: 440 },
+          connect: () => undefined,
+          start: () => undefined,
+          stop: () => undefined,
+        };
+      }
+      createScriptProcessor() {
+        return {
+          onaudioprocess: null as ((ev: unknown) => void) | null,
+          connect: () => undefined,
+          disconnect: () => undefined,
+        };
+      }
+      resume = async () => undefined;
+      close = async () => undefined;
+    }
+    vi.stubGlobal("AudioContext", FakeAudioContext);
+    vi.stubGlobal("webkitAudioContext", FakeAudioContext);
+
     renderRoute("/call");
 
     fireEvent.click(
       await screen.findByRole("button", { name: /iniciar llamada|start call/i }),
     );
 
-    expect(await screen.findByText("NOT ASSESSED")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(["LISTENING", "SPEAKING", "ERROR"]).toContain(
+        useCallStore.getState().phase,
+      );
+    });
+    expect(
+      await screen.findByText("SIN EVALUAR", {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/sin turnos|no turns/i)).toBeInTheDocument();
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });

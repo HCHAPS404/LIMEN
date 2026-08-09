@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import time
@@ -25,6 +26,11 @@ from apps.api.schemas.calls import (
 )
 from limen.auth import AuthService, SessionInvalid
 from limen.conversation.call_service import CallService
+from limen.conversation.session_intent import (
+    idle_check_reply,
+    idle_timeout_farewell,
+    max_duration_farewell,
+)
 from limen.intelligence.providers.factory import build_llm_provider
 from limen.persistence.database import get_database
 from limen.persistence.repositories import (
@@ -42,9 +48,17 @@ from limen.voice.pipeline import (
 )
 from limen.voice.stt import build_stt_provider
 from limen.voice.timing_record import VoiceTurnTimingRecord
+from limen.voice.transcript_quality import is_likely_stt_hallucination
 from limen.voice.tts import build_tts_provider
 
 router = APIRouter(prefix="/api/calls", tags=["calls"])
+
+# Premium call lifecycle — keep sessions from hanging forever (cost + UX).
+_IDLE_PROMPT_S = 150.0
+_IDLE_HANGUP_AFTER_PROMPT_S = 90.0
+_MAX_CALL_DURATION_S = 15 * 60.0
+_PLAYBACK_END_FAILSAFE_S = 8.0
+_WS_POLL_S = 5.0
 
 
 def _call_not_found() -> HTTPException:
@@ -70,6 +84,7 @@ async def create_call(
         patient_alias=payload.patient_alias,
         procedure=payload.procedure,
         postoperative_day=payload.postoperative_day,
+        voice_persona=payload.voice_persona,
     )
     return CallSummaryResponse.model_validate(created)
 
@@ -304,6 +319,17 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
     pending_speech_end: dict[int, float] = {}
     pending_timing: dict[int, VoiceTurnTimingRecord] = {}
     cancelled_turns: set[int] = set()
+    pending_end_after_playback: set[int] = set()
+    pending_end_failsafe: dict[int, float] = {}
+    pending_end_reason: dict[int, str] = {}
+    call_started_mono = time.monotonic()
+    last_patient_activity = time.monotonic()
+    idle_prompt_sent_at: float | None = None
+    agent_speaking = False
+
+    from limen.voice.personas import get_persona
+
+    active_persona_id = service.get_voice_persona(account.account_id, call_id)
 
     async def emit(type_: str, payload: dict[str, Any]) -> None:
         nonlocal sequence
@@ -337,11 +363,144 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
             status=status,  # type: ignore[arg-type]
         )
 
-    await emit("call.state", {"state": "LISTENING"})
+    async def speak_system(
+        text: str,
+        *,
+        end_session: bool,
+        call_end_reason: str | None = None,
+    ) -> int:
+        """TTS a system line (idle / max-duration). Returns turn_seq."""
+        nonlocal active_turn_seq, agent_speaking, active_persona_id
+        active_turn_seq += 1
+        turn_seq = active_turn_seq
+        agent_speaking = True
+        await emit(
+            "call.transcript",
+            {
+                "turn_id": uuid4().hex,
+                "speaker": "agent",
+                "text": text,
+                "timestamp": datetime.now(tz=UTC).isoformat(),
+                "turn_seq": turn_seq,
+            },
+        )
+        await emit("call.state", {"state": "SPEAKING", "turn_seq": turn_seq})
+        try:
+            audio, tts_timing = await synthesize_with_timing(
+                tts, text, voice=active_persona_id
+            )
+        except Exception as error:  # noqa: BLE001
+            agent_speaking = False
+            await emit(
+                "call.error",
+                {
+                    "code": "tts_failed",
+                    "message": f"{type(error).__name__}:{error}",
+                    "retryable": True,
+                    "assistant_text": text,
+                },
+            )
+            await emit("call.state", {"state": "LISTENING"})
+            return turn_seq
+        await emit(
+            "call.metrics",
+            {
+                **timing_to_metrics(tts_timing),
+                "tts_provider": audio.provider,
+                "tts_voice": audio.voice,
+                "audio_duration_ms": audio.duration_ms,
+                "turn_seq": turn_seq,
+                "system_prompt": True,
+                "end_session": end_session,
+                "call_end_reason": call_end_reason,
+            },
+        )
+        await emit(
+            "call.audio",
+            {
+                "turn_seq": turn_seq,
+                "mime_type": audio.mime_type,
+                "sample_rate_hz": audio.sample_rate_hz,
+            },
+        )
+        await websocket.send_bytes(audio.audio)
+        if end_session:
+            pending_end_after_playback.add(turn_seq)
+            pending_end_failsafe[turn_seq] = (
+                time.monotonic() + _PLAYBACK_END_FAILSAFE_S
+            )
+            if call_end_reason:
+                pending_end_reason[turn_seq] = call_end_reason
+        return turn_seq
+
+    async def finish_call(reason: str) -> None:
+        service.finish(account_id=account.account_id, call_id=call_id)
+        await emit("call.state", {"state": "ENDED"})
+        await emit(
+            "call.ended",
+            {"reason": reason, "call_end_reason": reason},
+        )
+        trace(
+            "call.ended",
+            stage="voice",
+            detail=reason,
+            payload={"call_end_reason": reason},
+        )
+
+    await emit(
+        "call.state",
+        {
+            "state": "LISTENING",
+            "voice_persona": active_persona_id,
+            "voice_display_name": get_persona(active_persona_id).display_name,
+        },
+    )
 
     try:
         while True:
-            message = await websocket.receive()
+            try:
+                message = await asyncio.wait_for(
+                    websocket.receive(), timeout=_WS_POLL_S
+                )
+            except TimeoutError:
+                now = time.monotonic()
+                # Failsafe: hang up if playback.completed never arrives.
+                for seq, deadline in list(pending_end_failsafe.items()):
+                    if now < deadline:
+                        continue
+                    if seq not in pending_end_after_playback:
+                        pending_end_failsafe.pop(seq, None)
+                        continue
+                    reason = pending_end_reason.pop(seq, "patient_farewell")
+                    pending_end_after_playback.discard(seq)
+                    pending_end_failsafe.pop(seq, None)
+                    await finish_call(reason)
+                    return
+                if now - call_started_mono >= _MAX_CALL_DURATION_S:
+                    await speak_system(
+                        max_duration_farewell(),
+                        end_session=True,
+                        call_end_reason="max_duration",
+                    )
+                    # Wait for playback or failsafe on next polls.
+                    continue
+                if agent_speaking:
+                    continue
+                if idle_prompt_sent_at is None:
+                    if now - last_patient_activity >= _IDLE_PROMPT_S:
+                        await speak_system(
+                            idle_check_reply(),
+                            end_session=False,
+                        )
+                        idle_prompt_sent_at = time.monotonic()
+                elif now - idle_prompt_sent_at >= _IDLE_HANGUP_AFTER_PROMPT_S:
+                    await speak_system(
+                        idle_timeout_farewell(),
+                        end_session=True,
+                        call_end_reason="idle_prompt_timeout",
+                    )
+                continue
+
             if message.get("type") == "websocket.disconnect":
                 break
 
@@ -358,12 +517,28 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                     body = {"type": "text", "text": raw}
                 msg_type = str(body.get("type") or "")
                 if msg_type in {"end", "finish"}:
-                    service.finish(account_id=account.account_id, call_id=call_id)
-                    await emit("call.state", {"state": "ENDED"})
-                    await emit("call.ended", {"reason": "client_end"})
+                    await finish_call("manual")
                     break
+                if msg_type == "voice.select":
+                    active_persona_id = service.set_voice_persona(
+                        account.account_id,
+                        call_id,
+                        str(body.get("persona_id") or body.get("voice_persona") or ""),
+                    )
+                    await emit(
+                        "call.state",
+                        {
+                            "state": "LISTENING",
+                            "voice_persona": active_persona_id,
+                            "voice_display_name": get_persona(
+                                active_persona_id
+                            ).display_name,
+                        },
+                    )
+                    continue
                 if msg_type == "voice.interrupt":
                     cancelled_turns.add(active_turn_seq)
+                    agent_speaking = False
                     service.mark_voice_interrupted(
                         account_id=account.account_id, call_id=call_id
                     )
@@ -445,6 +620,32 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                             )
                     continue
                 if msg_type == "voice.playback.completed":
+                    agent_speaking = False
+                    done_seq = body.get("turn_seq")
+                    try:
+                        done_seq_i = int(done_seq) if done_seq is not None else None
+                    except (TypeError, ValueError):
+                        done_seq_i = None
+                    if (
+                        done_seq_i is not None
+                        and done_seq_i in pending_end_after_playback
+                    ):
+                        pending_end_after_playback.discard(done_seq_i)
+                        pending_end_failsafe.pop(done_seq_i, None)
+                        reason = pending_end_reason.pop(
+                            done_seq_i, "patient_farewell"
+                        )
+                        await finish_call(reason)
+                        break
+                    # Open LISTENING only after browser playback ends — emitting
+                    # LISTENING right after send_bytes lets speaker echo hit STT.
+                    await emit(
+                        "call.state",
+                        {
+                            "state": "LISTENING",
+                            "turn_seq": body.get("turn_seq"),
+                        },
+                    )
                     trace(
                         "voice.playback.completed",
                         stage="voice",
@@ -458,9 +659,13 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                     trace("voice.mic.granted", stage="voice")
                     continue
                 if msg_type == "voice.speech.started":
+                    last_patient_activity = time.monotonic()
+                    idle_prompt_sent_at = None
                     trace("voice.speech.started", stage="voice")
                     continue
                 if msg_type == "voice.speech.ended":
+                    last_patient_activity = time.monotonic()
+                    idle_prompt_sent_at = None
                     speech_end_mono = body.get("speech_end_monotonic")
                     if isinstance(speech_end_mono, (int, float)):
                         # Will attach to next audio frame / text turn.
@@ -480,8 +685,13 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                         speech_end_mono = float(body["speech_end_monotonic"])
                     except (TypeError, ValueError):
                         speech_end_mono = None
+                if user_text:
+                    last_patient_activity = time.monotonic()
+                    idle_prompt_sent_at = None
 
             elif message.get("bytes") is not None:
+                last_patient_activity = time.monotonic()
+                idle_prompt_sent_at = None
                 audio_bytes = message["bytes"]
                 active_turn_seq += 1
                 turn_seq = active_turn_seq
@@ -565,6 +775,33 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
 
                 user_text = transcript.normalized_text or transcript.text
                 user_text = normalize_transcript_text(user_text)
+                if is_likely_stt_hallucination(
+                    user_text,
+                    duration_ms=transcript.duration_ms,
+                    confidence=transcript.confidence,
+                ):
+                    await emit(
+                        "call.error",
+                        {
+                            "code": "stt_hallucination",
+                            "message": "No se escuchó una frase clara. Intente de nuevo.",
+                            "retryable": True,
+                        },
+                    )
+                    await emit("call.state", {"state": "LISTENING"})
+                    trace(
+                        "voice.false_barge_in",
+                        stage="stt",
+                        status="error",
+                        detail="stt_hallucination_rejected",
+                        payload={
+                            "turn_seq": turn_seq,
+                            "raw_text": transcript.raw_text,
+                            "duration_ms": transcript.duration_ms,
+                            "confidence": transcript.confidence,
+                        },
+                    )
+                    continue
                 timing_rec = VoiceTurnTimingRecord(
                     sample_id=f"{call_id}:{turn_seq}",
                     turn_id=f"pending-{turn_seq}",
@@ -736,6 +973,7 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 continue
 
             await emit("call.state", {"state": "SPEAKING", "turn_seq": turn_seq})
+            agent_speaking = True
             trace(
                 "tts.started",
                 stage="tts",
@@ -743,20 +981,24 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 payload={"turn_seq": turn_seq},
             )
             try:
+                persona_voice = active_persona_id
+                if result.conversation and result.conversation.assistant_persona_id:
+                    persona_voice = result.conversation.assistant_persona_id
+                    active_persona_id = persona_voice
                 audio, tts_timing = await synthesize_with_timing(
-                    tts, result.assistant_text, voice=settings.tts_voice
+                    tts, result.assistant_text, voice=persona_voice
                 )
             except Exception as error:  # noqa: BLE001
+                agent_speaking = False
                 await emit(
                     "call.error",
                     {
                         "code": "tts_failed",
                         "message": f"{type(error).__name__}:{error}",
-                        "retryable": True,
+                        "retryable": not bool(result.metrics.get("end_session")),
                         "assistant_text": result.assistant_text,
                     },
                 )
-                await emit("call.state", {"state": "LISTENING"})
                 trace(
                     "provider.error",
                     stage="tts",
@@ -764,6 +1006,15 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                     detail="tts_failed",
                     payload={"turn_seq": turn_seq},
                 )
+                # Farewell/wrapup/idle must still hang up even if TTS fails —
+                # otherwise the session stays open with no audio to complete.
+                if result.metrics.get("end_session"):
+                    reason = str(
+                        result.metrics.get("call_end_reason") or "patient_farewell"
+                    )
+                    await finish_call(reason)
+                    break
+                await emit("call.state", {"state": "LISTENING"})
                 continue
 
             if turn_seq in pending_timing:
@@ -808,17 +1059,24 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 duration_ms=tts_timing.tts_ms,
                 payload={"turn_seq": turn_seq},
             )
-            await emit("call.state", {"state": "LISTENING", "turn_seq": turn_seq})
+            # Remain SPEAKING until voice.playback.completed (or interrupt).
+            if result.metrics.get("end_session"):
+                pending_end_after_playback.add(turn_seq)
+                pending_end_failsafe[turn_seq] = (
+                    time.monotonic() + _PLAYBACK_END_FAILSAFE_S
+                )
+                reason = str(
+                    result.metrics.get("call_end_reason") or "patient_farewell"
+                )
+                pending_end_reason[turn_seq] = reason
             if result.safety.escalate:
-                service.finish(account_id=account.account_id, call_id=call_id)
-                await emit("call.state", {"state": "ENDED"})
-                await emit("call.ended", {"reason": "escalation"})
+                await finish_call("escalation")
                 break
     except WebSocketDisconnect:
         return
     except Exception as error:  # noqa: BLE001
         await emit(
             "call.error",
-            {"code": "voice_session_error", "message": str(error)},
+            {"code": "voice_session_error", "message": f"{type(error).__name__}:{error}"},
         )
         await websocket.close(code=1011)

@@ -8,6 +8,7 @@ export type RiskLevel = "GREEN" | "YELLOW" | "ORANGE" | "RED";
 export type ClinicalCertainty =
   | "KNOWN_NORMAL"
   | "KNOWN_ABNORMAL"
+  | "IMPROVING"
   | "UNKNOWN"
   | "CONFLICTING";
 
@@ -192,7 +193,12 @@ export type RealtimeEvent =
       call_id: string;
       sequence: number;
       timestamp: string;
-      payload: { state: CallPhase; turn_seq?: number };
+      payload: {
+        state: CallPhase;
+        turn_seq?: number;
+        voice_persona?: string;
+        voice_display_name?: string;
+      };
     }
   | {
       type: "call.transcript";
@@ -257,7 +263,7 @@ export type RealtimeEvent =
       call_id: string;
       sequence: number;
       timestamp: string;
-      payload: { reason: string };
+      payload: { reason: string; call_end_reason?: string };
     };
 
 export type RealtimeEventType = RealtimeEvent["type"];

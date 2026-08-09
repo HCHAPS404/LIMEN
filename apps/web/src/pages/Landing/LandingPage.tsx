@@ -107,14 +107,14 @@ export function LandingPage() {
 
                 <motion.h1
                   {...rise(0.1)}
-                  className="type-h1 m-0 max-w-[24ch] text-ice md:text-[clamp(1.75rem,2.4vw,2.35rem)]"
+                  className="type-h1 m-0 max-w-[24ch] text-ice"
                 >
                   {t("hero.headline")}
                 </motion.h1>
 
                 <motion.p
                   {...rise(0.16)}
-                  className="type-body m-0 max-w-[42ch] text-text-2 md:text-[1.0625rem] md:leading-relaxed"
+                  className="type-body-l m-0 max-w-[42ch] text-text-2"
                 >
                   {t("hero.support")}
                 </motion.p>
@@ -167,22 +167,12 @@ export function LandingPage() {
                   level={voice.level}
                   className="h-[clamp(17rem,44vh,30rem)] w-[clamp(17rem,44vh,30rem)]"
                 />
-                {!voice.enabled && (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={voice.enable}
-                    className="relative z-[1]"
-                  >
-                    {t("hero.enableMic")}
-                  </Button>
-                )}
               </motion.div>
             </Shell>
           </section>
 
           {/* Problem */}
-          <section className="border-t border-glass-border py-16 md:py-20">
+          <section className="py-16 md:py-20">
             <Shell>
               <motion.div
                 {...reveal()}
@@ -206,7 +196,7 @@ export function LandingPage() {
           {/* How it works */}
           <section
             id="how-it-works"
-            className="scroll-mt-28 border-t border-glass-border py-16 md:py-20"
+            className="scroll-mt-28 py-16 md:py-20"
           >
             <Shell>
               <motion.div
@@ -224,14 +214,14 @@ export function LandingPage() {
                 </p>
               </motion.div>
 
-              <ol className="mt-10 grid list-none gap-8 border-t border-glass-border p-0 pt-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-10">
+              <ol className="mt-10 grid list-none gap-8 p-0 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-10">
                 {steps.map((step, index) => (
                   <motion.li
                     key={step}
                     {...reveal(index * 0.06)}
                     className="flex flex-col gap-3"
                   >
-                    <span className="type-metric text-[1.25rem] text-text-3">
+                    <span className="type-metric text-text-3">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <h3 className="type-h3 m-0 text-ice">
@@ -246,8 +236,8 @@ export function LandingPage() {
             </Shell>
           </section>
 
-          {/* Pillars */}
-          <section className="border-t border-glass-border py-16 md:py-20">
+          {/* Pillars — open editorial list, not a card grid */}
+          <section className="py-16 md:py-20">
             <Shell>
               <motion.div
                 {...reveal()}
@@ -266,39 +256,37 @@ export function LandingPage() {
                 </p>
               </motion.div>
 
-              <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4 lg:gap-5">
+              <ul className="mt-10 m-0 flex list-none flex-col gap-8 p-0 lg:mt-12 lg:gap-10">
                 {pillars.map(({ key, icon: Icon }, index) => (
-                  <motion.article
+                  <motion.li
                     key={key}
                     {...reveal(index * 0.05)}
-                    className="glass-1 sheen-top flex flex-col gap-4 rounded-2xl p-5 md:p-6"
+                    className="grid gap-4 sm:grid-cols-[minmax(0,0.28fr)_minmax(0,0.72fr)] sm:items-start sm:gap-10"
                   >
-                    <div className="relative z-[1] flex items-center gap-3">
-                      <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-glass-border bg-[var(--glass-highlight)]">
-                        <Icon
-                          aria-hidden
-                          size={17}
-                          strokeWidth={1.6}
-                          className="text-ice"
-                        />
-                      </span>
-                      <h3 className="type-label m-0 text-ice">
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        aria-hidden
+                        size={18}
+                        strokeWidth={1.6}
+                        className="shrink-0 text-cyan"
+                      />
+                      <h3 className="type-h3 m-0 text-ice">
                         {t(`pillars.${key}.name`)}
                       </h3>
                     </div>
-                    <p className="type-body relative z-[1] m-0 text-text-2">
+                    <p className="type-body m-0 max-w-[52ch] text-text-2">
                       {t(`pillars.${key}.body`)}
                     </p>
-                  </motion.article>
+                  </motion.li>
                 ))}
-              </div>
+              </ul>
             </Shell>
           </section>
 
           {/* Security */}
           <section
             id="security"
-            className="scroll-mt-28 border-t border-glass-border py-16 md:py-20"
+            className="scroll-mt-28 py-16 md:py-20"
           >
             <Shell className="grid gap-10 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:gap-14">
               <motion.div {...reveal()}>
@@ -316,7 +304,7 @@ export function LandingPage() {
               <motion.dl {...reveal(0.06)} className="m-0 flex flex-col gap-8">
                 {guarantees.map(({ key, icon: Icon }) => (
                   <div key={key} className="flex gap-4">
-                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-glass-border bg-[var(--glass-highlight)]">
+                    <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-glass-border bg-[var(--glass-highlight)]">
                       <Icon
                         aria-hidden
                         size={16}
@@ -325,7 +313,7 @@ export function LandingPage() {
                       />
                     </span>
                     <div className="flex flex-col gap-1.5">
-                      <dt className="type-h3 m-0 text-[1.0625rem] text-ice">
+                      <dt className="type-h3 m-0 text-ice">
                         {t(`security.${key}.title`)}
                       </dt>
                       <dd className="type-body m-0 text-text-2">
@@ -339,7 +327,7 @@ export function LandingPage() {
           </section>
 
           {/* Status */}
-          <section className="border-t border-glass-border py-14 md:py-16">
+          <section className="py-14 md:py-16">
             <Shell>
               <motion.div
                 {...reveal()}
@@ -363,8 +351,19 @@ export function LandingPage() {
             <Shell>
               <motion.div
                 {...reveal()}
-                className="glass-2 sheen-top relative flex flex-col gap-6 overflow-hidden rounded-2xl px-7 py-10 md:flex-row md:items-center md:justify-between md:gap-10 md:px-10 md:py-12"
+                className="relative flex flex-col gap-6 overflow-hidden px-1 py-10 md:flex-row md:items-center md:justify-between md:gap-10 md:py-12"
               >
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -z-0 rounded-lg"
+                  style={{
+                    background: `radial-gradient(
+                      70% 120% at 8% 50%,
+                      color-mix(in oklab, var(--limen-action) 14%, transparent),
+                      transparent 70%
+                    )`,
+                  }}
+                />
                 <div className="relative z-[1] max-w-xl">
                   <h2 className="type-h1 m-0 text-ice">{t("cta.title")}</h2>
                   <p className="type-body mt-4 text-text-2">{t("cta.body")}</p>
@@ -392,7 +391,7 @@ export function LandingPage() {
             </Shell>
           </section>
 
-          <footer className="border-t border-glass-border pt-10 md:pt-12">
+          <footer className="pt-10 md:pt-12">
             <Shell className="flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
               <div className="flex flex-col gap-3">
                 <LimenLockup />
@@ -441,7 +440,7 @@ function LandingNav({ signedIn }: { signedIn: boolean }) {
       <div
         className={cn(
           SHELL,
-          "glass-2 sheen-top flex h-14 items-center gap-2 rounded-2xl px-3 sm:gap-3 sm:px-4",
+          "glass-1 sheen-top flex h-14 items-center gap-2 rounded-lg px-3 sm:gap-3 sm:px-4",
         )}
       >
         <Link

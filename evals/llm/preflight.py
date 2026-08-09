@@ -97,6 +97,35 @@ def detect_nvidia_gpu() -> dict[str, Any]:
         return {"name": "UNMEASURED", "vram_bytes": "UNMEASURED"}
 
 
+def detect_nvidia_gpu() -> dict[str, Any]:
+    """Return GPU name and VRAM bytes from nvidia-smi, or UNMEASURED fields."""
+    try:
+        out = subprocess.check_output(
+            [
+                "nvidia-smi",
+                "--query-gpu=name,memory.total",
+                "--format=csv,noheader,nounits",
+            ],
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=3,
+        ).strip()
+        if not out:
+            return {"name": "UNMEASURED", "vram_bytes": "UNMEASURED"}
+        line = out.splitlines()[0]
+        parts = [part.strip() for part in line.split(",")]
+        name = parts[0] if parts else "UNMEASURED"
+        vram_bytes: int | str = "UNMEASURED"
+        if len(parts) > 1:
+            try:
+                vram_bytes = int(float(parts[1]) * 1024 * 1024)
+            except ValueError:
+                vram_bytes = "UNMEASURED"
+        return {"name": name, "vram_bytes": vram_bytes}
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return {"name": "UNMEASURED", "vram_bytes": "UNMEASURED"}
+
+
 def collect_hardware() -> dict[str, Any]:
     ram_bytes: int | None = None
     try:

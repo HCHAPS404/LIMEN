@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import type { RiskLevel } from "../../api/types";
 import { RiskBadge } from "./RiskBadge";
-import { riskMeaning, riskPresentation } from "./riskPresentation";
+import { riskMeaning, riskPresentation, riskView } from "./riskPresentation";
 
 describe("RiskBadge", () => {
   it("labels every risk level with its clinical meaning", () => {
@@ -11,9 +11,10 @@ describe("RiskBadge", () => {
 
     for (const level of levels) {
       const { unmount } = render(<RiskBadge risk={level} />);
-      expect(screen.getByText(level)).toBeInTheDocument();
+      const view = riskView(level);
+      expect(screen.getByText(view.label)).toBeInTheDocument();
       expect(
-        screen.getByText(`Clinical risk ${level}: ${riskMeaning(level)}`),
+        screen.getByText(`Riesgo clínico ${view.label}: ${view.meaning}`),
       ).toBeInTheDocument();
       unmount();
     }
@@ -22,10 +23,10 @@ describe("RiskBadge", () => {
   it("states that risk is unassessed instead of defaulting to GREEN", () => {
     render(<RiskBadge risk={null} />);
 
-    expect(screen.getByText("NOT ASSESSED")).toBeInTheDocument();
-    expect(screen.queryByText("GREEN")).not.toBeInTheDocument();
+    expect(screen.getByText("SIN EVALUAR")).toBeInTheDocument();
+    expect(screen.queryByText("VERDE")).not.toBeInTheDocument();
     expect(
-      screen.getByText(/No safety decision recorded/),
+      screen.getByText(/Aún no hay decisión de seguridad/),
     ).toBeInTheDocument();
   });
 
@@ -41,6 +42,7 @@ describe("RiskBadge", () => {
   it("shows the meaning inline when asked", () => {
     render(<RiskBadge risk="RED" showMeaning />);
 
-    expect(screen.getAllByText(/Escalate to clinician/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Escalar a clínico/).length).toBeGreaterThan(0);
+    expect(riskMeaning("RED")).toMatch(/Escalar/i);
   });
 });

@@ -16,11 +16,13 @@ export function createCall(input?: {
   patientAlias?: string;
   procedure?: string | null;
   postoperativeDay?: number | null;
+  voicePersona?: string | null;
 }): Promise<CallSummary> {
   return apiJson<CallSummary>("/api/calls", {
     patient_alias: input?.patientAlias ?? "Paciente",
     procedure: input?.procedure ?? null,
     postoperative_day: input?.postoperativeDay ?? null,
+    voice_persona: input?.voicePersona ?? "elena",
   });
 }
 

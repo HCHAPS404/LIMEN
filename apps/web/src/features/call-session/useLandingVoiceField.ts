@@ -10,26 +10,41 @@ const LEVEL_POLL_MS = 50;
 const SPEECH_FLOOR = 0.012;
 
 /**
- * Landing-only voice field. Mic opens only after an explicit enable gesture
- * (browsers require a user gesture for capture; auto-open on mount is hostile).
+ * Landing voice field: the orb always animates (ambient).
+ * Mic capture is attempted quietly for reactive motion; failure stays ambient
+ * with no “enable microphone” CTA (browsers may still deny without a gesture).
  */
 export function useLandingVoiceField() {
-  const [level, setLevel] = useState(0);
+  const [level, setLevel] = useState(0.04);
   const [phase, setPhase] = useState<CallPhase>("IDLE");
-  const [enabled, setEnabled] = useState(false);
   const captureRef = useRef<MicrophoneCapture | null>(null);
+  const ambientRef = useRef(0);
 
   useEffect(() => {
-    if (!enabled) {
-      captureRef.current?.stop();
-      captureRef.current = null;
-      setLevel(0);
-      setPhase("IDLE");
-      return;
-    }
-
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
+    let micReady = false;
+
+    const startAmbient = () => {
+      timer = setInterval(() => {
+        if (cancelled) return;
+        if (micReady && captureRef.current) {
+          const next = captureRef.current.readLevel();
+          setLevel(next);
+          setPhase(next > SPEECH_FLOOR ? "LISTENING" : "IDLE");
+          return;
+        }
+        ambientRef.current += 0.045;
+        const wave =
+          0.035 +
+          0.025 * Math.sin(ambientRef.current) +
+          0.012 * Math.sin(ambientRef.current * 0.37);
+        setLevel(wave);
+        setPhase("IDLE");
+      }, LEVEL_POLL_MS);
+    };
+
+    startAmbient();
 
     void (async () => {
       try {
@@ -39,17 +54,10 @@ export function useLandingVoiceField() {
           return;
         }
         captureRef.current = capture;
-        timer = setInterval(() => {
-          const next = capture.readLevel();
-          setLevel(next);
-          setPhase(next > SPEECH_FLOOR ? "LISTENING" : "IDLE");
-        }, LEVEL_POLL_MS);
+        micReady = true;
       } catch {
-        if (!cancelled) {
-          setLevel(0);
-          setPhase("IDLE");
-          setEnabled(false);
-        }
+        // Keep ambient animation — no CTA, no error chrome on the landing hero.
+        micReady = false;
       }
     })();
 
@@ -59,13 +67,13 @@ export function useLandingVoiceField() {
       captureRef.current?.stop();
       captureRef.current = null;
     };
-  }, [enabled]);
+  }, []);
 
   return {
     level,
     phase,
-    enabled,
-    enable: () => setEnabled(true),
-    disable: () => setEnabled(false),
+    enabled: true,
+    enable: () => undefined,
+    disable: () => undefined,
   };
 }

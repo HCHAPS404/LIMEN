@@ -66,6 +66,12 @@ class ConversationContext(BaseModel):
     evidence_available: bool = False
     current_safety: SafetyDecision | None = None
     greeting_done: bool = False
+    patient_display_name: str | None = None
+    asked_preferred_name: bool = False
+    # Assistant voice persona for this call only (settings → createCall).
+    assistant_persona_id: str | None = None
+    assistant_display_name: str | None = None
+    assistant_gender: Literal["female", "male"] | None = None
 
     def debug_view(self) -> dict[str, Any]:
         """Safe structured snapshot for debug UI / TRAZA (no chain-of-thought)."""
@@ -90,6 +96,11 @@ class ConversationContext(BaseModel):
             "previous_response_interrupted": self.previous_response_interrupted,
             "evidence_available": self.evidence_available,
             "greeting_done": self.greeting_done,
+            "patient_display_name": self.patient_display_name,
+            "asked_preferred_name": self.asked_preferred_name,
+            "assistant_persona_id": self.assistant_persona_id,
+            "assistant_display_name": self.assistant_display_name,
+            "assistant_gender": self.assistant_gender,
             "current_severity": (
                 self.current_safety.severity.name if self.current_safety else None
             ),
@@ -118,17 +129,39 @@ def infer_question_intent(question: str) -> tuple[str, list[str]]:
 
 
 def extract_pain_severity_mention(text: str) -> int | None:
-    """Parse informal Spanish severity like 'un siete' / '7/10'."""
+    """Parse informal Spanish severity like 'un siete' / '7/10'.
+
+    When the patient reports a transition («bajó de 7 a 4»), returns the
+    **current** value (4). Peak is recovered via ``extract_pain_severity_transition``.
+    """
+    transition = extract_pain_severity_transition(text)
+    if transition is not None:
+        _peak, current = transition
+        return current
+    return _parse_single_severity_token(text)
+
+
+def extract_pain_severity_transition(text: str) -> tuple[int, int] | None:
+    """Return (peak, current) for phrases like 'de 7 a 4' / 'bajó a un cuatro'."""
     import re
 
+    folded = text.casefold()
     m = re.search(
-        r"\b(?:un[ao]?\s+)?(diez|nueve|ocho|siete|seis|cinco|cuatro|tres|dos|uno|0?\d|10)\b"
-        r"(?:\s*(?:/|sobre)\s*10)?",
-        text.casefold(),
+        r"\b(?:de|desde)\s+"
+        r"(diez|nueve|ocho|siete|seis|cinco|cuatro|tres|dos|uno|10|[0-9])"
+        r"\s+a\s+"
+        r"(diez|nueve|ocho|siete|seis|cinco|cuatro|tres|dos|uno|10|[0-9])\b",
+        folded,
     )
-    if not m:
-        return None
-    raw = m.group(1)
+    if m:
+        peak = _severity_token_to_int(m.group(1))
+        current = _severity_token_to_int(m.group(2))
+        if peak is not None and current is not None:
+            return peak, current
+    return None
+
+
+def _severity_token_to_int(raw: str) -> int | None:
     words = {
         "uno": 1,
         "dos": 2,
@@ -150,3 +183,16 @@ def extract_pain_severity_mention(text: str) -> int | None:
     if 0 <= value <= 10:
         return value
     return None
+
+
+def _parse_single_severity_token(text: str) -> int | None:
+    import re
+
+    m = re.search(
+        r"\b(?:un[ao]?\s+)?(diez|nueve|ocho|siete|seis|cinco|cuatro|tres|dos|uno|0?\d|10)\b"
+        r"(?:\s*(?:/|sobre)\s*10)?",
+        text.casefold(),
+    )
+    if not m:
+        return None
+    return _severity_token_to_int(m.group(1))

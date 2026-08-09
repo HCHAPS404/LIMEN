@@ -48,6 +48,8 @@ type CallState = {
   escalated: boolean;
   evidence: EvidenceChunk[];
   metrics: TurnMetrics | null;
+  /** Call-scoped assistant name (frozen for the live session). */
+  assistantDisplayName: string | null;
   /** Voice WebSocket — distinct from HTTP /health "Connected". */
   transportStatus: "idle" | "connecting" | "open" | "closed" | "error";
 
@@ -55,6 +57,7 @@ type CallState = {
   /** Backend realtime may jump phases; do not drop the authoritative state. */
   applyServerPhase: (phase: CallPhase) => void;
   setCallId: (callId: string | null) => void;
+  setAssistantDisplayName: (name: string | null) => void;
   setMicLevel: (level: number) => void;
   setPatientSpeaking: (speaking: boolean) => void;
   setTransportStatus: (
@@ -84,6 +87,7 @@ const initial = {
   escalated: false,
   evidence: [] as EvidenceChunk[],
   metrics: null,
+  assistantDisplayName: null as string | null,
   transportStatus: "idle" as const,
 };
 
@@ -116,6 +120,7 @@ export const useCallStore = create<CallState>((set, get) => ({
   },
 
   setCallId: (callId) => set({ callId }),
+  setAssistantDisplayName: (assistantDisplayName) => set({ assistantDisplayName }),
   setMicLevel: (micLevel) => set({ micLevel }),
   setPatientSpeaking: (patientSpeaking) => set({ patientSpeaking }),
   setTransportStatus: (transportStatus) => set({ transportStatus }),

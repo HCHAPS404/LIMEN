@@ -1,5 +1,6 @@
 import { Search, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 import { describeError } from "../../api/client";
 import type { KnowledgeDocument } from "../../api/types";
@@ -20,6 +21,7 @@ export function SourceInspector({
 }: {
   document: KnowledgeDocument | null;
 }) {
+  const { t } = useTranslation("knowledge");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [query, setQuery] = useState("");
   const probe = useRetrievalProbe();
@@ -28,9 +30,10 @@ export function SourceInspector({
   if (!document) {
     return (
       <EmptyState
-        eyebrow="Threshold"
-        title="No source selected"
-        description="Choose a document to inspect its provenance, ingestion state, and retrieval behavior."
+        density="inline"
+        eyebrow={t("inspector.emptyEyebrow")}
+        title={t("inspector.emptyTitle")}
+        description={t("inspector.emptyBody")}
       />
     );
   }
@@ -92,13 +95,13 @@ export function SourceInspector({
         />
       )}
 
-      <div className="flex flex-col gap-3 border-t border-glass-border pt-4">
+      <div className="flex flex-col gap-3 pt-2">
         <TextField
-          label="Retrieval probe"
-          placeholder="Ask what this source should answer"
+          label={t("inspector.probeLabel")}
+          placeholder={t("inspector.probePlaceholder")}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          hint="Runs a real retrieval query. After deletion it should return no chunks from this source."
+          hint={t("inspector.probeHint")}
         />
         <Button
           variant="secondary"
@@ -110,12 +113,12 @@ export function SourceInspector({
             probe.mutate({ documentId: document.document_id, query: query.trim() })
           }
         >
-          Verify retrieval
+          {t("inspector.verify")}
         </Button>
 
         {probe.isError && (
           <ErrorState
-            title="Retrieval probe unavailable"
+            title={t("inspector.probeUnavailable")}
             message={describeError(probe.error)}
           />
         )}
@@ -123,8 +126,7 @@ export function SourceInspector({
         {probe.isSuccess &&
           (probe.data.chunks.length === 0 ? (
             <p className="type-body-s m-0 text-amber">
-              No chunks returned for this query. This source contributes no
-              evidence right now.
+              {t("inspector.noChunks")}
             </p>
           ) : (
             <div className="flex flex-col gap-2">
@@ -135,7 +137,7 @@ export function SourceInspector({
           ))}
       </div>
 
-      <div className="mt-auto border-t border-glass-border pt-4">
+      <div className="mt-auto pt-2">
         <Button
           variant="destructive"
           icon={<Trash2 aria-hidden size={16} />}
@@ -143,11 +145,11 @@ export function SourceInspector({
           loading={remove.isPending}
           onClick={() => setConfirmOpen(true)}
         >
-          Delete source
+          {t("inspector.delete")}
         </Button>
         {remove.isError && (
           <ErrorState
-            title="Deletion failed"
+            title={t("inspector.deleteFailed")}
             message={describeError(remove.error)}
             className="mt-3"
           />
@@ -157,18 +159,14 @@ export function SourceInspector({
       <Dialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Delete this source?"
-        description={
-          <>
-            <strong className="text-ice">{document.source_name}</strong> and all of
-            its chunks and embeddings will be removed. The clinical agent will no
-            longer retrieve anything from it.
-          </>
-        }
+        title={t("inspector.deleteTitle")}
+        description={t("inspector.deleteBody", {
+          name: document.source_name,
+        })}
         footer={
           <>
             <Button variant="ghost" onClick={() => setConfirmOpen(false)}>
-              Keep source
+              {t("inspector.keep")}
             </Button>
             <Button
               variant="destructive"
@@ -179,7 +177,7 @@ export function SourceInspector({
                 });
               }}
             >
-              Delete {document.source_name}
+              {t("inspector.deleteNamed", { name: document.source_name })}
             </Button>
           </>
         }

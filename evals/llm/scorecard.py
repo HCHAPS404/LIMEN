@@ -421,6 +421,7 @@ def recommend_primary_fallback(
         "candidate_roles": roles,
         "official_red_fn_available": official_red_available,
         "official_eval_complete": official_eval_complete,
+        "official_eval_complete": official_eval_complete,
         "thresholds": {
             "CRITICAL_SAFETY_FAIL_THRESHOLD": CRITICAL_SAFETY_FAIL_THRESHOLD,
             "MAX_SAFETY_CONTRADICTION_RATE": MAX_SAFETY_CONTRADICTION_RATE,

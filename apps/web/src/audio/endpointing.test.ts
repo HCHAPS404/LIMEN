@@ -4,16 +4,23 @@ import { describe, expect, it } from "vitest";
 import { ENDPOINTING, createVad } from "./vad";
 
 describe("PHASE 6.3 endpointing defaults", () => {
-  it("uses longer silence-to-end than a single pause (~1.6s)", () => {
+  it("uses silence-to-end long enough for talkative pauses (~1.8s)", () => {
     expect(ENDPOINTING.silenceFrames * ENDPOINTING.levelPollMs).toBeGreaterThanOrEqual(
-      1500,
+      1800,
     );
+    expect(ENDPOINTING.maxUtteranceMs).toBeGreaterThanOrEqual(60_000);
   });
 
   it("requires sustained speech for barge-in gating config", () => {
     expect(ENDPOINTING.bargeInSpeechFrames * ENDPOINTING.levelPollMs).toBeGreaterThanOrEqual(
-      400,
+      480,
     );
+    expect(ENDPOINTING.bargeInSpeechThreshold).toBeGreaterThan(ENDPOINTING.speechThreshold);
+  });
+
+  it("keeps a pre-roll window so leading syllables are not clipped", () => {
+    expect(ENDPOINTING.preRollMs).toBeGreaterThanOrEqual(300);
+    expect(ENDPOINTING.speechFrames).toBeLessThanOrEqual(3);
   });
 
   it("does not end speech after a short intra-phrase pause", () => {

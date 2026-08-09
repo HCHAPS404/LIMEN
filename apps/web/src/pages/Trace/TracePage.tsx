@@ -45,9 +45,11 @@ export function TracePage() {
   return (
     <WorkspaceSplit
       inspector={
-        <InspectorPanel title={t("inspector")} scroll className="h-full">
-          <DecisionCard event={selected} />
-        </InspectorPanel>
+        callId && selected ? (
+          <InspectorPanel title={t("inspector")} scroll className="h-full">
+            <DecisionCard event={selected} />
+          </InspectorPanel>
+        ) : undefined
       }
     >
       <SolidPanel
@@ -66,8 +68,9 @@ export function TracePage() {
         className="min-h-0 flex-1"
       >
         {!callId ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-8">
             <EmptyState
+              density="inline"
               eyebrow="TRAZA"
               title={t("pickTitle")}
               description={t("pickBody")}
@@ -78,14 +81,17 @@ export function TracePage() {
               }
             />
             {recent.isSuccess && recent.data.length > 0 && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <p className="type-label m-0 text-text-3">{t("recent")}</p>
-                <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                <ul className="m-0 flex list-none flex-col p-0">
                   {recent.data.slice(0, 8).map((call) => (
-                    <li key={call.call_id}>
+                    <li
+                      key={call.call_id}
+                      className="border-b border-[color-mix(in_oklab,var(--glass-border)_50%,transparent)] last:border-b-0"
+                    >
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between gap-3 rounded-lg border border-glass-border bg-[var(--glass-surface)] px-4 py-3 text-left transition-colors hover:border-[var(--glass-border-strong)]"
+                        className="flex w-full items-center justify-between gap-4 py-3.5 text-left transition-colors hover:bg-[var(--glass-highlight)]"
                         onClick={() => navigate(`/trace/${call.call_id}`)}
                       >
                         <span className="type-body text-ice">
@@ -104,6 +110,7 @@ export function TracePage() {
         ) : trace.isError ? (
           endpointMissing ? (
             <EmptyState
+              density="inline"
               eyebrow="TRAZA"
               title={t("loadError")}
               description={describeError(trace.error)}
@@ -121,6 +128,7 @@ export function TracePage() {
           )
         ) : events.length === 0 ? (
           <EmptyState
+            density="inline"
             title={t("emptyEvents")}
             description={`Call ${callId}`}
           />

@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import pytest
+
 from evals.llm.cases import all_cases
 from evals.llm.schemas import BenchmarkAdvisoryRisk, BenchmarkFinding, BenchmarkInterpretation
 from evals.llm.scoring import score_advisory, score_interpretation, score_patient_response
-
 from limen.clinical.uncertainty import ClinicalCertainty
 from limen.intelligence.providers.ollama import is_g3_allowed_ollama_model
 from limen.intelligence.structured_output import extract_json_text, parse_structured

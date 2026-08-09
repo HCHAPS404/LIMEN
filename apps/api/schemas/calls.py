@@ -11,6 +11,7 @@ RiskLevel = Literal["GREEN", "YELLOW", "ORANGE", "RED"]
 ClinicalCertaintyLiteral = Literal[
     "KNOWN_NORMAL",
     "KNOWN_ABNORMAL",
+    "IMPROVING",
     "UNKNOWN",
     "CONFLICTING",
 ]
@@ -20,6 +21,11 @@ class CreateCallRequest(BaseModel):
     patient_alias: str = Field(default="Paciente", min_length=1, max_length=80)
     procedure: str | None = Field(default=None, max_length=120)
     postoperative_day: int | None = Field(default=None, ge=0, le=365)
+    voice_persona: str | None = Field(
+        default=None,
+        max_length=32,
+        description="Assistant voice persona id: elena|nikolas|anikka|alex",
+    )
 
 
 class CallSummaryResponse(BaseModel):

@@ -6,11 +6,11 @@ import json
 
 import httpx
 import pytest
-from evals.llm.schemas import BenchmarkInterpretation
 
 from limen.intelligence.contracts import LLMRequest
 from limen.intelligence.providers.ollama import OllamaLLMProvider
 from limen.intelligence.structured_output import parse_structured
+from evals.llm.schemas import BenchmarkInterpretation
 
 
 @pytest.mark.asyncio

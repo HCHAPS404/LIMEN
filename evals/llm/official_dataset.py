@@ -423,6 +423,9 @@ def assert_no_ground_truth_in_prompt(prompt: str, record: dict[str, Any] | None 
     for gt_field in TRAJECTORY_FIELD_TOKENS:
         if gt_field in lowered:
             raise AssertionError(f"prohibited trajectory field leaked into prompt: {gt_field}")
+    for gt_field in TRAJECTORY_FIELD_TOKENS:
+        if gt_field in lowered:
+            raise AssertionError(f"prohibited trajectory field leaked into prompt: {gt_field}")
     if record:
         for gt_field in PROHIBITED_GROUND_TRUTH_FIELDS:
             keys_l = {k.lower(): k for k in record}

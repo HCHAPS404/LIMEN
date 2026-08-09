@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import type { TraceEventRecord } from "../../api/types";
 import { EvidenceCitation } from "../../components/data/EvidenceCitation";
 import { Metric, MetricStrip } from "../../components/data/Metric";
@@ -8,12 +10,15 @@ import { formatTimestamp } from "../../lib/format";
 import { resolveTraceStageView } from "./traceStage";
 
 export function DecisionCard({ event }: { event: TraceEventRecord | null }) {
+  const { t } = useTranslation("trace");
+
   if (!event) {
     return (
       <EmptyState
-        eyebrow="Inspect"
-        title="No step selected"
-        description="Pick a timeline step to see the decision, the evidence behind it, and the measured cost of that turn."
+        density="inline"
+        eyebrow={t("inspector")}
+        title={t("emptyInspectTitle")}
+        description={t("emptyInspectBody")}
       />
     );
   }

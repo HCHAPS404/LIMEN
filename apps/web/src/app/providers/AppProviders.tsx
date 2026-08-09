@@ -7,6 +7,7 @@ import i18n from "../../i18n";
 import { AuthProvider } from "./AuthProvider";
 import { createQueryClient } from "./queryClient";
 import { ThemeProvider } from "./ThemeProvider";
+import { VoicePersonaProvider } from "./VoicePersonaProvider";
 
 export function AppProviders({
   children,
@@ -20,11 +21,13 @@ export function AppProviders({
   return (
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <TooltipProvider>{children}</TooltipProvider>
-          </AuthProvider>
-        </QueryClientProvider>
+        <VoicePersonaProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthProvider>
+              <TooltipProvider>{children}</TooltipProvider>
+            </AuthProvider>
+          </QueryClientProvider>
+        </VoicePersonaProvider>
       </ThemeProvider>
     </I18nextProvider>
   );

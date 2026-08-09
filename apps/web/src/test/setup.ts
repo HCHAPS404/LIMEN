@@ -77,3 +77,10 @@ beforeEach(() => {
   viewportWidth = DEFAULT_VIEWPORT_WIDTH;
   listeners.clear();
 });
+
+
+/** jsdom throws "Not implemented" on media pause/play; keep call teardown quiet. */
+if (typeof HTMLMediaElement !== "undefined") {
+  HTMLMediaElement.prototype.pause = function pause() {};
+  HTMLMediaElement.prototype.play = async function play() {};
+}

@@ -50,12 +50,35 @@ class CallService:
         patient_alias: str = "Paciente",
         procedure: str | None = None,
         postoperative_day: int | None = None,
+        voice_persona: str | None = None,
     ) -> dict[str, Any]:
+        from limen.voice.personas import get_persona
+
+        persona = get_persona(voice_persona)
         created = self._calls.create_call(
             account_id=account_id,
             patient_alias=patient_alias,
             procedure=procedure,
             postoperative_day=postoperative_day,
+        )
+        # Seed call-scoped conversation context with assistant persona (not clinical).
+        seed_ctx = ConversationContext(
+            call_id=created["call_id"],
+            assistant_persona_id=persona.id,
+            assistant_display_name=persona.display_name,
+            assistant_gender=persona.gender,
+        )
+        self._calls.update_runtime(
+            account_id=account_id,
+            call_id=created["call_id"],
+            clinical_state=ClinicalState(),
+            final_risk=None,
+            escalated=False,
+            metrics={
+                "conversation_context": seed_ctx.model_dump(mode="json"),
+                "voice_persona": persona.id,
+                "turns": [],
+            },
         )
         self._traces.append(
             call_id=created["call_id"],
@@ -63,13 +86,65 @@ class CallService:
             stage="call.started",
             event_type="call.started",
             label="Call started",
-            detail=patient_alias,
+            detail=f"{patient_alias}; persona={persona.id}",
         )
-        log_event(_log, "call.started", call_id=created["call_id"])
+        log_event(
+            _log,
+            "call.started",
+            call_id=created["call_id"],
+            voice_persona=persona.id,
+        )
         return created
 
     def list(self, account_id: str) -> list[dict[str, Any]]:
         return self._calls.list_calls(account_id)
+
+    def get_voice_persona(self, account_id: str, call_id: str) -> str:
+        """Return call-scoped assistant persona id (elena|nikolas|…)."""
+        from limen.voice.personas import normalize_persona_id
+
+        row = self._calls.get_call_row(account_id, call_id)
+        if row is None:
+            return normalize_persona_id(None)
+        blob = self._load_call_metrics_blob(row)
+        ctx = blob.get("conversation_context")
+        if isinstance(ctx, dict) and ctx.get("assistant_persona_id"):
+            return normalize_persona_id(str(ctx.get("assistant_persona_id")))
+        return normalize_persona_id(
+            str(blob.get("voice_persona")) if blob.get("voice_persona") else None
+        )
+
+    def set_voice_persona(
+        self, account_id: str, call_id: str, persona_id: str
+    ) -> str:
+        """Update call-scoped persona mid-session (Settings override via WS)."""
+        from limen.voice.personas import get_persona
+
+        persona = get_persona(persona_id)
+        row = self._calls.get_call_row(account_id, call_id)
+        if row is None:
+            return persona.id
+        blob = self._load_call_metrics_blob(row)
+        ctx_raw = blob.get("conversation_context")
+        if isinstance(ctx_raw, dict):
+            ctx = ConversationContext.model_validate(ctx_raw)
+        else:
+            ctx = ConversationContext(call_id=call_id)
+        ctx.assistant_persona_id = persona.id
+        ctx.assistant_display_name = persona.display_name
+        ctx.assistant_gender = persona.gender
+        blob["conversation_context"] = ctx.model_dump(mode="json")
+        blob["voice_persona"] = persona.id
+        clinical = ClinicalState.model_validate_json(row["clinical_state_json"] or "{}")
+        self._calls.update_runtime(
+            account_id=account_id,
+            call_id=call_id,
+            clinical_state=clinical,
+            final_risk=row["final_risk"],
+            escalated=bool(row["escalated"]),
+            metrics=blob,
+        )
+        return persona.id
 
     def get(self, account_id: str, call_id: str) -> dict[str, Any] | None:
         return self._calls.get_call(account_id, call_id)
@@ -90,6 +165,36 @@ class CallService:
         clinical = ClinicalState.model_validate_json(row["clinical_state_json"] or "{}")
         prior = self._load_call_metrics_blob(row)
         conversation = self._load_conversation_context(prior, call_id=call_id)
+        from limen.conversation.session_intent import (
+            display_name_for_speech,
+            patient_display_name_safe,
+        )
+        from limen.voice.personas import get_persona
+
+        # Keep assistant persona call-scoped (from create metrics or defaults).
+        if not conversation.assistant_persona_id:
+            persona = get_persona(prior.get("voice_persona"))
+            conversation.assistant_persona_id = persona.id
+            conversation.assistant_display_name = persona.display_name
+            conversation.assistant_gender = persona.gender
+        else:
+            persona = get_persona(conversation.assistant_persona_id)
+            conversation.assistant_display_name = (
+                conversation.assistant_display_name or persona.display_name
+            )
+            conversation.assistant_gender = (
+                conversation.assistant_gender or persona.gender
+            )
+
+        if not conversation.patient_display_name:
+            conversation.patient_display_name = display_name_for_speech(
+                row["patient_alias"] if row is not None else None
+            )
+        # Never treat the assistant persona label as the patient's name.
+        conversation.patient_display_name = patient_display_name_safe(
+            conversation.patient_display_name,
+            assistant_name=conversation.assistant_display_name,
+        )
         result = await self._orchestrator.handle_text_turn(
             call_id=call_id,
             account_id=account_id,
@@ -119,6 +224,9 @@ class CallService:
             "turns": turns,
             "call": call_agg.model_dump(mode="json"),
             "conversation_context": conversation_json,
+            "voice_persona": conversation.assistant_persona_id
+            or prior.get("voice_persona")
+            or "elena",
             "voice_latencies_ms": prior.get("voice_latencies_ms") or [],
             "voice_interruptions": prior.get("voice_interruptions") or 0,
             "stt_errors": prior.get("stt_errors") or 0,
@@ -378,6 +486,9 @@ class CallService:
         row = self._calls.get_call_row(account_id, call_id)
         if row is None:
             return None
+        # Idempotent: server voice path + client REST hang-up may both finish.
+        if row["ended_at"]:
+            return self._calls.get_call(account_id, call_id)
         clinical = ClinicalState.model_validate_json(row["clinical_state_json"] or "{}")
         risk = row["final_risk"]
         escalated = bool(row["escalated"])
@@ -513,6 +624,101 @@ class CallService:
             label="Assistant response interrupted",
             payload=ctx.debug_view(),
         )
+
+    @staticmethod
+    def _collect_safety_reasons(blob: dict[str, Any]) -> builtins.list[str]:
+        reasons: builtins.list[str] = []
+        last = blob.get("last_safety")
+        if isinstance(last, dict):
+            for reason in last.get("reasons") or []:
+                if reason and str(reason) not in reasons:
+                    reasons.append(str(reason))
+        artifact = blob.get("escalation_artifact")
+        if isinstance(artifact, dict):
+            for reason in artifact.get("reasons") or []:
+                if reason and str(reason) not in reasons:
+                    reasons.append(str(reason))
+        return reasons
+
+    def _collect_evidence_refs(
+        self, account_id: str, call_id: str
+    ) -> builtins.list[EvidenceChunk]:
+        """Rebuild evidence chunk refs from TRAZA retrieval events (no re-query)."""
+        events = self._traces.list_events(account_id, call_id)
+        seen: set[str] = set()
+        chunks: builtins.list[EvidenceChunk] = []
+        for event in events:
+            if event.get("event_type") not in {
+                "retrieval.evidence.selected",
+                "retrieval",
+            } and event.get("stage") != "retrieval":
+                continue
+            for item in event.get("evidence") or []:
+                if not isinstance(item, dict):
+                    continue
+                chunk_id = str(item.get("chunk_id") or "")
+                if not chunk_id or chunk_id in seen:
+                    continue
+                seen.add(chunk_id)
+                try:
+                    chunks.append(EvidenceChunk.model_validate(item))
+                except Exception:
+                    continue
+            metrics = event.get("metrics") or {}
+            if isinstance(metrics, dict):
+                for chunk_id in metrics.get("selected_chunk_ids") or []:
+                    cid = str(chunk_id)
+                    if cid in seen:
+                        continue
+                    seen.add(cid)
+                    docs = metrics.get("selected_document_ids") or []
+                    chunks.append(
+                        EvidenceChunk(
+                            document_id=str(docs[0]) if docs else "unknown",
+                            chunk_id=cid,
+                            text="",
+                            source_name="retrieved",
+                            page=None,
+                            score=0.0,
+                        )
+                    )
+        return chunks
+
+    @staticmethod
+    def _build_escalation_artifact(
+        *,
+        call_id: str,
+        row: Any,
+        clinical: ClinicalState,
+        safety: Any,
+        evidence_refs: builtins.list[EvidenceChunk],
+    ) -> dict[str, Any]:
+        from datetime import UTC, datetime
+
+        return {
+            "call_id": call_id,
+            "patient_alias": row["patient_alias"],
+            "procedure": row["procedure"],
+            "postoperative_day": row["postoperative_day"],
+            "severity": safety.severity.name,
+            "escalate": True,
+            "reasons": list(safety.reasons),
+            "timestamp": datetime.now(UTC).isoformat(),
+            "findings": [
+                {"name": f.name, "certainty": f.certainty.value, "notes": f.notes}
+                for f in clinical.findings
+            ],
+            "evidence_references": [
+                {
+                    "document_id": c.document_id,
+                    "chunk_id": c.chunk_id,
+                    "source_name": c.source_name,
+                    "page": c.page,
+                }
+                for c in evidence_refs
+            ],
+            "next_action": "Contactar atención médica de urgencia",
+        }
 
     @staticmethod
     def _collect_safety_reasons(blob: dict[str, Any]) -> builtins.list[str]:

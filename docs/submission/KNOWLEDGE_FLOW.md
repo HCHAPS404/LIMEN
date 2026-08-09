@@ -37,7 +37,8 @@ flowchart LR
 | Smoke indexed | **8** (0 failed, 357 chunks) |
 | Full 107/107 ingestion | `FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL` |
 
-Live G5 human admin-console confirmation: `FINAL_EVIDENCE_REQUIRED:G5_UI`
+Live G5 human admin-console confirmation: **PASS** (2026-08-09 operator UI + generated evidence)
+
 
 ## Code
 

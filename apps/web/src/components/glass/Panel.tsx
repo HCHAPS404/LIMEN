@@ -3,7 +3,7 @@ import type { HTMLAttributes, ReactNode } from "react";
 import { cn } from "../../lib/cn";
 
 type PanelProps = HTMLAttributes<HTMLDivElement> & {
-  /** Rendered above the content with a hairline separator. */
+  /** Rendered above the content; spacing + type-label only (no hairline rule). */
   title?: ReactNode;
   actions?: ReactNode;
   /** Body scrolls instead of growing the panel. */
@@ -23,7 +23,7 @@ function PanelFrame({
   return (
     <section className={cn("relative flex min-h-0 flex-col", className)} {...rest}>
       {(title || actions) && (
-        <header className="relative z-[1] flex min-h-14 shrink-0 items-center justify-between gap-4 border-b border-glass-border px-6 py-3.5">
+        <header className="relative z-[1] flex min-h-14 shrink-0 items-center justify-between gap-4 px-6 py-3.5">
           {typeof title === "string" ? (
             <h2 className="type-label m-0 tracking-[0.14em]">{title}</h2>
           ) : (
@@ -62,7 +62,7 @@ export function SolidPanel(props: PanelProps) {
   return (
     <PanelFrame
       {...props}
-      className={cn("glass-0 rounded-lg", props.className)}
+      className={cn("glass-0 sheen-top rounded-lg", props.className)}
     />
   );
 }

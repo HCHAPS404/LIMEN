@@ -19,20 +19,20 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   asChild?: boolean;
   loading?: boolean;
   icon?: ReactNode;
+  /** Soft hover glow (call CTAs). */
+  glow?: boolean;
 };
 
 const base =
   "inline-flex select-none items-center justify-center gap-2 rounded-sm border font-medium " +
-  "transition-[background-color,border-color,color,transform] duration-[var(--motion-fast)] " +
+  "transition-[background-color,border-color,color,transform,box-shadow] duration-[var(--motion-fast)] " +
   "ease-[var(--motion-ease)] active:scale-[0.99] disabled:pointer-events-none disabled:opacity-45";
 
 const variants: Record<ButtonVariant, string> = {
-  /** Teal glass CTA — brand action tint with blur, not a flat opaque slab. */
   inverse:
     "border-action-glass-border bg-action-glass font-semibold text-ice " +
     "shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[18px] " +
     "[&_*]:text-ice hover:border-action-glass-border hover:bg-action-glass-hover",
-  /** Alias kept for existing call sites; same teal glass as inverse. */
   primary:
     "border-action-glass-border bg-action-glass font-semibold text-ice " +
     "shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[18px] " +
@@ -48,10 +48,21 @@ const variants: Record<ButtonVariant, string> = {
     "hover:bg-[color-mix(in_oklab,var(--limen-coral)_22%,transparent)]",
 };
 
+const glowByVariant: Partial<Record<ButtonVariant, string>> = {
+  primary:
+    "hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--limen-action)_35%,transparent),0_0_28px_color-mix(in_oklab,var(--limen-action)_42%,transparent)]",
+  inverse:
+    "hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--limen-action)_35%,transparent),0_0_28px_color-mix(in_oklab,var(--limen-action)_42%,transparent)]",
+  secondary:
+    "hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--limen-action)_28%,transparent),0_0_24px_color-mix(in_oklab,var(--limen-action)_32%,transparent)]",
+  destructive:
+    "hover:shadow-[0_0_0_1px_color-mix(in_oklab,var(--limen-coral)_40%,transparent),0_0_28px_color-mix(in_oklab,var(--limen-coral)_38%,transparent)]",
+};
+
 const sizes: Record<ButtonSize, string> = {
-  sm: "h-9 px-3 text-[0.8125rem]",
-  md: "h-11 px-4 text-[0.9375rem]",
-  lg: "h-12 px-6 text-[0.9375rem]",
+  sm: "h-9 px-3 type-body-s",
+  md: "h-11 px-4 type-body",
+  lg: "h-12 px-6 type-body",
 };
 
 export function Button({
@@ -60,6 +71,7 @@ export function Button({
   asChild = false,
   loading = false,
   icon,
+  glow = false,
   className,
   children,
   disabled,
@@ -69,7 +81,13 @@ export function Button({
 
   return (
     <Component
-      className={cn(base, variants[variant], sizes[size], className)}
+      className={cn(
+        base,
+        variants[variant],
+        sizes[size],
+        glow ? glowByVariant[variant] : null,
+        className,
+      )}
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       {...rest}
@@ -79,7 +97,6 @@ export function Button({
       ) : (
         icon
       )}
-      {/* Slottable lets the icon coexist with the slotted child element. */}
       <Slottable>{children}</Slottable>
     </Component>
   );
