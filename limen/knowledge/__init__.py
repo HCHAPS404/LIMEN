@@ -1,3 +1,17 @@
-from limen.knowledge.contracts import EmbeddingProvider, EvidenceChunk, KnowledgeStatus
+from limen.knowledge.contracts import (
+    EmbeddingProvider,
+    EvidenceChunk,
+    EvidenceRetriever,
+    KnowledgeStatus,
+    RetrievalConfig,
+    RetrievalQuery,
+)
 
-__all__ = ["EmbeddingProvider", "EvidenceChunk", "KnowledgeStatus"]
+__all__ = [
+    "EmbeddingProvider",
+    "EvidenceChunk",
+    "EvidenceRetriever",
+    "KnowledgeStatus",
+    "RetrievalConfig",
+    "RetrievalQuery",
+]

@@ -11,7 +11,11 @@ __pycache__/
 *.so
 .Python
 .venv/
+.venv-embeddings/
+.venv-*/
+
 venv/
+.tmp/
 .env/
 dist/
 build/
@@ -35,6 +39,10 @@ apps/web/coverage/
 # LIMEN runtime (never commit)
 runtime/
 !runtime/.gitkeep
+*.sqlite
+*.sqlite3
+# Local DB copies outside runtime/ (if any)
+*.db
 
 # IDE / OS / local agent tooling (never publish)
 .idea/

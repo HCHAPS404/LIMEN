@@ -19,4 +19,5 @@ class ClinicalState(BaseModel):
     """Session-scoped clinical state — serializable, provider-neutral."""
 
     findings: list[Finding] = Field(default_factory=list)
+    open_questions: list[str] = Field(default_factory=list)
     summary_notes: str | None = None

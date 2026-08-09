@@ -2,7 +2,8 @@
 
 > **Document role:** canonical repository backbone, engineering governance, quality gates, and integration contract for LIMEN.  
 > **Status:** foundation specification.  
-> **Priority:** this document is a source of truth. Feature work must conform to it unless an explicit architecture decision record (ADR) changes the rule.
+> **Priority:** this document is a source of truth. Feature work must conform to it unless an explicit architecture decision record (ADR) changes the rule.  
+> **Domain SoT:** backend domain contracts, APIs, RAG, safety, and voice live in [`BACKEND.md`](BACKEND.md); UI contracts in [`FRONTEND.md`](FRONTEND.md).
 
 ---
 

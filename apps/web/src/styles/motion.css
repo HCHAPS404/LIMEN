@@ -1,0 +1,66 @@
+/* Motion language — FRONTEND.md section 25.
+   180-260ms, opacity/translate/scale only. No bounce, no infinite glow. */
+
+@keyframes limen-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes limen-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes limen-breathe {
+  0%,
+  100% {
+    transform: scale(0.985);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes limen-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(320%);
+  }
+}
+
+.motion-rise {
+  animation: limen-rise var(--motion-slow) var(--motion-ease) both;
+}
+
+.motion-fade {
+  animation: limen-fade var(--motion-base) var(--motion-ease) both;
+}
+
+.motion-breathe {
+  animation: limen-breathe 2.6s var(--motion-ease) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

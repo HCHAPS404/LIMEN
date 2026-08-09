@@ -22,4 +22,10 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
     },
   },
+  {
+    // A provider and the hook that reads its context belong together; splitting
+    // them to satisfy fast refresh would only spread the contract over two files.
+    files: ["src/app/providers/**/*.tsx"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
 );
