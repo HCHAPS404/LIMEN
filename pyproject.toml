@@ -84,6 +84,8 @@ module = [
   "numpy.*",
   "faster_whisper",
   "faster_whisper.*",
+  "ctranslate2",
+  "ctranslate2.*",
   "piper",
   "piper.*",
   "torch",
