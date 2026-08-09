@@ -74,9 +74,7 @@ def apply_runtime_profile(*, force: bool = False) -> str:
         current = os.environ.get(key, "")
         if force or current == "" or (
             key in _PROVIDER_KEYS and current.lower() == "stub"
-        ):
-            os.environ[key] = value
-        elif key not in os.environ:
+        ) or key not in os.environ:
             os.environ[key] = value
     # Prefer local E5 checkout when present and unset.
     if not os.environ.get("EMBEDDING_MODEL_PATH"):

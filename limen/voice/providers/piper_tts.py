@@ -295,7 +295,10 @@ class PiperTTSProvider:
                 "model_path": str(path),
                 "sample_rate_hz": self._sample_rate,
                 "reachable": True,
-                "personas": [normalize_persona_id(p) for p in ("elena", "nikolas", "anikka", "alex")],
+                "personas": [
+                    normalize_persona_id(p)
+                    for p in ("elena", "nikolas", "anikka", "alex")
+                ],
             }
         except Exception as exc:  # noqa: BLE001
             return {

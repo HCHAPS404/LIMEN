@@ -127,12 +127,15 @@ def update_context_after_patient(
     # Never promote an assistant persona name (e.g. patient said "Hola Anika").
     if not ctx.patient_display_name:
         preferred = extract_preferred_name(user_text)
-        if preferred and not is_assistant_persona_name(preferred):
-            if not addresses_assistant_by_name(
+        if (
+            preferred
+            and not is_assistant_persona_name(preferred)
+            and not addresses_assistant_by_name(
                 user_text, assistant_name=ctx.assistant_display_name
-            ):
-                ctx.patient_display_name = preferred
-                ctx.asked_preferred_name = True
+            )
+        ):
+            ctx.patient_display_name = preferred
+            ctx.asked_preferred_name = True
     elif is_assistant_persona_name(ctx.patient_display_name):
         ctx.patient_display_name = None
 

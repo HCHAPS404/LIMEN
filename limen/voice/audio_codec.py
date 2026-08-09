@@ -7,7 +7,6 @@ import struct
 import wave
 from typing import Any
 
-
 CANONICAL_SAMPLE_RATE_HZ = 16_000
 CANONICAL_CHANNELS = 1
 CANONICAL_SAMPLE_WIDTH = 2  # 16-bit PCM

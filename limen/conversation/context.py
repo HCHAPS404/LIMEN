@@ -111,7 +111,10 @@ def infer_question_intent(question: str) -> tuple[str, list[str]]:
     """Map follow-up question text to a coarse intent (not clinical authority)."""
     q = question.casefold()
     # Intensity before course so "evolución + intensidad" counts as severity ask.
-    if any(tok in q for tok in ("intens", "escala", "0 a 10", "0-10", "cuánto duele", "cuanto duele")):
+    if any(
+        tok in q
+        for tok in ("intens", "escala", "0 a 10", "0-10", "cuánto duele", "cuanto duele")
+    ):
         return "pain_severity", ["pain_severity"]
     if any(tok in q for tok in ("empeor", "mejor", "evoluci", "sigue igual", "desde cu")):
         return "symptom_course", ["course"]

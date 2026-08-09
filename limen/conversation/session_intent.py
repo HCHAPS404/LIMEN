@@ -197,11 +197,12 @@ def addresses_assistant_by_name(
     folded = _fold(raw)
     if _ASSISTANT_ADDRESS_RE.search(folded):
         return True
-    if assistant_name and _fold(assistant_name) in folded:
-        # Short utterance that only greets/names the assistant.
-        if _GREETING_RE.search(folded) or len(folded.split()) <= 4:
-            return True
-    return False
+    # Short utterance that only greets/names the assistant.
+    return bool(
+        assistant_name
+        and _fold(assistant_name) in folded
+        and (_GREETING_RE.search(folded) or len(folded.split()) <= 4)
+    )
 
 
 def looks_like_greeting_only(text: str) -> bool:

@@ -325,7 +325,10 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
     call_started_mono = time.monotonic()
     last_patient_activity = time.monotonic()
     idle_prompt_sent_at: float | None = None
+    max_duration_farewell_sent = False
+    idle_hangup_sent = False
     agent_speaking = False
+    call_finished = False
 
     from limen.voice.personas import get_persona
 
@@ -401,6 +404,8 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 },
             )
             await emit("call.state", {"state": "LISTENING"})
+            if end_session:
+                await finish_call(call_end_reason or "system")
             return turn_seq
         await emit(
             "call.metrics",
@@ -434,12 +439,20 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
         return turn_seq
 
     async def finish_call(reason: str) -> None:
+        nonlocal call_finished
+        if call_finished:
+            service.finish(account_id=account.account_id, call_id=call_id)
+            return
+        call_finished = True
         service.finish(account_id=account.account_id, call_id=call_id)
-        await emit("call.state", {"state": "ENDED"})
-        await emit(
-            "call.ended",
-            {"reason": reason, "call_end_reason": reason},
-        )
+        try:
+            await emit("call.state", {"state": "ENDED"})
+            await emit(
+                "call.ended",
+                {"reason": reason, "call_end_reason": reason},
+            )
+        except Exception:  # noqa: BLE001 — socket may already be gone
+            pass
         trace(
             "call.ended",
             stage="voice",
@@ -476,15 +489,19 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                     pending_end_failsafe.pop(seq, None)
                     await finish_call(reason)
                     return
-                if now - call_started_mono >= _MAX_CALL_DURATION_S:
-                    await speak_system(
-                        max_duration_farewell(),
-                        end_session=True,
-                        call_end_reason="max_duration",
-                    )
-                    # Wait for playback or failsafe on next polls.
-                    continue
                 if agent_speaking:
+                    continue
+                if now - call_started_mono >= _MAX_CALL_DURATION_S:
+                    if (
+                        not max_duration_farewell_sent
+                        and not pending_end_after_playback
+                    ):
+                        max_duration_farewell_sent = True
+                        await speak_system(
+                            max_duration_farewell(),
+                            end_session=True,
+                            call_end_reason="max_duration",
+                        )
                     continue
                 if idle_prompt_sent_at is None:
                     if now - last_patient_activity >= _IDLE_PROMPT_S:
@@ -493,7 +510,12 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                             end_session=False,
                         )
                         idle_prompt_sent_at = time.monotonic()
-                elif now - idle_prompt_sent_at >= _IDLE_HANGUP_AFTER_PROMPT_S:
+                elif (
+                    now - idle_prompt_sent_at >= _IDLE_HANGUP_AFTER_PROMPT_S
+                    and not idle_hangup_sent
+                    and not pending_end_after_playback
+                ):
+                    idle_hangup_sent = True
                     await speak_system(
                         idle_timeout_farewell(),
                         end_session=True,
@@ -502,6 +524,7 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 continue
 
             if message.get("type") == "websocket.disconnect":
+                await finish_call("disconnect")
                 break
 
             user_text: str | None = None
@@ -1070,9 +1093,13 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                 )
                 pending_end_reason[turn_seq] = reason
             if result.safety.escalate:
-                await finish_call("escalation")
-                break
+                pending_end_after_playback.add(turn_seq)
+                pending_end_failsafe[turn_seq] = (
+                    time.monotonic() + _PLAYBACK_END_FAILSAFE_S
+                )
+                pending_end_reason[turn_seq] = "escalation"
     except WebSocketDisconnect:
+        await finish_call("disconnect")
         return
     except Exception as error:  # noqa: BLE001
         await emit(

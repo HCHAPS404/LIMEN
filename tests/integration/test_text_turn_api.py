@@ -166,6 +166,37 @@ def test_post_text_turn_escalation_persists_escalation_stage(client: TestClient)
     assert by_stage["response"] < by_stage["escalation"]
 
 
+def test_escalation_and_red_risk_stay_sticky_after_benign_turn(
+    client: TestClient,
+) -> None:
+    """Call-level escalated/final_risk must not clear on a later GREEN turn."""
+    _register(client)
+    created = client.post("/api/calls", json={"patient_alias": "Paciente Sticky"})
+    call_id = created.json()["call_id"]
+
+    red = client.post(
+        f"/api/calls/{call_id}/turns",
+        json={"text": "no puedo respirar y hay sangrado abundante"},
+    )
+    assert red.status_code == 200, red.text
+    assert red.json()["safety"]["escalate"] is True
+    assert red.json()["safety"]["risk"] == "RED"
+
+    benign = client.post(
+        f"/api/calls/{call_id}/turns",
+        json={"text": "ahora solo me duele un poco la cabeza"},
+    )
+    assert benign.status_code == 200, benign.text
+    # Turn-level safety may be lower; call-level must remain sticky RED.
+    assert benign.json()["safety"]["risk"] in {"GREEN", "YELLOW", "ORANGE", "RED"}
+
+    summary = client.get(f"/api/calls/{call_id}/summary")
+    assert summary.status_code == 200, summary.text
+    call_body = summary.json()["call"]
+    assert call_body["escalated"] is True
+    assert call_body["final_risk"] == "RED"
+
+
 def test_conflicting_state_survives_http_turn(client: TestClient) -> None:
     _register(client)
     created = client.post("/api/calls", json={"patient_alias": "Paciente C"})

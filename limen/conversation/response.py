@@ -12,17 +12,17 @@ from limen.clinical.state import ClinicalState
 from limen.clinical.uncertainty_analysis import UncertaintyReport
 from limen.conversation.context import ConversationContext
 from limen.conversation.continuity import has_excessive_generic_opener, is_near_duplicate
+from limen.conversation.response_repair import (
+    looks_truncated_draft,
+    repair_identity_phrasing,
+    trim_to_last_complete_sentence,
+)
 from limen.conversation.response_templates import (
     ESCALATION_TEMPLATE,
     EVIDENCE_TEMPLATE,
     FALLBACK_TEMPLATE,
     deterministic_patient_reply,
     evidence_grounded_reply,
-)
-from limen.conversation.response_repair import (
-    looks_truncated_draft,
-    repair_identity_phrasing,
-    trim_to_last_complete_sentence,
 )
 from limen.conversation.response_validator import validate_patient_response
 from limen.conversation.session_intent import (

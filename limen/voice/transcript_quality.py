@@ -56,14 +56,11 @@ def is_likely_stt_hallucination(
         return True
 
     duration = float(duration_ms) if duration_ms is not None else None
-    words = folded.split()
     short = duration is not None and duration < 900.0
 
     if folded in _HALLUCINATION_EXACT:
         # Only reject known fillers on short/noisy clips — real "adiós"/"hola"
         # with normal utterance length must remain patient speech.
-        if short:
-            return True
-        return False
+        return bool(short)
 
     return False

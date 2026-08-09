@@ -138,9 +138,7 @@ def _invented_patient_name(text: str, display_name: str | None) -> bool:
     known = (display_name or "").strip()
     if known:
         # Allow the session name; still reject the literal slash form.
-        if re.search(r"\bse[nñ]or\s*/\s*se[nñ]ora\b", text, re.I):
-            return True
-        return False
+        return bool(re.search(r"\bse[nñ]or\s*/\s*se[nñ]ora\b", text, re.I))
     return _INVENTED_VOCATIVE.search(text) is not None
 
 

@@ -24,6 +24,13 @@ from limen.telemetry.logging import get_telemetry_logger, log_event
 _log = get_telemetry_logger("limen.call")
 
 
+def _sticky_final_risk(prior: str | None, turn: Severity) -> str:
+    """Call-level risk never decreases (severity is monotonic)."""
+    if prior in Severity.__members__:
+        return max(turn, Severity[prior]).name
+    return turn.name
+
+
 class CallService:
     def __init__(
         self,
@@ -211,10 +218,12 @@ class CallService:
 
         turns = list(prior.get("turns") or [])
         turns.append(result.metrics)
+        sticky_escalate = result.safety.escalate or bool(row["escalated"])
+        sticky_risk = _sticky_final_risk(row["final_risk"], result.safety.severity)
         call_agg = aggregate_call_metrics(
             [turn_metrics_from_dict(t) for t in turns],
-            final_risk=result.safety.severity.name,
-            escalated=result.safety.escalate or bool(row["escalated"]),
+            final_risk=sticky_risk,
+            escalated=sticky_escalate,
         )
         conversation_json = (
             result.conversation.model_dump(mode="json") if result.conversation else {}
@@ -245,8 +254,8 @@ class CallService:
             account_id=account_id,
             call_id=call_id,
             clinical_state=result.clinical_state,
-            final_risk=result.safety.severity.name,
-            escalated=result.safety.escalate,
+            final_risk=sticky_risk,
+            escalated=sticky_escalate,
             metrics=metrics_blob,
         )
 

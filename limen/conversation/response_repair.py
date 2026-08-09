@@ -82,7 +82,11 @@ def looks_truncated_draft(text: str) -> bool:
     if not _SENTENCE_END.search(cleaned):
         if len(folded) <= 2:
             return True
-        if len(folded) >= 8 and folded.endswith(("tiv", "ativ", "cion")) and folded not in _COMPLETE_FORMS:
+        if (
+            len(folded) >= 8
+            and folded.endswith(("tiv", "ativ", "cion"))
+            and folded not in _COMPLETE_FORMS
+        ):
             return True
     return False
 
