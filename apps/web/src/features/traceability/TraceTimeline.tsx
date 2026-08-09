@@ -2,7 +2,7 @@ import type { TraceEventRecord } from "../../api/types";
 import { RiskBadge } from "../../components/data/RiskBadge";
 import { formatClockTime } from "../../lib/format";
 import { cn } from "../../lib/cn";
-import { traceStageView } from "./traceStage";
+import { resolveTraceStageView } from "./traceStage";
 
 export function TraceTimeline({
   events,
@@ -16,7 +16,7 @@ export function TraceTimeline({
   return (
     <ol className="m-0 flex list-none flex-col p-0">
       {events.map((event, index) => {
-        const view = traceStageView[event.stage];
+        const view = resolveTraceStageView(event.stage);
         const selected = event.event_id === selectedId;
         const last = index === events.length - 1;
 

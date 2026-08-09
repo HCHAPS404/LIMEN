@@ -60,7 +60,7 @@ export const phasePresentation: Record<CallPhase, PhasePresentation> = {
   },
   ENDED: {
     label: "Ended",
-    description: "Session closed. The summary and trace are final.",
+    description: "Session closed. Open Sessions or TRAZA to review what was recorded.",
     accent: "var(--limen-text-2)",
     animated: false,
   },

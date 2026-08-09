@@ -64,7 +64,7 @@ export const en: Resources = {
       },
       settings: {
         title: "Settings",
-        subtitle: "Preferences and runtime diagnostics",
+        subtitle: "Preferences for your session in this browser",
       },
       notFound: { title: "Not found" },
       fallback: { title: "Workspace" },
@@ -75,11 +75,28 @@ export const en: Resources = {
       preferences: "Preferences",
       signOut: "Sign out",
       signingOut: "Signing out…",
+      deleteAccount: "Delete account",
+      deleteAccountTitle: "Delete this account?",
+      deleteAccountBody:
+        "Access with this email will be removed. You will need a new account to sign in again.",
+      deleteAccountConfirm: "Delete account",
+      deletingAccount: "Deleting account…",
     },
     preferences: {
-      title: "Preferences",
-      hint: "Stored in this browser, not on the server.",
+      title: "Your preferences",
+      lead: "Choose how LIMEN looks on this device and manage your session.",
+      hint: "Theme and language are stored in this browser, not on the server.",
       account: "Account",
+      themeHint: "Dark is the default for the clinical workspace.",
+      languageHint:
+        "Changes interface labels. The patient voice loop stays in Spanish.",
+      microphone: "Microphone",
+      microphoneHint: "Check permission and input level before a call.",
+      diagnostics: "Runtime diagnostics",
+      diagnosticsHint: "Verification only: what the backend reports right now.",
+      sessionActions: "Session",
+      sessionActionsHint:
+        "Sign out keeps the account. Delete account is permanent.",
     },
   },
 
@@ -97,6 +114,7 @@ export const en: Resources = {
       headline: "Postoperative follow-up by voice, with the doubt kept visible.",
       support:
         "LIMEN talks with the patient at home, answers only from the clinical documents you uploaded, and hands the call to a clinician when safety requires it.",
+      enableMic: "Enable microphone",
     },
     problem: {
       eyebrow: "The problem",
@@ -224,5 +242,88 @@ export const en: Resources = {
       checking: "Checking the session…",
       redirect: "Sign in to open the workspace.",
     },
+  },
+
+  call: {
+    stage: "Call",
+    transport: {
+      idle: "No voice link",
+      connecting: "Connecting voice…",
+      open: "Voice linked",
+      closed: "Voice closed",
+      error: "Voice error",
+    },
+    start: "Start call",
+    end: "End session",
+    liveContext: "Live context",
+    transcript: "Transcript",
+    turns_one: "{{count}} turn",
+    turns_other: "{{count}} turns",
+    silenceTitle: "No turns yet",
+    silenceBody:
+      "Patient and agent turns appear here as the session progresses.",
+    hint: "Blue reacts to your voice. Orange marks the agent. Speak, then pause to send the turn.",
+    blocked: "Voice session blocked",
+    retryMic: "Request microphone again",
+    phases: {
+      IDLE: { label: "Idle", description: "No active session. Start a call to open the microphone." },
+      REQUESTING_MIC: { label: "Requesting microphone", description: "Waiting for browser microphone permission." },
+      LISTENING: { label: "Listening", description: "You can speak. The field reacts to your voice." },
+      PROCESSING_STT: { label: "Transcribing", description: "Converting the last patient turn to text." },
+      THINKING: { label: "Reasoning", description: "Updating clinical state, retrieving evidence, evaluating safety." },
+      SPEAKING: { label: "Speaking", description: "Playing the agent response. Speak to interrupt." },
+      INTERRUPTED: { label: "Interrupted", description: "Playback stopped because you started speaking." },
+      ERROR: { label: "Error", description: "The session cannot continue until the problem is resolved." },
+      ENDED: { label: "Ended", description: "Session closed. Open Sessions or TRAZA to review what was recorded." },
+    },
+  },
+
+  knowledge: {
+    emptyApi: "Could not load knowledge",
+    notFound: "Document not found",
+  },
+
+  trace: {
+    timeline: "Timeline",
+    inspector: "Inspector",
+    pickTitle: "Choose a call to audit",
+    pickBody:
+      "Every decision, retrieval, and safety evaluation is recorded per call.",
+    browseSessions: "Browse sessions",
+    recent: "Recent calls",
+    emptyEvents: "No recorded steps",
+    loadError: "Could not load trace",
+    escalated: "Escalated",
+  },
+
+  sessions: {
+    title: "Completed calls",
+    emptyTitle: "No calls recorded",
+    emptyBody:
+      "Follow-up calls appear here with final risk, escalation, and a link to TRAZA.",
+    startCall: "Start a call",
+    loadError: "Could not load sessions",
+    headers: {
+      call: "Call",
+      patient: "Patient",
+      procedure: "Procedure",
+      pod: "POD",
+      started: "Started",
+      risk: "Risk",
+      escalated: "Escalated",
+      duration: "Duration",
+    },
+    unknown: "Unknown",
+    yes: "Yes",
+    no: "No",
+    openTrace: "Trace",
+    openSummary: "Summary",
+  },
+
+  connection: {
+    connected: "API up",
+    connecting: "Connecting",
+    disconnected: "API down",
+    unavailable: "Unavailable",
   },
 };

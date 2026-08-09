@@ -123,13 +123,15 @@ export function VoiceOrb({
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    const points = fibonacciSphere(POINT_COUNT);
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const points = fibonacciSphere(reduceMotion ? 220 : POINT_COUNT);
     let styles = getComputedStyle(canvas);
     let frame = 0;
     const start = performance.now();
     let rotY = 0;
     let rotX = 0.18;
-    // Smooth energy so the mesh breathes instead of stuttering with RMS noise.
     let smoothed = 0;
 
     const resize = () => {
@@ -144,26 +146,24 @@ export function VoiceOrb({
     const draw = (now: number) => {
       const { width, height } = canvas.getBoundingClientRect();
       const role = voiceRoleFromPhase(phaseRef.current);
-      const target = voiceEnergy(role, levelRef.current, now - start);
-      // Attack faster than release so speech onset is obvious.
+      const target = reduceMotion
+        ? 0
+        : voiceEnergy(role, levelRef.current, now - start);
       const follow = target > smoothed ? 0.5 : 0.14;
       smoothed += (target - smoothed) * follow;
       const energy = smoothed;
       const palette = paletteForRole(role, styles);
       const cx = width / 2;
       const cy = height / 2;
-      // Keep base radius small enough that peak displace × scale stays on-canvas.
       const radius = Math.min(width, height) * 0.3;
 
-      rotY += 0.0035 + energy * 0.016;
-      rotX = 0.15 + Math.sin((now - start) * 0.00045) * (0.05 + energy * 0.04);
+      if (!reduceMotion) {
+        rotY += 0.0035 + energy * 0.016;
+        rotX = 0.15 + Math.sin((now - start) * 0.00045) * (0.05 + energy * 0.04);
+      }
 
-      // Full clear to transparent — never paint a rectangular slab, or the
-      // canvas reads as a square over the page atmosphere.
       context.clearRect(0, 0, width, height);
 
-      // Glow must die to zero alpha inside a circle that fits the canvas.
-      // fillRect + a large radial used to leave a visible box at the edges.
       const glowOuter = Math.min(width, height) * 0.48;
       const glow = context.createRadialGradient(
         cx,
@@ -177,7 +177,6 @@ export function VoiceOrb({
       glow.addColorStop(0, rgba(palette.base, glowAlpha));
       glow.addColorStop(0.42, rgba(palette.soft, glowAlpha * 0.38));
       glow.addColorStop(0.72, rgba(palette.soft, glowAlpha * 0.1));
-      // Match RGB on the transparent stop so canvas does not tint edges black.
       glow.addColorStop(1, rgba(palette.soft, 0));
       context.beginPath();
       context.arc(cx, cy, glowOuter, 0, Math.PI * 2);
@@ -197,17 +196,16 @@ export function VoiceOrb({
         color: string;
       };
       const projected: Projected[] = [];
-      const t = now - start;
+      const t = reduceMotion ? 0 : now - start;
 
       for (let i = 0; i < points.length; i += 1) {
         const p = points[i];
-        // Ripple folds the surface; amplitude is capped so loud speech never
-        // pushes points past the canvas edge.
         const rippleA =
           Math.sin(p.y * 7 + t * 0.0045) * Math.cos(p.x * 5 + rotY * 2.4);
         const rippleB = Math.sin(p.z * 5 - t * 0.0032 + p.x * 3);
-        const displace =
-          1 + energy * (0.1 + 0.18 * rippleA + 0.12 * rippleB);
+        const displace = reduceMotion
+          ? 1
+          : 1 + energy * (0.1 + 0.18 * rippleA + 0.12 * rippleB);
         const x = p.x * displace;
         const y = p.y * displace;
         const z = p.z * displace;
@@ -239,22 +237,24 @@ export function VoiceOrb({
 
       projected.sort((a, b) => a.z - b.z);
 
-      context.lineWidth = 0.65;
-      for (let i = 0; i < projected.length; i += 6) {
-        const a = projected[i];
-        const b = projected[Math.min(projected.length - 1, i + 13)];
-        const c = projected[Math.min(projected.length - 1, i + 27)];
-        if (a.z < -0.2) continue;
-        context.strokeStyle = rgba(
-          mixRgb(palette.base, palette.white, 0.4),
-          role === "idle" ? 0.07 : 0.11 + energy * 0.14,
-        );
-        context.beginPath();
-        context.moveTo(a.x, a.y);
-        context.lineTo(b.x, b.y);
-        context.moveTo(a.x, a.y);
-        context.lineTo(c.x, c.y);
-        context.stroke();
+      if (!reduceMotion) {
+        context.lineWidth = 0.65;
+        for (let i = 0; i < projected.length; i += 6) {
+          const a = projected[i];
+          const b = projected[Math.min(projected.length - 1, i + 13)];
+          const c = projected[Math.min(projected.length - 1, i + 27)];
+          if (a.z < -0.2) continue;
+          context.strokeStyle = rgba(
+            mixRgb(palette.base, palette.white, 0.4),
+            role === "idle" ? 0.07 : 0.11 + energy * 0.14,
+          );
+          context.beginPath();
+          context.moveTo(a.x, a.y);
+          context.lineTo(b.x, b.y);
+          context.moveTo(a.x, a.y);
+          context.lineTo(c.x, c.y);
+          context.stroke();
+        }
       }
 
       for (const point of projected) {
@@ -264,12 +264,18 @@ export function VoiceOrb({
         context.fill();
       }
 
-      frame = window.requestAnimationFrame(draw);
+      if (!reduceMotion) {
+        frame = window.requestAnimationFrame(draw);
+      }
     };
 
     resize();
     window.addEventListener("resize", resize);
-    frame = window.requestAnimationFrame(draw);
+    if (reduceMotion) {
+      draw(performance.now());
+    } else {
+      frame = window.requestAnimationFrame(draw);
+    }
 
     return () => {
       window.cancelAnimationFrame(frame);
@@ -280,10 +286,10 @@ export function VoiceOrb({
   const role = voiceRoleFromPhase(phase);
   const label =
     role === "patient"
-      ? "Patient voice field"
+      ? "Campo de voz del paciente"
       : role === "agent"
-        ? "Agent voice field"
-        : "Voice field at rest";
+        ? "Campo de voz del agente"
+        : "Campo de voz en reposo";
 
   return (
     <canvas
@@ -292,7 +298,6 @@ export function VoiceOrb({
       aria-label={label}
       className={cn(
         "block bg-transparent",
-        // Callers that fuse the orb into a background pass their own size.
         className ?? "h-[clamp(14rem,34vh,22rem)] w-[clamp(14rem,34vh,22rem)]",
       )}
     />

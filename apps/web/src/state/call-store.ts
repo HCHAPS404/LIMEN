@@ -48,11 +48,18 @@ type CallState = {
   escalated: boolean;
   evidence: EvidenceChunk[];
   metrics: TurnMetrics | null;
+  /** Voice WebSocket — distinct from HTTP /health "Connected". */
+  transportStatus: "idle" | "connecting" | "open" | "closed" | "error";
 
   setPhase: (phase: CallPhase) => void;
+  /** Backend realtime may jump phases; do not drop the authoritative state. */
+  applyServerPhase: (phase: CallPhase) => void;
   setCallId: (callId: string | null) => void;
   setMicLevel: (level: number) => void;
   setPatientSpeaking: (speaking: boolean) => void;
+  setTransportStatus: (
+    status: "idle" | "connecting" | "open" | "closed" | "error",
+  ) => void;
   fail: (error: CallError) => void;
   appendTurn: (turn: TranscriptTurnRecord) => void;
   markLastAgentTurnInterrupted: () => void;
@@ -77,6 +84,7 @@ const initial = {
   escalated: false,
   evidence: [] as EvidenceChunk[],
   metrics: null,
+  transportStatus: "idle" as const,
 };
 
 export const useCallStore = create<CallState>((set, get) => ({
@@ -95,9 +103,22 @@ export const useCallStore = create<CallState>((set, get) => ({
     });
   },
 
+  applyServerPhase: (phase) => {
+    set({
+      phase,
+      startedAt:
+        (phase === "LISTENING" || phase === "THINKING" || phase === "SPEAKING") &&
+        get().startedAt === null
+          ? Date.now()
+          : get().startedAt,
+      error: phase === "ERROR" ? get().error : null,
+    });
+  },
+
   setCallId: (callId) => set({ callId }),
   setMicLevel: (micLevel) => set({ micLevel }),
   setPatientSpeaking: (patientSpeaking) => set({ patientSpeaking }),
+  setTransportStatus: (transportStatus) => set({ transportStatus }),
 
   fail: (error) => set({ phase: "ERROR", error, micLevel: 0 }),
 

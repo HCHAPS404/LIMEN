@@ -29,6 +29,7 @@ describe("DocumentStatus", () => {
   it("treats every pre-AVAILABLE state as pending and not retrievable", () => {
     for (const status of [
       "UPLOADING",
+      "UPLOADED",
       "PROCESSING",
       "INDEXING",
       "REMOVING",

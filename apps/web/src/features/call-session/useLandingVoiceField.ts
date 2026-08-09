@@ -7,21 +7,27 @@ import {
 } from "../../audio/recorder";
 
 const LEVEL_POLL_MS = 50;
-/** Raw RMS above this counts as visitor speech on the landing field. */
 const SPEECH_FLOOR = 0.012;
 
 /**
- * Landing-only voice field. Opens the real microphone when allowed and drives
- * a single color change: idle → patient blue while someone speaks.
- * Agent orange and processing states belong to the call workspace only —
- * this surface never demos AI turns.
+ * Landing-only voice field. Mic opens only after an explicit enable gesture
+ * (browsers require a user gesture for capture; auto-open on mount is hostile).
  */
 export function useLandingVoiceField() {
   const [level, setLevel] = useState(0);
   const [phase, setPhase] = useState<CallPhase>("IDLE");
+  const [enabled, setEnabled] = useState(false);
   const captureRef = useRef<MicrophoneCapture | null>(null);
 
   useEffect(() => {
+    if (!enabled) {
+      captureRef.current?.stop();
+      captureRef.current = null;
+      setLevel(0);
+      setPhase("IDLE");
+      return;
+    }
+
     let cancelled = false;
     let timer: ReturnType<typeof setInterval> | null = null;
 
@@ -39,10 +45,10 @@ export function useLandingVoiceField() {
           setPhase(next > SPEECH_FLOOR ? "LISTENING" : "IDLE");
         }, LEVEL_POLL_MS);
       } catch {
-        // Mic blocked: stay idle. No synthetic agent/patient demo on landing.
         if (!cancelled) {
           setLevel(0);
           setPhase("IDLE");
+          setEnabled(false);
         }
       }
     })();
@@ -53,7 +59,13 @@ export function useLandingVoiceField() {
       captureRef.current?.stop();
       captureRef.current = null;
     };
-  }, []);
+  }, [enabled]);
 
-  return { level, phase };
+  return {
+    level,
+    phase,
+    enabled,
+    enable: () => setEnabled(true),
+    disable: () => setEnabled(false),
+  };
 }

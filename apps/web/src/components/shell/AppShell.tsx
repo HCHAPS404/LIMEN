@@ -37,32 +37,61 @@ export function AppShell({
 }
 
 /** Workspace + optional inspector column (section 12). Pages pass `inspector`
- *  only on desktop; narrower viewports open the same content in a drawer. */
+ *  only on desktop; narrower viewports open the same content in a drawer.
+ *
+ *  `scroll="panels"` (default) keeps nested panel scroll for dense tables.
+ *  `scroll="page"` uses one workspace scrollbar so call/stage layouts are not
+ *  clipped into multiple independent panes.
+ */
 export function WorkspaceSplit({
   children,
   inspector,
   className,
+  scroll = "panels",
 }: {
   children: ReactNode;
   inspector?: ReactNode;
   className?: string;
+  scroll?: "panels" | "page";
 }) {
+  const pageScroll = scroll === "page";
+
   return (
     <div
       className={cn(
-        "grid min-h-0 flex-1 gap-5 p-5 md:gap-6 md:p-7 xl:p-8",
-        inspector
-          ? "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_var(--inspector-width)]"
-          : "grid-cols-1",
+        "min-h-0 flex-1",
+        pageScroll ? "limen-scroll overflow-y-auto" : "flex flex-col",
         className,
       )}
     >
-      <div className="flex min-h-0 min-w-0 flex-col gap-4 md:gap-5">
-        {children}
+      <div
+        className={cn(
+          "grid gap-5 p-5 md:gap-6 md:p-7 xl:p-8",
+          pageScroll ? "content-start" : "min-h-0 flex-1",
+          inspector
+            ? "grid-cols-1 xl:grid-cols-[minmax(0,1fr)_var(--inspector-width)]"
+            : "grid-cols-1",
+        )}
+      >
+        <div
+          className={cn(
+            "flex min-w-0 flex-col gap-4 md:gap-5",
+            !pageScroll && "min-h-0",
+          )}
+        >
+          {children}
+        </div>
+        {inspector && (
+          <aside
+            className={cn(
+              "flex flex-col",
+              !pageScroll && "min-h-0",
+            )}
+          >
+            {inspector}
+          </aside>
+        )}
       </div>
-      {inspector && (
-        <aside className="flex min-h-0 flex-col">{inspector}</aside>
-      )}
     </div>
   );
 }

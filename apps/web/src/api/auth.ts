@@ -43,3 +43,7 @@ export function login(input: {
 export function logout(): Promise<void> {
   return apiRequest<void>("/api/auth/logout", { method: "POST" });
 }
+
+export function deleteAccount(): Promise<void> {
+  return apiRequest<void>("/api/auth/me", { method: "DELETE" });
+}

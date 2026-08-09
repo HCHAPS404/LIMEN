@@ -73,7 +73,7 @@ export function KnowledgePage() {
             disabled={endpointMissing}
             disabledReason={
               endpointMissing
-                ? "Ingestion is unavailable until the backend exposes /api/knowledge/documents."
+                ? "Knowledge ingestion is marked not implemented (HTTP 501)."
                 : undefined
             }
             onFiles={(files) => {
@@ -98,9 +98,9 @@ export function KnowledgePage() {
           {documents.isError &&
             (endpointMissing ? (
               <EmptyState
-                eyebrow="Not yet"
-                title="Knowledge API not available"
-                description="The backend does not expose the knowledge endpoints yet, so no sources can be listed. Document state is never inferred on the client."
+                eyebrow="Knowledge"
+                title="Knowledge API not implemented"
+                description={describeError(documents.error)}
               />
             ) : (
               <ErrorState

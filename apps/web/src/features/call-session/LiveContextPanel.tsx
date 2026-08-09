@@ -22,7 +22,7 @@ export function LiveContextPanel() {
     ).length ?? null;
 
   return (
-    <div className="flex min-h-0 flex-col gap-5">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <span className="type-label">Safety decision</span>
         <RiskBadge risk={risk} size="lg" />
@@ -65,19 +65,19 @@ export function LiveContextPanel() {
         <ClinicalStateGrid state={clinicalState} />
       </div>
 
-      <div className="flex min-h-0 flex-col gap-2">
-        <span className="type-label">Evidence</span>
-        {evidence.length === 0 ? (
-          <EmptyState
-            title="No evidence retrieved"
-            description="Retrieved chunks appear here with document, page, and version provenance."
-            className="min-h-[7rem]"
-          />
-        ) : (
-          <div className="limen-scroll flex min-h-0 flex-col gap-2">
-            {evidence.slice(0, 3).map((chunk) => (
-              <EvidenceCitation
-                key={chunk.chunk_id}
+          <div className="flex flex-col gap-2">
+            <span className="type-label">Evidence</span>
+            {evidence.length === 0 ? (
+              <EmptyState
+                title="No evidence retrieved"
+                description="Retrieved chunks appear here with document, page, and version provenance."
+                className="min-h-[7rem]"
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                {evidence.slice(0, 3).map((chunk) => (
+                  <EvidenceCitation
+                    key={chunk.chunk_id}
                 chunk={chunk}
                 showText={false}
               />

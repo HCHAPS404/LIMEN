@@ -20,6 +20,7 @@ export function useDocuments() {
       const documents = query.state.data as KnowledgeDocument[] | undefined;
       const pending = documents?.some(
         (document) =>
+          document.status === "UPLOADED" ||
           document.status === "PROCESSING" ||
           document.status === "INDEXING" ||
           document.status === "UPLOADING" ||

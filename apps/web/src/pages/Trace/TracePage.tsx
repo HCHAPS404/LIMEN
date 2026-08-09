@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 
+import { callKeys, listCalls } from "../../api/calls";
 import { ApiError, describeError } from "../../api/client";
-import type { TraceEventRecord } from "../../api/types";
 import { RiskBadge } from "../../components/data/RiskBadge";
 import { StatusChip } from "../../components/data/StatusChip";
 import { EmptyState } from "../../components/feedback/EmptyState";
@@ -14,11 +16,19 @@ import { WorkspaceSplit } from "../../components/shell/AppShell";
 import { DecisionCard } from "../../features/traceability/DecisionCard";
 import { TraceTimeline } from "../../features/traceability/TraceTimeline";
 import { useTrace } from "../../features/traceability/useTrace";
+import type { TraceEventRecord } from "../../api/types";
 
 export function TracePage() {
   const { callId } = useParams<{ callId?: string }>();
+  const navigate = useNavigate();
+  const { t } = useTranslation("trace");
   const trace = useTrace(callId);
   const [selected, setSelected] = useState<TraceEventRecord | null>(null);
+  const recent = useQuery({
+    queryKey: callKeys.list(),
+    queryFn: ({ signal }) => listCalls(signal),
+    enabled: !callId,
+  });
 
   const events = trace.data?.events ?? [];
 
@@ -26,25 +36,28 @@ export function TracePage() {
     setSelected(null);
   }, [callId]);
 
+  const notFound =
+    trace.error instanceof ApiError &&
+    (trace.error.status === 404 || trace.error.code === "call_not_found");
   const endpointMissing =
     trace.error instanceof ApiError && trace.error.isNotImplemented;
 
   return (
     <WorkspaceSplit
       inspector={
-        <InspectorPanel title="Inspector" scroll className="h-full">
+        <InspectorPanel title={t("inspector")} scroll className="h-full">
           <DecisionCard event={selected} />
         </InspectorPanel>
       }
     >
       <SolidPanel
-        title="Timeline"
+        title={t("timeline")}
         actions={
           trace.data ? (
             <div className="flex items-center gap-2">
               <RiskBadge risk={trace.data.final_risk} size="sm" />
               {trace.data.escalated && (
-                <StatusChip tone="escalation">Escalated</StatusChip>
+                <StatusChip tone="escalation">{t("escalated")}</StatusChip>
               )}
             </div>
           ) : undefined
@@ -53,36 +66,63 @@ export function TracePage() {
         className="min-h-0 flex-1"
       >
         {!callId ? (
-          <EmptyState
-            eyebrow="TRAZA"
-            title="Choose a call to audit"
-            description="Every decision, retrieval, and safety evaluation is recorded per call. Open a session to inspect its reasoning chain."
-            action={
-              <Button variant="secondary" asChild>
-                <Link to="/sessions">Browse sessions</Link>
-              </Button>
-            }
-          />
+          <div className="flex flex-col gap-6">
+            <EmptyState
+              eyebrow="TRAZA"
+              title={t("pickTitle")}
+              description={t("pickBody")}
+              action={
+                <Button variant="secondary" asChild>
+                  <Link to="/sessions">{t("browseSessions")}</Link>
+                </Button>
+              }
+            />
+            {recent.isSuccess && recent.data.length > 0 && (
+              <div className="flex flex-col gap-2">
+                <p className="type-label m-0 text-text-3">{t("recent")}</p>
+                <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                  {recent.data.slice(0, 8).map((call) => (
+                    <li key={call.call_id}>
+                      <button
+                        type="button"
+                        className="flex w-full items-center justify-between gap-3 rounded-lg border border-glass-border bg-[var(--glass-surface)] px-4 py-3 text-left transition-colors hover:border-[var(--glass-border-strong)]"
+                        onClick={() => navigate(`/trace/${call.call_id}`)}
+                      >
+                        <span className="type-body text-ice">
+                          {call.patient_alias}
+                        </span>
+                        <RiskBadge risk={call.final_risk} size="sm" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
         ) : trace.isPending ? (
-          <LoadingState label="Loading trace" rows={5} />
+          <LoadingState label={t("timeline")} rows={5} />
         ) : trace.isError ? (
           endpointMissing ? (
             <EmptyState
-              eyebrow="Not yet"
-              title="Trace API not available"
-              description={`The backend does not expose a trace for ${callId} yet. Decision history is never reconstructed on the client.`}
+              eyebrow="TRAZA"
+              title={t("loadError")}
+              description={describeError(trace.error)}
             />
           ) : (
             <ErrorState
-              title="Could not load trace"
-              message={describeError(trace.error)}
+              title={t("loadError")}
+              message={
+                notFound
+                  ? `Call ${callId} was not found.`
+                  : describeError(trace.error)
+              }
               onRetry={() => void trace.refetch()}
             />
           )
         ) : events.length === 0 ? (
           <EmptyState
-            title="No recorded steps"
-            description={`Call ${callId} exists but has no trace events. Nothing is inferred to fill the gap.`}
+            title={t("emptyEvents")}
+            description={`Call ${callId}`}
           />
         ) : (
           <TraceTimeline

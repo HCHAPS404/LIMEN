@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import { cn } from "../../lib/cn";
 
 export type ConnectionStatus =
@@ -8,30 +10,26 @@ export type ConnectionStatus =
 
 const presentation: Record<
   ConnectionStatus,
-  { label: string; dot: string; text: string; shell: string }
+  { dot: string; text: string; shell: string }
 > = {
   connected: {
-    label: "Connected",
     dot: "bg-green",
     text: "text-ice",
     shell: "border-glass-border bg-[var(--glass-highlight)]",
   },
   connecting: {
-    label: "Connecting",
     dot: "bg-amber motion-breathe",
     text: "text-amber",
     shell:
       "border-[color-mix(in_oklab,var(--limen-amber)_24%,transparent)] bg-[color-mix(in_oklab,var(--limen-amber)_7%,transparent)]",
   },
   disconnected: {
-    label: "Disconnected",
     dot: "bg-coral",
     text: "text-coral",
     shell:
       "border-[color-mix(in_oklab,var(--limen-coral)_24%,transparent)] bg-[color-mix(in_oklab,var(--limen-coral)_7%,transparent)]",
   },
   unavailable: {
-    label: "Not available",
     dot: "bg-[var(--limen-text-3)]",
     text: "text-text-3",
     shell: "border-glass-border bg-[var(--glass-highlight)]",
@@ -49,6 +47,7 @@ export function ConnectionState({
   detail,
   className,
 }: ConnectionStateProps) {
+  const { t } = useTranslation("connection");
   const view = presentation[status];
 
   return (
@@ -69,7 +68,7 @@ export function ConnectionState({
           view.text,
         )}
       >
-        {view.label}
+        {t(status)}
       </span>
       {detail && (
         <span className="hidden text-[0.8125rem] text-text-3 sm:inline">

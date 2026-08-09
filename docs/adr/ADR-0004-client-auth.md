@@ -14,7 +14,7 @@ Introduce the smallest authentication that produces per-client data isolation:
 - New domain package `limen/auth/`: `Account`, `StoredAccount`, `SessionRecord`, an `AccountRepository` protocol, password hashing, and session tokens. The service depends on the protocol only; SQLite lives in `limen/persistence/repositories/accounts.py`.
 - Passwords hashed with `hashlib.scrypt` (standard library, so environment reproduction needs no compiler). Parameters are encoded inside the stored hash and can be raised without invalidating existing accounts.
 - Sessions are opaque random tokens; only their SHA-256 digest is persisted, so a database dump cannot be replayed as a live cookie.
-- Transport: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`. The token travels in an httpOnly, `SameSite=Lax` cookie (`Secure` controlled by `AUTH_COOKIE_SECURE`), never in a response body.
+- Transport: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `DELETE /api/auth/me` (permanent account removal; clears the cookie). The token travels in an httpOnly, `SameSite=Lax` cookie (`Secure` controlled by `AUTH_COOKIE_SECURE`), never in a response body.
 - `apps/api/dependencies.require_account` is the guard every client-owned route must depend on, scoping its queries to `account.account_id`. `/health` stays public so a cold deployment can be probed before any account exists.
 - Frontend: `/`, `/login`, and `/register` are public; every workspace surface sits behind `RequireAuth`.
 - Schema version moves from 1 to 2 (`accounts`, `auth_sessions`).
@@ -38,7 +38,7 @@ Does not alter voice interaction, retrieval, safety decisions, or telemetry. It 
 
 ## Verification
 - `tests/unit/test_auth_passwords.py` — salting, verification, malformed hashes.
-- `tests/unit/test_auth_service.py` — register/login/logout/expiry, duplicate email, non-enumerable failures, idempotent seed.
-- `tests/unit/test_auth_repository.py` — SQLite round trip and session purge.
-- `tests/integration/test_auth_api.py` — endpoint round trip, httpOnly cookie flags, error codes, `/health` still public.
+- `tests/unit/test_auth_service.py` — register/login/logout/delete/expiry, duplicate email, non-enumerable failures, idempotent seed.
+- `tests/unit/test_auth_repository.py` — SQLite round trip, account cascade, session purge.
+- `tests/integration/test_auth_api.py` — endpoint round trip, delete account, httpOnly cookie flags, error codes, `/health` still public.
 - `apps/web/src/app/router/routes.test.tsx` — visitors are redirected to sign in; the account menu appears once a session exists.

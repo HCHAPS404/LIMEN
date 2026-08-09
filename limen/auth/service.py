@@ -85,6 +85,10 @@ class AuthService:
         """Idempotent: revoking an unknown or already-revoked token is a no-op."""
         self._repository.delete_session(hash_token(token))
 
+    def delete_account(self, account_id: str) -> None:
+        """Permanently removes the account and every session that belonged to it."""
+        self._repository.delete_account(account_id)
+
     def authenticate(self, token: str) -> Account:
         session = self._repository.find_session(hash_token(token))
         if session is None:

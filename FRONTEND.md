@@ -80,7 +80,8 @@ Call/session history.
 
 ### `/settings`
 
-Runtime diagnostics, and the per-browser theme and language preferences.
+Client preferences in one glass panel: theme, language, account, microphone,
+session actions (delete account / sign out). Runtime diagnostics stay collapsed.
 
 ## P2 — Optional
 
@@ -815,22 +816,23 @@ Do not build a huge analytics product.
 
 # 20. Screen Specification — Settings
 
-Settings is primarily a **demo/diagnostic surface**. The only account material it
-shows is the signed-in email; there is no profile or role editing.
+Settings is the **client preference surface**, not an ops dashboard.
+All preference blocks live in **one glass container**; session actions sit last.
 
-Sections:
+Primary sections (top → bottom):
 
-- preferences (language, theme, signed-in account);
-- runtime model (read-only or controlled);
-- STT provider;
-- TTS voice;
-- microphone diagnostics;
-- backend health;
-- knowledge index health;
-- telemetry status;
-- build/version.
+```text
+appearance     dark / light (explicit choice, browser-local)
+language       ES / EN interface labels
+account        signed-in identity (read-only)
+microphone     real capture check before a call
+diagnostics    collapsed runtime verification
+session        delete account → sign out (destructive / exit, last)
+```
 
-Any dangerous runtime switch should be clearly labeled and disabled during evaluation mode if needed.
+Runtime diagnostics (model, persistence, knowledge, STT/TTS, telemetry) stay
+behind a collapsed disclosure for verification. Missing signals remain unknown.
+Delete account calls `DELETE /api/auth/me` after an explicit confirmation.
 
 ---
 

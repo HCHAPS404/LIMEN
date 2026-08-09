@@ -11,7 +11,7 @@ from limen.knowledge.contracts import KnowledgeStatus
 class DocumentRecord:
     document_id: str
     name: str
-    status: KnowledgeStatus = KnowledgeStatus.UPLOADING
+    status: KnowledgeStatus = KnowledgeStatus.UPLOADED
     fingerprint: str = ""
 
 

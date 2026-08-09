@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { callKeys, listCalls } from "../../api/calls";
@@ -12,6 +13,7 @@ import { WorkspaceSplit } from "../../components/shell/AppShell";
 import { SessionsTable } from "../../features/sessions/SessionsTable";
 
 export function SessionsPage() {
+  const { t } = useTranslation("sessions");
   const calls = useQuery({
     queryKey: callKeys.list(),
     queryFn: ({ signal }) => listCalls(signal),
@@ -23,14 +25,14 @@ export function SessionsPage() {
   return (
     <WorkspaceSplit>
       <SolidPanel
-        title="Completed calls"
+        title={t("title")}
         scroll
         padded={false}
         className="min-h-0 flex-1"
       >
         {calls.isPending && (
           <div className="p-5">
-            <LoadingState label="Loading sessions" rows={4} />
+            <LoadingState label={t("title")} rows={4} />
           </div>
         )}
 
@@ -38,13 +40,13 @@ export function SessionsPage() {
           <div className="p-5">
             {endpointMissing ? (
               <EmptyState
-                eyebrow="Not yet"
-                title="Sessions API not available"
-                description="The backend does not expose call history yet. No placeholder sessions are shown."
+                eyebrow={t("title")}
+                title={t("loadError")}
+                description={describeError(calls.error)}
               />
             ) : (
               <ErrorState
-                title="Could not load sessions"
+                title={t("loadError")}
                 message={describeError(calls.error)}
                 onRetry={() => void calls.refetch()}
               />
@@ -55,12 +57,12 @@ export function SessionsPage() {
         {calls.isSuccess &&
           (calls.data.length === 0 ? (
             <EmptyState
-              eyebrow="Quiet"
-              title="No calls recorded"
-              description="Completed follow-up calls appear here with their final risk, escalation outcome, and a link to the full decision trace."
+              eyebrow={t("title")}
+              title={t("emptyTitle")}
+              description={t("emptyBody")}
               action={
                 <Button variant="primary" asChild>
-                  <Link to="/call">Start a call</Link>
+                  <Link to="/call">{t("startCall")}</Link>
                 </Button>
               }
             />

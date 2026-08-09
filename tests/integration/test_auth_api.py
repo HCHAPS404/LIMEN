@@ -21,9 +21,14 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
     # Request handling resolves settings and the database through module-level
     # caches, so the temporary path has to be visible before the first call.
     monkeypatch.setenv("DATABASE_PATH", str(tmp_path / "auth.db"))
+    monkeypatch.setenv("VECTOR_PATH", str(tmp_path / "vectors"))
+    monkeypatch.setenv("EMBEDDING_PROVIDER", "stub")
     monkeypatch.setenv("LLM_PROVIDER", "stub")
     settings_module.get_settings.cache_clear()
     reset_database_for_tests()
+    from limen.knowledge.vector_store import reset_vector_store_for_tests
+
+    reset_vector_store_for_tests()
 
     settings = settings_module.get_settings()
     assert settings.database_path == tmp_path / "auth.db"
@@ -31,6 +36,7 @@ def client(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClie
     with TestClient(create_app(settings)) as test_client:
         yield test_client
 
+    reset_vector_store_for_tests()
     reset_database_for_tests()
     settings_module.get_settings.cache_clear()
 
@@ -145,6 +151,32 @@ def test_forged_cookie_is_rejected(client: TestClient) -> None:
 
 def test_logout_without_a_session_still_succeeds(client: TestClient) -> None:
     assert client.post("/api/auth/logout").status_code == 204
+
+
+def test_delete_me_removes_account_and_clears_cookie(client: TestClient) -> None:
+    register(client)
+    assert client.get("/api/auth/me").status_code == 200
+
+    deleted = client.delete("/api/auth/me")
+    assert deleted.status_code == 204
+    assert client.get("/api/auth/me").status_code == 401
+
+    # The email can be registered again after deletion.
+    created = client.post(
+        "/api/auth/register",
+        json={
+            "email": "clinica@umbral.io",
+            "password": PASSWORD,
+            "display_name": "Clínica Umbral",
+        },
+    )
+    assert created.status_code == 201
+
+
+def test_delete_me_requires_a_session(client: TestClient) -> None:
+    response = client.delete("/api/auth/me")
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "session_invalid"
 
 
 def test_health_stays_public(client: TestClient) -> None:

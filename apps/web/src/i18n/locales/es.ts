@@ -24,7 +24,7 @@ export const es = {
   },
 
   shell: {
-    workspace: "Workspace",
+    workspace: "Espacio de trabajo",
     nav: {
       call: "Llamada",
       knowledge: "Conocimiento",
@@ -55,7 +55,7 @@ export const es = {
       },
       settings: {
         title: "Ajustes",
-        subtitle: "Preferencias y diagnóstico del runtime",
+        subtitle: "Preferencias de tu sesión en este navegador",
       },
       notFound: { title: "No encontrado" },
       fallback: { title: "Workspace" },
@@ -66,11 +66,29 @@ export const es = {
       preferences: "Preferencias",
       signOut: "Cerrar sesión",
       signingOut: "Cerrando sesión…",
+      deleteAccount: "Borrar cuenta",
+      deleteAccountTitle: "¿Borrar esta cuenta?",
+      deleteAccountBody:
+        "Se eliminará el acceso a LIMEN con este correo. Tendrás que crear una cuenta nueva para volver a entrar.",
+      deleteAccountConfirm: "Borrar cuenta",
+      deletingAccount: "Borrando cuenta…",
     },
     preferences: {
-      title: "Preferencias",
-      hint: "Se guardan en este navegador, no en el servidor.",
+      title: "Tus preferencias",
+      lead: "Elige cómo se ve LIMEN en este dispositivo y gestiona tu sesión.",
+      hint: "Tema e idioma se guardan en este navegador, no en el servidor.",
       account: "Cuenta",
+      themeHint: "Oscuro es el modo por defecto del workspace clínico.",
+      languageHint: "Cambia las etiquetas de la interfaz. La voz del paciente sigue en español.",
+      microphone: "Micrófono",
+      microphoneHint:
+        "Comprueba el permiso y el nivel de entrada antes de una llamada.",
+      diagnostics: "Diagnóstico del runtime",
+      diagnosticsHint:
+        "Solo para verificación: lo que reporta el backend en este momento.",
+      sessionActions: "Sesión",
+      sessionActionsHint:
+        "Cerrar sesión deja la cuenta intacta. Borrar cuenta es permanente.",
     },
   },
 
@@ -88,6 +106,7 @@ export const es = {
       headline: "Seguimiento postoperatorio por voz, con la duda a la vista.",
       support:
         "LIMEN conversa en español con el paciente en casa, responde solo con lo que está en tus documentos clínicos y pasa la llamada a una persona cuando la seguridad lo exige.",
+      enableMic: "Activar micrófono",
     },
     problem: {
       eyebrow: "El problema",
@@ -216,5 +235,88 @@ export const es = {
       checking: "Comprobando la sesión…",
       redirect: "Inicia sesión para abrir el workspace.",
     },
+  },
+
+  call: {
+    stage: "Llamada",
+    transport: {
+      idle: "Sin transporte",
+      connecting: "Conectando voz…",
+      open: "Voz conectada",
+      closed: "Voz cerrada",
+      error: "Voz con error",
+    },
+    start: "Iniciar llamada",
+    end: "Terminar sesión",
+    liveContext: "Contexto en vivo",
+    transcript: "Transcripción",
+    turns_one: "{{count}} turno",
+    turns_other: "{{count}} turnos",
+    silenceTitle: "Sin turnos aún",
+    silenceBody:
+      "Los turnos del paciente y del agente aparecen aquí a medida que avanza la sesión.",
+    hint: "El azul reacciona a tu voz. El naranja marca al agente. Habla y suelta para enviar el turno.",
+    blocked: "Sesión de voz bloqueada",
+    retryMic: "Pedir micrófono de nuevo",
+    phases: {
+      IDLE: { label: "En espera", description: "Sin sesión activa. Inicia una llamada para abrir el micrófono." },
+      REQUESTING_MIC: { label: "Solicitando micrófono", description: "Esperando permiso del navegador." },
+      LISTENING: { label: "Escuchando", description: "Puedes hablar. El campo reacciona a tu voz." },
+      PROCESSING_STT: { label: "Transcribiendo", description: "Convirtiendo el último turno a texto." },
+      THINKING: { label: "Razonando", description: "Actualizando estado clínico, recuperando evidencia y evaluando seguridad." },
+      SPEAKING: { label: "Hablando", description: "Reproduciendo la respuesta del agente. Habla para interrumpir." },
+      INTERRUPTED: { label: "Interrumpido", description: "La reproducción se detuvo porque empezaste a hablar." },
+      ERROR: { label: "Error", description: "La sesión no puede continuar hasta resolver el problema." },
+      ENDED: { label: "Finalizada", description: "Sesión cerrada. Revisa Sesiones o TRAZA para lo registrado." },
+    },
+  },
+
+  knowledge: {
+    emptyApi: "No se pudo cargar el conocimiento",
+    notFound: "Documento no encontrado",
+  },
+
+  trace: {
+    timeline: "Línea de tiempo",
+    inspector: "Inspector",
+    pickTitle: "Elige una llamada para auditar",
+    pickBody:
+      "Cada decisión, recuperación y evaluación de seguridad se registra por llamada.",
+    browseSessions: "Ver sesiones",
+    recent: "Llamadas recientes",
+    emptyEvents: "Sin pasos registrados",
+    loadError: "No se pudo cargar la traza",
+    escalated: "Escalada",
+  },
+
+  sessions: {
+    title: "Llamadas completadas",
+    emptyTitle: "Sin llamadas registradas",
+    emptyBody:
+      "Las llamadas de seguimiento aparecen aquí con riesgo final, escalada y enlace a TRAZA.",
+    startCall: "Iniciar una llamada",
+    loadError: "No se pudieron cargar las sesiones",
+    headers: {
+      call: "Llamada",
+      patient: "Paciente",
+      procedure: "Procedimiento",
+      pod: "DPO",
+      started: "Inicio",
+      risk: "Riesgo",
+      escalated: "Escalada",
+      duration: "Duración",
+    },
+    unknown: "Desconocido",
+    yes: "Sí",
+    no: "No",
+    openTrace: "Traza",
+    openSummary: "Resumen",
+  },
+
+  connection: {
+    connected: "API activa",
+    connecting: "Conectando",
+    disconnected: "API caída",
+    unavailable: "No disponible",
   },
 } as const;

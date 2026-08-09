@@ -1,7 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import type { CallPhase } from "../../api/types";
+import { renderWithProviders } from "../../test/renderRoute";
 import { CallState } from "./CallState";
 import { phasePresentation } from "./callPhase";
 
@@ -22,18 +23,20 @@ describe("CallState", () => {
   });
 
   it("announces the phase politely for assistive technology", () => {
-    const { container } = render(<CallState phase="LISTENING" />);
+    const { container } = renderWithProviders(<CallState phase="LISTENING" />);
     const region = container.querySelector("[aria-live='polite']");
 
     expect(region).not.toBeNull();
-    expect(screen.getByTestId("call-phase-label")).toHaveTextContent("Listening");
+    expect(screen.getByTestId("call-phase-label")).toHaveTextContent(
+      /escuchando|listening/i,
+    );
   });
 
   it("explains a blocked session rather than showing a bare spinner", () => {
-    render(<CallState phase="ERROR" />);
+    renderWithProviders(<CallState phase="ERROR" />);
 
     expect(
-      screen.getByText(/cannot continue until the problem is resolved/i),
+      screen.getByText(/no puede continuar|cannot continue/i),
     ).toBeInTheDocument();
   });
 });

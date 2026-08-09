@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Protocol, TypeVar
+from typing import Any, Protocol, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,8 @@ class LLMRequest(BaseModel):
     temperature: float = 0.2
     max_tokens: int | None = None
     metadata: dict[str, str] = Field(default_factory=dict)
+    # When set, adapters MAY request constrained JSON matching this schema.
+    response_json_schema: dict[str, Any] | None = None
 
 
 class LLMResponse(BaseModel):
@@ -24,9 +26,14 @@ class LLMResponse(BaseModel):
 
     text: str
     model: str
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
-    latency_ms: float = 0.0
+    prompt_tokens: int | None = None
+    completion_tokens: int | None = None
+    latency_ms: float | None = None
+    time_to_first_token_ms: float | None = None
+    generation_ms: float | None = None
+    finish_reason: str | None = None
+    provider: str | None = None
+    usage_metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class LLMProvider(Protocol):

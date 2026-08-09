@@ -18,17 +18,23 @@ export const documentStatusView: Record<DocumentStatus, DocumentStatusView> = {
     pending: true,
     meaning: "Transferring the file to the backend.",
   },
+  UPLOADED: {
+    label: "Uploaded",
+    tone: "intelligence",
+    pending: true,
+    meaning: "File registered. Processing has not finished.",
+  },
   PROCESSING: {
     label: "Processing",
     tone: "review",
     pending: true,
-    meaning: "Parsing and OCR in progress. Not retrievable yet.",
+    meaning: "Parsing and indexing in progress. Not retrievable yet.",
   },
   INDEXING: {
     label: "Indexing",
     tone: "review",
     pending: true,
-    meaning: "Chunking and embedding in progress. Not retrievable yet.",
+    meaning: "Chunking and indexing in progress. Not retrievable yet.",
   },
   AVAILABLE: {
     label: "Available",
@@ -46,7 +52,7 @@ export const documentStatusView: Record<DocumentStatus, DocumentStatusView> = {
     label: "Removing",
     tone: "review",
     pending: true,
-    meaning: "Deleting chunks and embeddings.",
+    meaning: "Deleting chunks and index artifacts.",
   },
   REMOVED: {
     label: "Removed",

@@ -4,10 +4,21 @@
 
 export type PlaybackListener = (playing: boolean) => void;
 
+export type PlaybackMeta = {
+  turnSeq?: number;
+};
+
 export type AgentPlayback = {
-  enqueue: (audio: Blob | string) => Promise<void>;
+  enqueue: (audio: Blob | string, meta?: PlaybackMeta) => Promise<void>;
   stop: () => void;
   readonly playing: boolean;
+  readonly activeTurnSeq: number | null;
+  onPlaybackStarted: ((meta: {
+    turnSeq: number | null;
+    agentAudioStartedMonotonic: number;
+    agentAudioReceivedMonotonic: number;
+  }) => void) | null;
+  onPlaybackCompleted: ((meta: { turnSeq: number | null }) => void) | null;
   subscribe: (listener: PlaybackListener) => () => void;
   dispose: () => void;
 };
@@ -17,6 +28,10 @@ export function createAgentPlayback(): AgentPlayback {
   const listeners = new Set<PlaybackListener>();
   let playing = false;
   let objectUrl: string | null = null;
+  let activeTurnSeq: number | null = null;
+  let generation = 0;
+  let onPlaybackStarted: AgentPlayback["onPlaybackStarted"] = null;
+  let onPlaybackCompleted: AgentPlayback["onPlaybackCompleted"] = null;
 
   const emit = (next: boolean) => {
     playing = next;
@@ -31,16 +46,38 @@ export function createAgentPlayback(): AgentPlayback {
   };
 
   element?.addEventListener("ended", () => {
+    const seq = activeTurnSeq;
     releaseUrl();
     emit(false);
+    onPlaybackCompleted?.({ turnSeq: seq });
+    activeTurnSeq = null;
   });
 
   return {
-    async enqueue(audio) {
+    get onPlaybackStarted() {
+      return onPlaybackStarted;
+    },
+    set onPlaybackStarted(handler) {
+      onPlaybackStarted = handler;
+    },
+    get onPlaybackCompleted() {
+      return onPlaybackCompleted;
+    },
+    set onPlaybackCompleted(handler) {
+      onPlaybackCompleted = handler;
+    },
+    get activeTurnSeq() {
+      return activeTurnSeq;
+    },
+    async enqueue(audio, meta) {
       if (!element) return;
+      const gen = ++generation;
+      const turnSeq = meta?.turnSeq ?? null;
+      const receivedMono = performance.now() / 1000;
       // A new turn always replaces the current one; overlapping voices are a defect.
       element.pause();
       releaseUrl();
+      activeTurnSeq = turnSeq;
 
       if (typeof audio === "string") {
         element.src = audio;
@@ -52,17 +89,27 @@ export function createAgentPlayback(): AgentPlayback {
       emit(true);
       try {
         await element.play();
+        if (gen !== generation) return; // superseded
+        onPlaybackStarted?.({
+          turnSeq,
+          agentAudioReceivedMonotonic: receivedMono,
+          agentAudioStartedMonotonic: performance.now() / 1000,
+        });
       } catch {
+        if (gen !== generation) return;
         releaseUrl();
         emit(false);
+        activeTurnSeq = null;
       }
     },
     stop() {
+      generation += 1;
       if (!element) return;
       element.pause();
       element.currentTime = 0;
       releaseUrl();
       emit(false);
+      activeTurnSeq = null;
     },
     get playing() {
       return playing;
@@ -72,10 +119,12 @@ export function createAgentPlayback(): AgentPlayback {
       return () => listeners.delete(listener);
     },
     dispose() {
+      generation += 1;
       element?.pause();
       releaseUrl();
       listeners.clear();
       playing = false;
+      activeTurnSeq = null;
     },
   };
 }

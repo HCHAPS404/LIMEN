@@ -112,7 +112,9 @@ export function NavRail() {
         {railExpanded ? (
           <div className="mb-6 flex items-center gap-2.5 px-3">
             <LimenMark size={18} />
-            <span className="type-label m-0 text-text-3">{t("workspace")}</span>
+            <span className="text-[0.8125rem] font-semibold tracking-[0.22em] text-ice uppercase">
+              LIMEN
+            </span>
           </div>
         ) : (
           <div className="mb-8 flex h-12 w-12 items-center justify-center">

@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Outlet, useMatches } from "react-router-dom";
+import { Outlet, useLocation, useMatches } from "react-router-dom";
 
 import { ConnectionState } from "../../components/feedback/ConnectionState";
 import { AccountMenu } from "../../components/shell/AccountMenu";
@@ -11,8 +11,10 @@ import {
 } from "../../features/diagnostics/useHealth";
 import type { RouteMeta } from "../router/routeMeta";
 
+/** Workspace chrome. API health detail stays quiet except on Settings. */
 export function WorkspaceLayout() {
   const matches = useMatches();
+  const location = useLocation();
   const health = useHealth();
   const { t } = useTranslation("shell");
 
@@ -21,12 +23,14 @@ export function WorkspaceLayout() {
     .map((match) => match.handle as RouteMeta | undefined)
     .find((handle): handle is RouteMeta => Boolean(handle?.titleKey));
 
+  const onSettings = location.pathname.startsWith("/settings");
   const status = healthConnectionStatus(health);
-  const detail = health.data
-    ? `API v${health.data.version}`
-    : status === "disconnected"
-      ? "API unreachable"
-      : undefined;
+  const detail =
+    onSettings && health.data
+      ? `API v${health.data.version}`
+      : onSettings && status === "disconnected"
+        ? "API unreachable"
+        : undefined;
 
   return (
     <AppShell
@@ -34,7 +38,11 @@ export function WorkspaceLayout() {
         <ContextHeader
           title={t(meta?.titleKey ?? "routes.fallback.title")}
           subtitle={meta?.subtitleKey ? t(meta.subtitleKey) : undefined}
-          status={<ConnectionState status={status} detail={detail} />}
+          status={
+            onSettings ? (
+              <ConnectionState status={status} detail={detail} />
+            ) : undefined
+          }
           actions={<AccountMenu />}
         />
       }

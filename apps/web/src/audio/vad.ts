@@ -1,3 +1,22 @@
+/** Endpointing defaults measured for pause-heavy Spanish (PHASE 6.3).
+ *
+ * LEVEL_POLL_MS = 60 → silenceFrames 28 ≈ 1680 ms silence before end-of-turn.
+ * Prefer natural turn-taking over minimum latency.
+ */
+export const ENDPOINTING = {
+  levelPollMs: 60,
+  /** ~240 ms of speech before opening a segment. */
+  speechFrames: 4,
+  /** ~1680 ms silence to end (pause-heavy Spanish). */
+  silenceFrames: 28,
+  speechThreshold: 0.045,
+  silenceThreshold: 0.02,
+  minUtteranceMs: 320,
+  maxUtteranceMs: 45_000,
+  /** Sustained speech frames while SPEAKING before barge-in (~480 ms). */
+  bargeInSpeechFrames: 8,
+} as const;
+
 /** Energy-threshold voice activity detection.
  *  Deterministic and dependency-free: it drives barge-in without needing STT. */
 
@@ -18,14 +37,16 @@ export type VoiceActivityDetector = {
   /** Feed one RMS level; returns the state after the frame. */
   push: (level: number) => VadState;
   readonly state: VadState;
+  /** Consecutive speech frames in the current run (for barge-in gating). */
+  readonly speechRun: number;
   reset: () => void;
 };
 
 export function createVad(options: VadOptions = {}): VoiceActivityDetector {
-  const speechThreshold = options.speechThreshold ?? 0.045;
-  const silenceThreshold = options.silenceThreshold ?? 0.02;
-  const speechFrames = options.speechFrames ?? 3;
-  const silenceFrames = options.silenceFrames ?? 12;
+  const speechThreshold = options.speechThreshold ?? ENDPOINTING.speechThreshold;
+  const silenceThreshold = options.silenceThreshold ?? ENDPOINTING.silenceThreshold;
+  const speechFrames = options.speechFrames ?? ENDPOINTING.speechFrames;
+  const silenceFrames = options.silenceFrames ?? ENDPOINTING.silenceFrames;
 
   let state: VadState = "silence";
   let speechRun = 0;
@@ -53,6 +74,9 @@ export function createVad(options: VadOptions = {}): VoiceActivityDetector {
     },
     get state() {
       return state;
+    },
+    get speechRun() {
+      return speechRun;
     },
     reset() {
       state = "silence";

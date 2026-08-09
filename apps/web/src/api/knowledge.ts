@@ -21,8 +21,8 @@ export function uploadDocument(file: File): Promise<KnowledgeDocument> {
   });
 }
 
-export function deleteDocument(documentId: string): Promise<void> {
-  return apiRequest<void>(
+export function deleteDocument(documentId: string): Promise<KnowledgeDocument> {
+  return apiRequest<KnowledgeDocument>(
     `/api/knowledge/documents/${encodeURIComponent(documentId)}`,
     { method: "DELETE" },
   );

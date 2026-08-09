@@ -11,7 +11,17 @@ export const LOCALE_STORAGE_KEY = "limen.locale";
 /** Spanish first: the patient-facing voice loop is Spanish. */
 export const DEFAULT_LOCALE: Locale = "es";
 
-export const NAMESPACES = ["common", "shell", "landing", "auth"] as const;
+export const NAMESPACES = [
+  "common",
+  "shell",
+  "landing",
+  "auth",
+  "call",
+  "knowledge",
+  "trace",
+  "sessions",
+  "connection",
+] as const;
 
 function isLocale(value: string | null): value is Locale {
   return value === "es" || value === "en";

@@ -46,6 +46,14 @@ class SqliteAccountRepository:
     def find_account_by_id(self, account_id: str) -> StoredAccount | None:
         return self._read_account("account_id", account_id)
 
+    def delete_account(self, account_id: str) -> None:
+        """Removes the account; auth_sessions cascade via the FK."""
+        with self._connection:
+            self._connection.execute(
+                "DELETE FROM accounts WHERE account_id = ?",
+                (account_id,),
+            )
+
     def insert_session(self, session: SessionRecord) -> None:
         with self._connection:
             self._connection.execute(

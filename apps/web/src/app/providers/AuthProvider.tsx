@@ -3,6 +3,7 @@ import { createContext, useContext, type ReactNode } from "react";
 
 import {
   authKeys,
+  deleteAccount,
   fetchAccount,
   login,
   logout,
@@ -23,6 +24,8 @@ type AuthContextValue = {
   }) => Promise<void>;
   signOut: () => Promise<void>;
   isSigningOut: boolean;
+  deleteAccount: () => Promise<void>;
+  isDeletingAccount: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -48,13 +51,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (data) => queryClient.setQueryData(authKeys.me, data.account),
   });
 
+  const clearSessionCache = () => {
+    // Cached clinical data belongs to the account that just left.
+    queryClient.setQueryData(authKeys.me, null);
+    queryClient.clear();
+  };
+
   const signOut = useMutation({
     mutationFn: logout,
-    onSettled: () => {
-      // Cached clinical data belongs to the account that just left.
-      queryClient.setQueryData(authKeys.me, null);
-      queryClient.clear();
-    },
+    onSettled: clearSessionCache,
+  });
+
+  const removeAccount = useMutation({
+    mutationFn: deleteAccount,
+    onSettled: clearSessionCache,
   });
 
   const account = session.data ?? null;
@@ -79,6 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await signOut.mutateAsync();
         },
         isSigningOut: signOut.isPending,
+        deleteAccount: async () => {
+          await removeAccount.mutateAsync();
+        },
+        isDeletingAccount: removeAccount.isPending,
       }}
     >
       {children}

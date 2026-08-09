@@ -31,6 +31,12 @@ class InMemoryAccountRepository:
     def find_account_by_id(self, account_id: str) -> StoredAccount | None:
         return self.accounts.get(account_id)
 
+    def delete_account(self, account_id: str) -> None:
+        self.accounts.pop(account_id, None)
+        stale = [k for k, v in self.sessions.items() if v.account_id == account_id]
+        for key in stale:
+            del self.sessions[key]
+
     def insert_session(self, session: SessionRecord) -> None:
         self.sessions[session.token_hash] = session
 
@@ -162,6 +168,19 @@ def test_ensure_account_is_idempotent(service: AuthService) -> None:
     assert first.account_id == second.account_id
     # The seeded password is not rewritten from configuration on later runs.
     assert service.login("demo@limen.local", PASSWORD).account.account_id == first.account_id
+
+
+def test_delete_account_removes_account_and_sessions(
+    service: AuthService, repository: InMemoryAccountRepository
+) -> None:
+    session = service.register("clinica@umbral.io", PASSWORD, "Clínica Umbral")
+    service.delete_account(session.account.account_id)
+    assert repository.accounts == {}
+    assert repository.sessions == {}
+    with pytest.raises(SessionInvalid):
+        service.authenticate(session.token)
+    with pytest.raises(InvalidCredentials):
+        service.login("clinica@umbral.io", PASSWORD)
 
 
 def test_purge_expired_sessions_removes_only_stale_rows(

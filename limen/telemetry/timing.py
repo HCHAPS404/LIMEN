@@ -20,6 +20,22 @@ class StageTimer:
             return None
         return (self.marks[end] - self.marks[start]) * 1000
 
+    def stage_ms(self, stage: str) -> float | None:
+        """Duration for a ``measure(stage)`` block, or None if absent."""
+        return self.elapsed_ms(f"{stage}_start", f"{stage}_end")
+
+    def measured_stages(self) -> dict[str, float]:
+        """Return {stage: duration_ms} for completed measure() blocks only."""
+        out: dict[str, float] = {}
+        for key in self.marks:
+            if not key.endswith("_start"):
+                continue
+            stage = key[: -len("_start")]
+            value = self.stage_ms(stage)
+            if value is not None:
+                out[stage] = value
+        return out
+
     @contextmanager
     def measure(self, stage: str) -> Iterator[None]:
         start_key = f"{stage}_start"

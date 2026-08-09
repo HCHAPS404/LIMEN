@@ -43,6 +43,16 @@ def test_deleting_a_session_invalidates_the_token(service: AuthService) -> None:
         service.authenticate(session.token)
 
 
+def test_deleting_an_account_cascades_sessions(service: AuthService) -> None:
+    session = service.register("clinica@umbral.io", PASSWORD, "Clínica Umbral")
+    service.delete_account(session.account.account_id)
+    with pytest.raises(SessionInvalid):
+        service.authenticate(session.token)
+    # Email is free again for a new registration.
+    again = service.register("clinica@umbral.io", PASSWORD, "Clínica Umbral")
+    assert again.account.account_id != session.account.account_id
+
+
 def test_expired_rows_are_purged(tmp_path: Path) -> None:
     database = Database(tmp_path / "accounts.db")
     database.initialize()

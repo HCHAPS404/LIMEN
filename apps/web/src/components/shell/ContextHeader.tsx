@@ -56,6 +56,12 @@ export function ContextHeader({
         )}
       </div>
 
+      <div className="min-w-0 flex-1 sm:hidden">
+        <h1 className="m-0 truncate text-[0.9375rem] font-semibold tracking-[-0.016em] text-ice">
+          {title}
+        </h1>
+      </div>
+
       <div className="ml-auto flex shrink-0 items-center gap-3">
         {status}
         {actions}

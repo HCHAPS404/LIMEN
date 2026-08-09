@@ -117,3 +117,21 @@ async def logout(
 @router.get("/me", response_model=AccountResponse)
 async def me(account: CurrentAccount) -> AccountResponse:
     return AccountResponse.from_account(account)
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_me(
+    response: Response,
+    account: CurrentAccount,
+    auth: Auth,
+    settings: Settings,
+) -> None:
+    """Permanently removes the signed-in account and clears the session cookie."""
+    auth.delete_account(account.account_id)
+    response.delete_cookie(
+        key=settings.auth_cookie_name,
+        httponly=True,
+        secure=settings.auth_cookie_secure,
+        samesite="lax",
+        path="/",
+    )

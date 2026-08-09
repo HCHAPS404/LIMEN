@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from limen.clinical.state import ClinicalState
 from limen.safety.decision import SafetyDecision, Severity
-from limen.safety.rules import evaluate_text_rules
+from limen.safety.rules import evaluate_state_rules, evaluate_text_rules
 
 
 class SafetyGovernor:
@@ -11,6 +12,10 @@ class SafetyGovernor:
 
     def evaluate_utterance(self, text: str) -> SafetyDecision:
         return evaluate_text_rules(text)
+
+    def evaluate_state(self, state: ClinicalState) -> SafetyDecision:
+        """Use typed findings (present / denied / conflicting) without weakening RED."""
+        return evaluate_state_rules(state)
 
     def merge(self, *decisions: SafetyDecision) -> SafetyDecision:
         """Severity is monotonic: the strongest decision wins."""

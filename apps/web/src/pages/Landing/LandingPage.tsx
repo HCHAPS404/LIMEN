@@ -160,13 +160,23 @@ export function LandingPage() {
 
               <motion.div
                 {...rise(0.12)}
-                className="relative z-[1] flex items-center justify-center lg:justify-end"
+                className="relative z-[1] flex flex-col items-center justify-center gap-4 lg:items-end lg:justify-end"
               >
                 <VoiceOrb
                   phase={voice.phase}
                   level={voice.level}
                   className="h-[clamp(17rem,44vh,30rem)] w-[clamp(17rem,44vh,30rem)]"
                 />
+                {!voice.enabled && (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={voice.enable}
+                    className="relative z-[1]"
+                  >
+                    {t("hero.enableMic")}
+                  </Button>
+                )}
               </motion.div>
             </Shell>
           </section>
@@ -214,20 +224,20 @@ export function LandingPage() {
                 </p>
               </motion.div>
 
-              <ol className="mt-10 grid list-none gap-4 p-0 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-5">
+              <ol className="mt-10 grid list-none gap-8 border-t border-glass-border p-0 pt-10 sm:grid-cols-2 lg:mt-12 lg:grid-cols-3 lg:gap-10">
                 {steps.map((step, index) => (
                   <motion.li
                     key={step}
                     {...reveal(index * 0.06)}
-                    className="glass-1 sheen-top flex flex-col gap-4 rounded-2xl p-6 md:p-7"
+                    className="flex flex-col gap-3"
                   >
-                    <span className="type-metric relative z-[1] text-[1.25rem] text-text-3">
+                    <span className="type-metric text-[1.25rem] text-text-3">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <h3 className="type-h3 relative z-[1] m-0 text-ice">
+                    <h3 className="type-h3 m-0 text-ice">
                       {t(`steps.${step}.title`)}
                     </h3>
-                    <p className="type-body relative z-[1] m-0 text-text-2">
+                    <p className="type-body m-0 text-text-2">
                       {t(`steps.${step}.body`)}
                     </p>
                   </motion.li>
@@ -461,7 +471,7 @@ function LandingNav({ signedIn }: { signedIn: boolean }) {
           </a>
         </nav>
 
-        <div className="relative z-[1] hidden items-center gap-1 sm:flex">
+        <div className="relative z-[1] flex items-center gap-1">
           <LanguageSwitcher />
           <ThemeToggle />
         </div>

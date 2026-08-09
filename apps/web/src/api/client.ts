@@ -34,7 +34,8 @@ export class ApiError extends Error {
   /** The endpoint is not part of the running backend yet. Callers render an
    *  explicit "not available" state rather than inventing data. */
   get isNotImplemented(): boolean {
-    return this.status === 404 || this.status === 501;
+    // 404 is a missing resource (call_not_found, …), not an absent endpoint.
+    return this.status === 501;
   }
 
   get isNetworkFailure(): boolean {
@@ -138,6 +139,9 @@ export function describeError(error: unknown): string {
     }
     if (error.isNotImplemented) {
       return `The backend does not expose ${error.path} yet.`;
+    }
+    if (error.status === 404) {
+      return error.detail ?? `Resource not found (${error.path}).`;
     }
     return error.detail ? `${error.message} ${error.detail}` : error.message;
   }

@@ -5,7 +5,7 @@ import { RiskBadge } from "../../components/data/RiskBadge";
 import { riskMeaning } from "../../components/data/riskPresentation";
 import { EmptyState } from "../../components/feedback/EmptyState";
 import { formatTimestamp } from "../../lib/format";
-import { traceStageView } from "./traceStage";
+import { resolveTraceStageView } from "./traceStage";
 
 export function DecisionCard({ event }: { event: TraceEventRecord | null }) {
   if (!event) {
@@ -18,7 +18,7 @@ export function DecisionCard({ event }: { event: TraceEventRecord | null }) {
     );
   }
 
-  const view = traceStageView[event.stage];
+  const view = resolveTraceStageView(event.stage);
   const metrics = event.metrics;
 
   return (

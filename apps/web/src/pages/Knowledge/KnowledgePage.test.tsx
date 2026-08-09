@@ -90,19 +90,19 @@ describe("Knowledge console", () => {
   });
 
   it("says the knowledge API is unavailable instead of showing sources", async () => {
-    mockKnowledge({ status: 404, body: { detail: "Not Found" } });
+    mockKnowledge({ status: 501, body: { detail: "Not Implemented" } });
 
     renderRoute("/knowledge");
 
     expect(
-      await screen.findByText(/Knowledge API not available/i),
+      await screen.findByText(/Knowledge API not implemented/i),
     ).toBeInTheDocument();
     expect(screen.queryByText("Available")).not.toBeInTheDocument();
     expect(screen.getByText("0 available")).toBeInTheDocument();
   });
 
   it("disables ingestion when the upload endpoint does not exist", async () => {
-    mockKnowledge({ status: 404, body: { detail: "Not Found" } });
+    mockKnowledge({ status: 501, body: { detail: "Not Implemented" } });
 
     renderRoute("/knowledge");
 
@@ -112,7 +112,7 @@ describe("Knowledge console", () => {
       ).toBeDisabled(),
     );
     expect(
-      screen.getByText(/Ingestion is unavailable until the backend exposes/i),
+      screen.getByText(/not implemented \(HTTP 501\)/i),
     ).toBeInTheDocument();
   });
 

@@ -11,10 +11,10 @@ export type ClinicalCertainty =
   | "UNKNOWN"
   | "CONFLICTING";
 
-/** `UPLOADING` and `REMOVING` are client-side transitions while a request is in
- *  flight. Every other value must come from the backend. */
+/** Backend lifecycle statuses plus client-only optimistic `UPLOADING` / `INDEXING`. */
 export type DocumentStatus =
   | "UPLOADING"
+  | "UPLOADED"
   | "PROCESSING"
   | "INDEXING"
   | "AVAILABLE"
@@ -34,13 +34,16 @@ export type CallPhase =
   | "ENDED";
 
 export type TraceStage =
+  | "call.started"
   | "patient_statement"
   | "clinical_extraction"
+  | "uncertainty"
   | "retrieval"
   | "safety_evaluation"
   | "response"
   | "escalation"
-  | "session_end";
+  | "session_end"
+  | "provider.error";
 
 export type HealthResponse = {
   status: string;
@@ -48,6 +51,7 @@ export type HealthResponse = {
   app_env: string;
   llm_provider: string;
   llm_model: string;
+  degraded_llm_mode?: boolean;
   database: {
     database?: string;
     schema_version?: string;
@@ -58,9 +62,14 @@ export type HealthResponse = {
 export type KnowledgeDocument = {
   document_id: string;
   source_name: string;
+  filename?: string | null;
   status: DocumentStatus;
   version: number;
+  active_version_id?: string | null;
   uploaded_at: string;
+  updated_at?: string | null;
+  indexed_at?: string | null;
+  removed_at?: string | null;
   size_bytes?: number | null;
   page_count?: number | null;
   chunk_count?: number | null;
@@ -76,9 +85,14 @@ export type EvidenceChunk = {
   chunk_id: string;
   text: string;
   source_name: string;
+  filename?: string | null;
   page?: number | null;
+  section?: string | null;
   score: number;
   version: number;
+  version_id?: string | null;
+  content_hash?: string | null;
+  active?: boolean;
 };
 
 export type RetrievalProbe = {
@@ -120,18 +134,32 @@ export type CallSummary = {
 
 export type TurnMetrics = {
   latency_ms?: number | null;
+  total_latency_ms?: number | null;
+  clinical_ms?: number | null;
+  uncertainty_ms?: number | null;
+  retrieval_ms?: number | null;
+  safety_ms?: number | null;
+  response_generation_ms?: number | null;
+  persistence_ms?: number | null;
+  dense_ms?: number | null;
+  lexical_ms?: number | null;
+  fusion_ms?: number | null;
   input_tokens?: number | null;
   output_tokens?: number | null;
   llm_calls?: number | null;
   rag_queries?: number | null;
+  evidence_selected?: number | null;
   estimated_cost_usd?: number | null;
+  cost_basis?: "measured" | "estimated" | "not_available" | "synthetic" | null;
 };
 
 export type TraceEventRecord = {
   event_id: string;
   call_id: string;
   sequence: number;
-  stage: TraceStage;
+  stage: TraceStage | string;
+  event_type?: string | null;
+  schema_version?: number;
   timestamp: string;
   label: string;
   detail?: string | null;
@@ -140,6 +168,11 @@ export type TraceEventRecord = {
   reasons?: string[];
   evidence?: EvidenceChunk[];
   metrics?: TurnMetrics | null;
+  turn_id?: string | null;
+  document_id?: string | null;
+  duration_ms?: number | null;
+  status?: string | null;
+  payload?: Record<string, unknown>;
 };
 
 export type CallTrace = {
@@ -147,13 +180,20 @@ export type CallTrace = {
   events: TraceEventRecord[];
   final_risk: RiskLevel | null;
   escalated: boolean;
-  totals?: TurnMetrics | null;
+  totals?: Record<string, unknown> | null;
+  schema_version?: number;
 };
 
 /** Realtime envelope (FRONTEND.md section 29). Discriminated on `type`; the
  *  socket transport itself lands with the voice backend. */
 export type RealtimeEvent =
-  | { type: "call.state"; call_id: string; sequence: number; timestamp: string; payload: { state: CallPhase } }
+  | {
+      type: "call.state";
+      call_id: string;
+      sequence: number;
+      timestamp: string;
+      payload: { state: CallPhase; turn_seq?: number };
+    }
   | {
       type: "call.transcript";
       call_id: string;
@@ -187,14 +227,30 @@ export type RealtimeEvent =
       call_id: string;
       sequence: number;
       timestamp: string;
-      payload: TurnMetrics;
+      payload: TurnMetrics & Record<string, unknown>;
+    }
+  | {
+      type: "call.audio";
+      call_id: string;
+      sequence: number;
+      timestamp: string;
+      payload: {
+        turn_seq: number;
+        mime_type?: string;
+        sample_rate_hz?: number;
+      };
     }
   | {
       type: "call.error";
       call_id: string;
       sequence: number;
       timestamp: string;
-      payload: { code: string; message: string };
+      payload: {
+        code: string;
+        message: string;
+        retryable?: boolean;
+        assistant_text?: string;
+      };
     }
   | {
       type: "call.ended";

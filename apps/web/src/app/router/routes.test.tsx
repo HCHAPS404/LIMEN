@@ -52,51 +52,89 @@ describe("application shell routing", () => {
     renderRoute("/call");
 
     expect(
-      await screen.findByRole("navigation", { name: "Workspace" }),
+      await screen.findByRole("navigation", { name: /espacio de trabajo|workspace/i }),
     ).toBeInTheDocument();
     // Navigation labels follow the default locale (Spanish).
     expect(
       screen.getByRole("link", { name: "Conocimiento" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /start call/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /iniciar llamada|start call/i }),
+    ).toBeInTheDocument();
   });
 
-  it("reports backend health in the context header", async () => {
-    renderRoute("/call");
+  it("reports backend health on Settings, not as a global Connected claim", async () => {
+    renderRoute("/settings");
 
-    expect(await screen.findByText("Connected")).toBeInTheDocument();
+    expect(await screen.findByText(/API activa|API up/i)).toBeInTheDocument();
     expect(screen.getByText(/API v0\.1\.0/)).toBeInTheDocument();
   });
 
-  it("starts the call with no risk assessed and an empty transcript", async () => {
+  it("keeps the call stage alone until a session starts", async () => {
     renderRoute("/call");
-
-    expect(await screen.findByText("NOT ASSESSED")).toBeInTheDocument();
-    expect(screen.getByText(/No turns recorded/i)).toBeInTheDocument();
-    expect(screen.getByText(/No clinical state yet/i)).toBeInTheDocument();
-  });
-
-  it("moves the live context into a drawer below the desktop breakpoint", async () => {
-    setViewportWidth(900);
-    renderRoute("/call");
-
-    const openContext = await screen.findByRole("button", {
-      name: /open live context/i,
-    });
-    expect(screen.queryByText("NOT ASSESSED")).not.toBeInTheDocument();
-
-    fireEvent.click(openContext);
 
     expect(
-      await screen.findByRole("dialog", { name: /live context/i }),
+      await screen.findByRole("button", { name: /iniciar llamada|start call/i }),
     ).toBeInTheDocument();
-    expect(screen.getByText("NOT ASSESSED")).toBeInTheDocument();
+    expect(screen.queryByText("NOT ASSESSED")).not.toBeInTheDocument();
+    expect(screen.queryByText(/sin turnos|no turns/i)).not.toBeInTheDocument();
+  });
+
+  it("reveals live context and transcript as their own sections after start", async () => {
+    setViewportWidth(900);
+    mockBackend((path) => {
+      if (path.endsWith("/health")) return { status: 200, body: healthPayload };
+      if (path.endsWith("/api/calls") && !path.includes("/stream")) {
+        return {
+          status: 201,
+          body: {
+            call_id: "call-test",
+            patient_alias: "Paciente",
+            started_at: "2026-08-07T12:00:00Z",
+            final_risk: null,
+            escalated: false,
+          },
+        };
+      }
+      return { status: 404, body: { detail: "Not Found" } };
+    });
+
+    class MockWebSocket {
+      static OPEN = 1;
+      readyState = 1;
+      binaryType = "arraybuffer";
+      onopen: ((ev: Event) => void) | null = null;
+      onerror: ((ev: Event) => void) | null = null;
+      onclose: ((ev: CloseEvent) => void) | null = null;
+      onmessage: ((ev: MessageEvent) => void) | null = null;
+      constructor() {
+        queueMicrotask(() => this.onopen?.(new Event("open")));
+      }
+      send() {}
+      close() {
+        this.readyState = 3;
+        this.onclose?.(new CloseEvent("close"));
+      }
+    }
+    vi.stubGlobal("WebSocket", MockWebSocket);
+
+    renderRoute("/call");
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: /iniciar llamada|start call/i }),
+    );
+
+    expect(await screen.findByText("NOT ASSESSED")).toBeInTheDocument();
+    expect(screen.getByText(/sin turnos|no turns/i)).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("asks for a call before rendering a trace", async () => {
     renderRoute("/trace");
 
-    expect(await screen.findByText(/Choose a call to audit/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/elige una llamada|choose a call/i),
+    ).toBeInTheDocument();
   });
 
   it("offers account entry points to a visitor on the landing", async () => {
@@ -176,6 +214,28 @@ describe("session guard", () => {
 describe("settings diagnostics", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it("keeps preference actions in one panel with sign out last", async () => {
+    mockBackend((path) =>
+      path.endsWith("/health")
+        ? { status: 200, body: healthPayload }
+        : { status: 404, body: { detail: "Not Found" } },
+    );
+
+    renderRoute("/settings");
+
+    expect(
+      await screen.findByRole("button", { name: /borrar cuenta|delete account/i }),
+    ).toBeInTheDocument();
+    const signOut = screen.getByRole("button", {
+      name: /cerrar sesión|sign out/i,
+    });
+    expect(signOut).toBeInTheDocument();
+    // Sign out is the last actionable control in the session block.
+    expect(signOut.compareDocumentPosition(
+      screen.getByRole("button", { name: /borrar cuenta|delete account/i }),
+    ) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
 
   it("shows the runtime model reported by the backend", async () => {
