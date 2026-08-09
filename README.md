@@ -66,11 +66,30 @@ Source: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
 
 ## Features
 
-- Adaptive Spanish voice conversation (browser mic → STT → TTS)
-- Hybrid RAG with provenance
-- Live knowledge upload / delete / forget (admin console)
-- Deterministic escalation + structured call summary
-- TRAZA decision timeline
+**Voice & conversation**
+
+- Browser mic → VAD → Faster-Whisper STT → Safety Governor → Phi-3.5 or templates → Piper TTS
+- Selectable Piper personas (Elena, Nikolas, Anikka, Alex) from Settings; display name frozen for the live call
+- Default Piper pack `es_MX-claude-high` (LatAm Spanish; no official `es_CO` voice in Piper)
+- Session continuity: preferred name, anti-repetition, farewell / idle / max-duration hang-up
+- WebSocket barge-in, stale-audio discard, finish on disconnect, idempotent call end
+
+**Clinical & safety**
+
+- Explicit `ClinicalState` with `UNKNOWN` / `CONFLICTING` preserved
+- Deterministic escalation; call-level `final_risk` / `escalated` are sticky (monotonic)
+- Structured call summary on finish
+
+**Knowledge & audit**
+
+- Hybrid RAG with provenance (E5 + Qdrant + FTS5 + RRF)
+- Live knowledge upload / list / delete / forget (`/knowledge`)
+- TRAZA decision timeline (`/trace/:callId`)
+
+**Product surface**
+
+- React workspace: Call, Knowledge, Sessions, Trace, Settings
+- Clinical Glass shell (tokens in `FRONTEND.md`); further UI/UX polish is **in progress**
 - Challenge runtime profile (`LIMEN_RUNTIME_PROFILE=challenge`)
 
 ## Challenge requirements coverage
@@ -82,11 +101,11 @@ Source: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
 | Live upload | `/knowledge` + knowledge API lifecycle |
 | Delete / forget | Deletion service purges lexical + vector indexes |
 | Traceability | TRAZA UI + `/api/traces/{id}` |
-| Escalation | SafetyGovernor RED + persisted artifact |
+| Escalation | SafetyGovernor RED + sticky call-level escalate/risk + artifact |
 | Structured summary | Call finish → summary endpoint/UI |
-| Spanish | Product UI + patient prompts (CO-oriented) |
+| Spanish | Product UI + patient prompts (CO-oriented LatAm) |
 | Regional robustness | Eval scenarios; no hard-coded challenge slang branches |
-| Voice browser / API | Faster-Whisper + Piper; stubs for CI |
+| Voice browser / API | Faster-Whisper + Piper personas; stubs for CI |
 | Public repository | This repo + MIT license |
 | Dependencies | `pyproject.toml`, `apps/web/package.json`, `.env.example` |
 
@@ -132,13 +151,15 @@ More: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md).
 - Official PDFs: `LIMEN_DATASET_PATH=... make prepare-official-knowledge`  
   Discovered **107**; smoke indexed **8** (not 107/107 yet) —
   `FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`
-- Live G5: admin UI `/knowledge` —
-  `FINAL_EVIDENCE_REQUIRED:G5_UI`
+- Live G5 path: admin UI `/knowledge` (upload → retrieve → delete → forget).
+  Competition evidence package still tracked in
+  [`docs/FINAL_POLISH_REGISTER.md`](docs/FINAL_POLISH_REGISTER.md).
 
 ## Voice
 
-faster-whisper-small (CUDA float16) · Piper `es_MX-claude-high` · browser VAD ·
-WebSocket barge-in / stale-response protection.
+faster-whisper-small (CUDA float16) · Piper personas (default pack
+`es_MX-claude-high`) · browser VAD · WebSocket barge-in / stale-response
+protection. Runtime notes: [`docs/VOICE_RUNTIME.md`](docs/VOICE_RUNTIME.md).
 
 Official challenge latency (speech-end → browser playback start):
 
@@ -152,7 +173,9 @@ Server TTS-ready proxies are **not** official challenge latency.
 ## Safety / escalation
 
 Deterministic rules + structured findings → SafetyDecision → templates/Phi under
-floor → validator. RED cannot be downgraded by generative output.
+floor → validator. RED cannot be downgraded by generative output. Once a call
+escalates or reaches a higher risk band, later benign turns do not clear
+call-level `escalated` / `final_risk`.
 
 ## TRAZA / observability
 
@@ -200,7 +223,9 @@ scripts/     bootstrap, prepare-*, verify-*
 Not a medical device; local-model language limits; browser voice P50/P95 still
 unmeasured; safety rules need broader clinical validation; knowledge quality
 depends on corpus; full official PDF ingest not verified at 107/107; human
-clinical validation is outside hackathon scope.
+clinical validation is outside hackathon scope. Visual UI/UX refinement and
+further conversation phrasing polish remain active workstreams (see polish
+register).
 
 ## Reproducibility
 
@@ -208,6 +233,15 @@ Challenge profile forces real providers (no stub READY). Evaluation artifacts ar
 generated under `docs/*.generated.md` and `runtime/evals/`. Submission package:
 [`docs/submission/`](docs/submission/). Final polish queue:
 [`docs/FINAL_POLISH_REGISTER.md`](docs/FINAL_POLISH_REGISTER.md).
+
+## Roadmap (near term)
+
+1. **In progress — UI/UX:** Clinical Glass refinements on Call / Knowledge /
+   Trace / Settings as directed in product review.
+2. **Planned — conversation & IA:** further phrasing, continuity, and
+   communication quality after the front pass.
+3. **Planned — challenge evidence:** G4 browser latency, demo video, and other
+   `FINAL_EVIDENCE_REQUIRED` items in the polish register.
 
 ## License
 
