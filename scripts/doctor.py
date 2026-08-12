@@ -83,8 +83,7 @@ def _check_python() -> Check:
     return Check(
         "python",
         ok,
-        f"{platform.python_version()} ({sys.executable})"
-        + ("" if ok else " — need Python 3.11+"),
+        f"{platform.python_version()} ({sys.executable})" + ("" if ok else " — need Python 3.11+"),
         "host",
     )
 
@@ -347,9 +346,7 @@ def main() -> int:
     settings_block = any(not c.ok for c in checks if c.name == "settings")
 
     ready_stubs = (
-        all(c.ok for c in host_required)
-        and all(c.ok for c in stubs_files)
-        and not settings_block
+        all(c.ok for c in host_required) and all(c.ok for c in stubs_files) and not settings_block
     )
     # Challenge hint: ollama reachable is the main gate; GPU/dataset optional
     ollama = next(c for c in checks if c.name == "ollama")
@@ -370,8 +367,7 @@ def main() -> int:
         print("Nivel 1 stubs: host looks ready. Start API+web, then: make smoke-local")
     if not ready_challenge:
         print(
-            "Nivel 3 challenge still needs: "
-            "Ollama + prepare-voice + verify-challenge-environment"
+            "Nivel 3 challenge still needs: Ollama + prepare-voice + verify-challenge-environment"
         )
     print("Docs: README.md · docs/GETTING_STARTED.md · docs/CHALLENGE_RUNTIME.md")
     return 0 if ready_stubs else 1
