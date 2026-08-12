@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 import type { RiskLevel } from "../../api/types";
 import { cn } from "../../lib/cn";
 import { riskView } from "./riskPresentation";
@@ -20,14 +22,31 @@ const sizes: Record<RiskBadgeSize, string> = {
 
 const iconSizes: Record<RiskBadgeSize, number> = { sm: 12, md: 14, lg: 18 };
 
+const LABEL_KEY = {
+  GREEN: "risk.label.green",
+  YELLOW: "risk.label.yellow",
+  ORANGE: "risk.label.orange",
+  RED: "risk.label.red",
+} as const;
+
+const MEANING_KEY = {
+  GREEN: "risk.meaning.green",
+  YELLOW: "risk.meaning.yellow",
+  ORANGE: "risk.meaning.orange",
+  RED: "risk.meaning.red",
+} as const;
+
 export function RiskBadge({
   risk,
   size = "md",
   showMeaning = false,
   className,
 }: RiskBadgeProps) {
+  const { t } = useTranslation("common");
   const view = riskView(risk);
   const Icon = view.icon;
+  const label = risk ? t(LABEL_KEY[risk]) : t("risk.label.unassessed");
+  const meaning = risk ? t(MEANING_KEY[risk]) : t("risk.meaning.unassessed");
 
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
@@ -39,14 +58,12 @@ export function RiskBadge({
         )}
       >
         <Icon aria-hidden size={iconSizes[size]} />
-        {view.label}
+        {label}
       </span>
       {showMeaning && (
-        <span className="type-body-s text-text-2">{view.meaning}</span>
+        <span className="type-body-s text-text-2">{meaning}</span>
       )}
-      <span className="sr-only">
-        Riesgo clínico {view.label}: {view.meaning}
-      </span>
+      <span className="sr-only">{t("risk.sr", { label, meaning })}</span>
     </span>
   );
 }

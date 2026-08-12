@@ -4,10 +4,12 @@ import { cn } from "../../lib/cn";
 
 type MetricProps = {
   label: string;
-  /** `null` renders the honest "not measured" placeholder. */
+  /** `null` renders the honest empty placeholder. */
   value: ReactNode | null;
   unit?: string;
   hint?: string;
+  /** Copy when value is absent (pass through i18n). */
+  emptyHint?: string;
   tone?: "default" | "intelligence" | "evidence" | "audit";
   className?: string;
 };
@@ -24,6 +26,7 @@ export function Metric({
   value,
   unit,
   hint,
+  emptyHint = "Not measured",
   tone = "default",
   className,
 }: MetricProps) {
@@ -44,7 +47,7 @@ export function Metric({
         )}
       </span>
       <span className="type-body-s text-text-3">
-        {measured ? hint : "Not measured"}
+        {measured ? hint : emptyHint}
       </span>
     </div>
   );

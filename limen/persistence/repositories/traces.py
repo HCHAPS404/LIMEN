@@ -52,6 +52,8 @@ class SqliteTraceRepository:
         resolved_type = resolve_event_type(stage=stage, event_type=event_type)
         evidence_payload = [
             # Prefer IDs + provenance; truncate text to limit replication.
+            # `text` mirrors `text_preview` so the inspector can render citations
+            # without a second join to the chunk store.
             {
                 "document_id": chunk.document_id,
                 "chunk_id": chunk.chunk_id,
@@ -60,7 +62,10 @@ class SqliteTraceRepository:
                 "page": chunk.page,
                 "section": chunk.section,
                 "score": chunk.score,
+                "version": chunk.version,
+                "version_id": chunk.version_id,
                 "retrieval_modes": list(chunk.retrieval_modes),
+                "text": (chunk.text or "")[:160],
                 "text_preview": (chunk.text or "")[:160],
             }
             for chunk in (evidence or [])

@@ -1,6 +1,6 @@
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 import { cn } from "../../lib/cn";
 import { useUiStore } from "../../state/ui-store";
@@ -98,7 +98,7 @@ export function NavRail() {
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 right-0 w-px bg-[linear-gradient(180deg,transparent_6%,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_22%,color-mix(in_oklab,var(--limen-ice)_8%,transparent)_78%,transparent_94%)]"
+        className="pointer-events-none absolute inset-y-0 right-0 w-px bg-[color-mix(in_oklab,var(--limen-ice)_26%,transparent)]"
       />
 
       <div
@@ -108,14 +108,24 @@ export function NavRail() {
         )}
       >
         {railExpanded ? (
-          <div className="mb-7 flex items-center gap-2.5 px-2.5">
+          <Link
+            to="/"
+            aria-label={t("rail.home")}
+            className="mb-7 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 transition-colors duration-[var(--motion-fast)] hover:bg-[color-mix(in_oklab,var(--limen-ice)_6%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+          >
             <LimenMark size={18} />
             <span className="type-eyebrow m-0 text-ice">LIMEN</span>
-          </div>
+          </Link>
         ) : (
-          <div className="mb-7 flex h-11 w-11 items-center justify-center">
-            <LimenMark size={20} />
-          </div>
+          <Tooltip content={t("rail.home")}>
+            <Link
+              to="/"
+              aria-label={t("rail.home")}
+              className="mb-7 flex h-11 w-11 items-center justify-center rounded-md transition-colors duration-[var(--motion-fast)] hover:bg-[color-mix(in_oklab,var(--limen-ice)_6%,transparent)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan"
+            >
+              <LimenMark size={20} />
+            </Link>
+          </Tooltip>
         )}
 
         <ul
@@ -143,7 +153,7 @@ export function NavRail() {
           <div
             aria-hidden
             className={cn(
-              "mb-1 h-px w-full bg-[linear-gradient(90deg,transparent,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_35%,color-mix(in_oklab,var(--limen-ice)_10%,transparent)_65%,transparent)]",
+              "mb-1 h-px w-full bg-[color-mix(in_oklab,var(--limen-ice)_26%,transparent)]",
               !railExpanded && "w-8",
             )}
           />
@@ -185,7 +195,7 @@ export function NavBarMobile() {
       className={cn(
         "fixed inset-x-0 bottom-0 z-30 flex items-stretch justify-around gap-1 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden",
         "bg-[color-mix(in_oklab,var(--limen-bg-1)_40%,transparent)] backdrop-blur-[20px]",
-        "shadow-[0_-1px_0_color-mix(in_oklab,var(--limen-ice)_8%,transparent)]",
+        "border-t border-[color-mix(in_oklab,var(--limen-ice)_26%,transparent)]",
       )}
     >
       {navItems.map(({ to, labelKey, icon: Icon }) => (

@@ -42,6 +42,10 @@ export type TraceStage =
   | "retrieval"
   | "safety_evaluation"
   | "response"
+  | "conversation"
+  | "voice"
+  | "stt"
+  | "tts"
   | "escalation"
   | "session_end"
   | "provider.error";
@@ -84,13 +88,15 @@ export type KnowledgeDocument = {
 export type EvidenceChunk = {
   document_id: string;
   chunk_id: string;
-  text: string;
+  /** Full or preview text; traces may send `text_preview` instead. */
+  text?: string;
+  text_preview?: string;
   source_name: string;
   filename?: string | null;
   page?: number | null;
   section?: string | null;
   score: number;
-  version: number;
+  version?: number;
   version_id?: string | null;
   content_hash?: string | null;
   active?: boolean;

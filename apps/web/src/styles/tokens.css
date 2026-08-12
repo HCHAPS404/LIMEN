@@ -32,8 +32,8 @@
      Never reuse these for clinical risk or document status. */
   --limen-voice-patient: #4f8fff;
   --limen-voice-patient-soft: #9dc0ff;
-  --limen-voice-agent: #f08a3c;
-  --limen-voice-agent-soft: #ffc28a;
+  --limen-voice-agent: #e87a3c;
+  --limen-voice-agent-soft: #d4894a;
   --limen-voice-idle: #c8d0d8;
 
   /* Atmosphere light — restrained, never a control color.
@@ -95,13 +95,15 @@
 [data-theme="light"] {
   color-scheme: light;
 
-  --limen-bg-0: #eef2f6;
-  --limen-bg-1: #f7f9fb;
-  --limen-bg-2: #ffffff;
-  --limen-bg-3: #e4eaf1;
+  /* Cool slate canvas — soft paper, not pure white glare. */
+  --limen-bg-0: #d5dee8;
+  --limen-bg-1: #dde5ee;
+  --limen-bg-2: #e6edf4;
+  --limen-bg-3: #c5d0dc;
 
-  --limen-cyan: #157e7e;
-  --limen-teal: #106363;
+  /* Cool ice-cyan — less hospital mint, more editorial signal on slate paper. */
+  --limen-cyan: #0b7d9a;
+  --limen-teal: #0a667e;
   --limen-violet: #5949ac;
 
   --limen-green: #1d8b5c;
@@ -113,53 +115,54 @@
   --limen-voice-patient: #2f6fe0;
   --limen-voice-patient-soft: #7ba3ea;
   --limen-voice-agent: #c96a1f;
-  --limen-voice-agent-soft: #e0a066;
+  --limen-voice-agent-soft: #b87840;
   --limen-voice-idle: #7b8894;
 
-  --limen-beam: #8aa8c4;
-  --atmo-beam: 26%;
-  --atmo-cyan: 9%;
+  --limen-beam: #6a8fad;
+  --atmo-beam: 16%;
+  --atmo-cyan: 14%;
   --atmo-teal: 11%;
 
   --limen-white: #060a11;
   --limen-ice: #142030;
-  --limen-text-2: #47596a;
-  --limen-text-3: #6b7d8c;
+  --limen-text-2: #3f5163;
+  --limen-text-3: #5f7284;
 
-  --limen-action: #157e7e;
-  --limen-action-hover: #1d9696;
-  --limen-action-glass: color-mix(in oklab, var(--limen-action) 18%, transparent);
+  /* Primary CTAs / focus — saturated blue-cyan that reads on light canvas. */
+  --limen-action: #0c87a8;
+  --limen-action-hover: #0f9abd;
+  --limen-action-glass: color-mix(in oklab, var(--limen-action) 90%, transparent);
   --limen-action-glass-hover: color-mix(
     in oklab,
-    var(--limen-action) 28%,
+    var(--limen-action) 98%,
     transparent
   );
   --limen-action-glass-border: color-mix(
     in oklab,
-    var(--limen-action) 48%,
+    var(--limen-action) 72%,
     transparent
   );
 
   --limen-inverse-fill: #142030;
   --limen-inverse-ink: #f7f9fb;
-  --limen-ink-on-accent: #ffffff;
+  --limen-ink-on-accent: #f7fafc;
 
-  --glass-solid: rgba(255, 255, 255, 0.86);
-  --glass-surface: rgba(255, 255, 255, 0.55);
-  --glass-surface-strong: rgba(255, 255, 255, 0.74);
-  --glass-inspector: rgba(255, 255, 255, 0.68);
-  --glass-modal: rgba(247, 249, 251, 0.9);
-  --glass-border: rgba(20, 32, 48, 0.12);
-  --glass-border-strong: rgba(20, 32, 48, 0.2);
+  --glass-solid: rgba(214, 224, 234, 0.78);
+  --glass-surface: rgba(210, 220, 232, 0.58);
+  --glass-surface-strong: rgba(200, 212, 226, 0.78);
+  --glass-inspector: rgba(210, 220, 232, 0.74);
+  --glass-modal: rgba(220, 228, 238, 0.9);
+  --glass-border: rgba(20, 32, 48, 0.14);
+  --glass-border-strong: rgba(20, 32, 48, 0.22);
   --glass-highlight: rgba(20, 32, 48, 0.05);
-  --glass-sheen: rgba(255, 255, 255, 0.8);
+  --glass-sheen: rgba(255, 255, 255, 0.22);
 
   --shadow-panel:
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    0 14px 36px rgba(18, 32, 48, 0.1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 14px 36px rgba(18, 32, 48, 0.08);
   --shadow-float:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 24px 64px rgba(18, 32, 48, 0.14);
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 24px 64px rgba(18, 32, 48, 0.12);
 }
 
 :root {
@@ -188,7 +191,7 @@
   --rail-width: 256px;
   --rail-width-collapsed: 88px;
   --inspector-width: 360px;
-  --header-height: 72px;
+  --header-height: 80px;
 
   --motion-fast: 180ms;
   --motion-base: 220ms;

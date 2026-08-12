@@ -1,8 +1,15 @@
+import { useTranslation } from "react-i18next";
+
 import type { TraceEventRecord } from "../../api/types";
 import { RiskBadge } from "../../components/data/RiskBadge";
 import { formatClockTime } from "../../lib/format";
 import { cn } from "../../lib/cn";
-import { resolveTraceStageView } from "./traceStage";
+import {
+  eventTypeKey,
+  resolveEventType,
+  resolveTraceAccent,
+  resolveTraceCategoryKey,
+} from "./eventPresentation";
 
 export function TraceTimeline({
   events,
@@ -13,10 +20,22 @@ export function TraceTimeline({
   selectedId: string | null;
   onSelect: (event: TraceEventRecord) => void;
 }) {
+  const { t } = useTranslation("trace");
+
   return (
     <ol className="m-0 flex list-none flex-col p-0">
       {events.map((event, index) => {
-        const view = resolveTraceStageView(event.stage);
+        const accent = resolveTraceAccent(event);
+        const category = String(
+          t(`categories.${resolveTraceCategoryKey(event)}` as never, {
+            defaultValue: t("categories.step"),
+          }),
+        );
+        const title = String(
+          t(`events.${eventTypeKey(resolveEventType(event))}.title` as never, {
+            defaultValue: t("events.unknown.title"),
+          }),
+        );
         const selected = event.event_id === selectedId;
         const last = index === events.length - 1;
 
@@ -26,7 +45,7 @@ export function TraceTimeline({
               <span
                 aria-hidden
                 className="h-2 w-2 shrink-0 rounded-full"
-                style={{ background: view.accent }}
+                style={{ background: accent }}
               />
               {!last && (
                 <span
@@ -55,18 +74,15 @@ export function TraceTimeline({
                 />
               )}
               <span className="flex flex-wrap items-center gap-2">
-                <span
-                  className="type-label m-0"
-                  style={{ color: view.accent }}
-                >
-                  {view.label}
+                <span className="type-label m-0" style={{ color: accent }}>
+                  {category}
                 </span>
                 <span className="type-body-s tabular text-text-3">
                   #{event.sequence} · {formatClockTime(event.timestamp)}
                 </span>
                 {event.risk && <RiskBadge risk={event.risk} size="sm" />}
               </span>
-              <span className="type-body text-ice">{event.label}</span>
+              <span className="type-body text-ice">{title}</span>
             </button>
           </li>
         );

@@ -27,9 +27,9 @@ export function AccountMenu() {
     <DropdownMenu.Root>
       <DropdownMenu.Trigger
         aria-label={t("account.menuLabel")}
-        className="group inline-flex h-11 items-center gap-2.5 rounded-md border border-glass-border bg-[color-mix(in_oklab,var(--limen-bg-2)_28%,transparent)] pr-2.5 pl-1.5 backdrop-blur-[12px] transition-[border-color,background-color] duration-[var(--motion-fast)] hover:border-[var(--glass-border-strong)] hover:bg-[color-mix(in_oklab,var(--limen-bg-2)_40%,transparent)] data-[state=open]:border-[var(--glass-border-strong)] data-[state=open]:bg-[color-mix(in_oklab,var(--limen-bg-2)_44%,transparent)]"
+        className="group inline-flex h-10 items-center gap-2.5 rounded-md border border-[color-mix(in_oklab,var(--limen-ice)_28%,transparent)] bg-[color-mix(in_oklab,var(--limen-bg-2)_50%,transparent)] pr-2.5 pl-1.5 transition-[border-color,background-color] duration-[var(--motion-fast)] hover:border-[color-mix(in_oklab,var(--limen-ice)_40%,transparent)] hover:bg-[color-mix(in_oklab,var(--limen-bg-2)_68%,transparent)] data-[state=open]:border-cyan data-[state=open]:bg-[color-mix(in_oklab,var(--limen-bg-2)_72%,transparent)]"
       >
-        <span className="type-label inline-flex h-8 w-8 items-center justify-center rounded-sm bg-[color-mix(in_oklab,var(--limen-cyan)_14%,transparent)] !tracking-[0.04em] text-cyan">
+        <span className="type-label inline-flex h-7 w-7 items-center justify-center rounded-sm bg-[color-mix(in_oklab,var(--limen-cyan)_18%,transparent)] !tracking-[0.04em] text-cyan">
           {initials(label)}
         </span>
         <span className="type-body-s hidden max-w-[11rem] truncate font-medium text-ice sm:inline">
@@ -47,7 +47,7 @@ export function AccountMenu() {
         <DropdownMenu.Content
           align="end"
           sideOffset={10}
-          className="glass-1 z-50 w-[17.5rem] rounded-md p-2"
+          className="glass-1 z-50 w-[17.5rem] rounded-md border border-[color-mix(in_oklab,var(--limen-ice)_22%,transparent)] p-2"
         >
           <div className="flex flex-col gap-0.5 px-2.5 py-2.5">
             <p className="type-eyebrow m-0 text-text-3">
@@ -56,7 +56,7 @@ export function AccountMenu() {
             <p className="type-body-s m-0 truncate text-ice">{account.email}</p>
           </div>
 
-          <DropdownMenu.Separator className="my-2 h-px bg-[linear-gradient(90deg,transparent,var(--glass-border)_18%,var(--glass-border)_82%,transparent)]" />
+          <DropdownMenu.Separator className="my-2 h-px bg-[color-mix(in_oklab,var(--limen-ice)_22%,transparent)]" />
 
           <div className="flex items-center justify-between gap-2 px-2.5 py-1.5">
             <span className="type-body-s text-text-3">
@@ -68,7 +68,7 @@ export function AccountMenu() {
             </div>
           </div>
 
-          <DropdownMenu.Separator className="my-2 h-px bg-[linear-gradient(90deg,transparent,var(--glass-border)_18%,var(--glass-border)_82%,transparent)]" />
+          <DropdownMenu.Separator className="my-2 h-px bg-[color-mix(in_oklab,var(--limen-ice)_22%,transparent)]" />
 
           <DropdownMenu.Item
             disabled={isSigningOut}

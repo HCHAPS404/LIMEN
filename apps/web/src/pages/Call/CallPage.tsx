@@ -15,7 +15,6 @@ import { LiveContextPanel } from "../../features/call-session/LiveContextPanel";
 import { TranscriptTurn } from "../../features/call-session/TranscriptTurn";
 import { useCallSession } from "../../features/call-session/useCallSession";
 import { VoiceOrb } from "../../features/call-session/VoiceOrb";
-import { Waveform } from "../../features/call-session/Waveform";
 import { formatDuration } from "../../lib/format";
 import { useCallStore } from "../../state/call-store";
 
@@ -42,7 +41,6 @@ export function CallPage() {
     elapsed,
     paused,
     transportStatus,
-    readWaveform,
     controls,
   } = useCallSession();
   const { persona } = useVoicePersona();
@@ -83,12 +81,24 @@ export function CallPage() {
 
         <div className="relative z-[1] flex flex-col items-center px-4 pb-10 pt-6 md:px-8 md:pb-12 md:pt-8">
           <div className="relative flex items-center justify-center">
-            {/* Orb-local bloom — sized to the sphere so it cannot hard-cut at section edges. */}
+            {/* Orb-local bloom — phase-aware so agent speech washes ember into the canvas. */}
             <div
               aria-hidden
-              className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(36rem,88vw)] -translate-x-1/2 -translate-y-1/2"
+              className="pointer-events-none absolute left-1/2 top-1/2 aspect-square w-[min(40rem,92vw)] -translate-x-1/2 -translate-y-1/2 transition-[opacity,filter] duration-[var(--motion-base)] ease-[var(--motion-ease)]"
               style={{
-                background: `
+                opacity: !paused && phase === "SPEAKING" ? 1 : 0.85,
+                background:
+                  !paused && phase === "SPEAKING"
+                    ? `
+                  radial-gradient(
+                    circle at 50% 48%,
+                    color-mix(in oklab, var(--limen-voice-agent) 34%, transparent) 0%,
+                    color-mix(in oklab, var(--limen-voice-agent-soft) 18%, transparent) 26%,
+                    color-mix(in oklab, var(--limen-voice-agent) 8%, var(--limen-bg-0)) 48%,
+                    transparent 72%
+                  )
+                `
+                    : `
                   radial-gradient(
                     circle at 50% 48%,
                     color-mix(in oklab, var(--limen-action) 30%, transparent) 0%,
@@ -102,17 +112,12 @@ export function CallPage() {
             <VoiceOrb
               phase={paused ? "IDLE" : phase}
               level={paused ? 0 : micLevel}
-              className="relative z-[1] h-[clamp(14rem,32vh,20rem)] w-[clamp(14rem,32vh,20rem)]"
+              className="relative z-[1] h-[clamp(16rem,38vh,24rem)] w-[clamp(16rem,38vh,24rem)]"
             />
           </div>
 
           <div className="relative z-[1] mt-8 flex w-full max-w-[34rem] flex-col items-center gap-6 md:mt-10 md:gap-8">
             <CallState phase={paused ? "IDLE" : phase} />
-            <Waveform
-              readWaveform={readWaveform}
-              active={sessionOpen && !paused && phase === "LISTENING"}
-              className="h-10 w-full max-w-[16rem]"
-            />
             <p className="type-body-s m-0 text-text-3">
               {paused
                 ? t("pausedHint")

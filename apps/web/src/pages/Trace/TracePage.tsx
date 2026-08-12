@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { callKeys, listCalls } from "../../api/calls";
 import { ApiError, describeError } from "../../api/client";
+import type { TraceEventRecord } from "../../api/types";
 import { RiskBadge } from "../../components/data/RiskBadge";
 import { StatusChip } from "../../components/data/StatusChip";
 import { EmptyState } from "../../components/feedback/EmptyState";
@@ -16,7 +17,6 @@ import { WorkspaceSplit } from "../../components/shell/AppShell";
 import { DecisionCard } from "../../features/traceability/DecisionCard";
 import { TraceTimeline } from "../../features/traceability/TraceTimeline";
 import { useTrace } from "../../features/traceability/useTrace";
-import type { TraceEventRecord } from "../../api/types";
 
 export function TracePage() {
   const { callId } = useParams<{ callId?: string }>();
@@ -36,6 +36,17 @@ export function TracePage() {
     setSelected(null);
   }, [callId]);
 
+  useEffect(() => {
+    const list = trace.data?.events;
+    if (!callId || !list || list.length === 0) return;
+    setSelected((current) => {
+      if (current && list.some((event) => event.event_id === current.event_id)) {
+        return current;
+      }
+      return list[0] ?? null;
+    });
+  }, [callId, trace.data?.events]);
+
   const notFound =
     trace.error instanceof ApiError &&
     (trace.error.status === 404 || trace.error.code === "call_not_found");
@@ -45,7 +56,7 @@ export function TracePage() {
   return (
     <WorkspaceSplit
       inspector={
-        callId && selected ? (
+        callId ? (
           <InspectorPanel title={t("inspector")} scroll className="h-full">
             <DecisionCard event={selected} />
           </InspectorPanel>
@@ -120,7 +131,7 @@ export function TracePage() {
               title={t("loadError")}
               message={
                 notFound
-                  ? `Call ${callId} was not found.`
+                  ? t("callNotFound", { callId })
                   : describeError(trace.error)
               }
               onRetry={() => void trace.refetch()}
@@ -130,7 +141,7 @@ export function TracePage() {
           <EmptyState
             density="inline"
             title={t("emptyEvents")}
-            description={`Call ${callId}`}
+            description={callId}
           />
         ) : (
           <TraceTimeline

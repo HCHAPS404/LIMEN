@@ -21,30 +21,51 @@ export function HorizonField({ className }: { className?: string }) {
         style={{
           background: `
             radial-gradient(
-              110% 70% at 50% -15%,
+              120% 78% at 50% -18%,
               color-mix(in oklab, var(--limen-beam) var(--atmo-beam), transparent),
+              transparent 62%
+            ),
+            radial-gradient(
+              58% 42% at 88% 18%,
+              color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
               transparent 58%
             ),
             radial-gradient(
-              60% 40% at 90% 20%,
-              color-mix(in oklab, var(--limen-cyan) var(--atmo-cyan), transparent),
-              transparent 55%
+              70% 55% at 12% 28%,
+              color-mix(in oklab, var(--limen-action) 10%, transparent),
+              transparent 60%
             ),
             radial-gradient(
-              70% 50% at 50% 110%,
+              80% 55% at 50% 112%,
               color-mix(in oklab, var(--limen-teal) var(--atmo-teal), transparent),
-              transparent 60%
+              transparent 62%
+            )
+          `,
+        }}
+      />
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: [0.2, 0.35, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        className="absolute left-1/2 top-[42%] h-[min(36rem,80vw)] w-[min(56rem,110vw)] -translate-x-1/2 -translate-y-1/2"
+        style={{
+          background: `
+            radial-gradient(
+              ellipse 50% 40% at 50% 50%,
+              color-mix(in oklab, var(--limen-action) 16%, transparent),
+              transparent 72%
             )
           `,
         }}
       />
 
       <div
-        className="absolute inset-0 opacity-[0.14]"
+        className="absolute inset-0 opacity-[0.12]"
         style={{
           backgroundImage: `radial-gradient(
             circle at center,
-            color-mix(in oklab, var(--limen-ice) 30%, transparent) 0.55px,
+            color-mix(in oklab, var(--limen-ice) 28%, transparent) 0.55px,
             transparent 0.65px
           )`,
           backgroundSize: "28px 28px",

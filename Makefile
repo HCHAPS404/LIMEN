@@ -25,6 +25,11 @@ EMBEDDING_MODEL_PATH ?= $(shell \
 	fi)
 
 help:
+	@echo "LIMEN — progressive paths:"
+	@echo "  Level 1 stubs:   make bootstrap && make run  (+ make dev-web)"
+	@echo "  Level 3 challenge: make prepare-voice prepare-llm-bench prepare-knowledge"
+	@echo "                     make verify-challenge-environment && make run-challenge"
+	@echo ""
 	@echo "LIMEN targets:"
 	@echo "  make bootstrap              - create .venv, install deps (CPU embeddings by default)"
 	@echo "  make run                    - alias for make dev-api"

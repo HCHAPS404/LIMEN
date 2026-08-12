@@ -1,219 +1,326 @@
 # ◈ LIMEN
 
-LIMEN is a **browser-based postoperative follow-up agent** for the
-**Tech Sphere Challenge 2026**. It turns patient speech into an explicit clinical
-state, checks living medical knowledge with provenance, and escalates through a
-**deterministic Safety Governor** — not through unconstrained LLM judgment.
+**Seguimiento postoperatorio por voz en el navegador** — Tech Sphere Challenge 2026.
 
-> **Not a medical device.** Not a replacement for a clinician.
+LIMEN conversa en español con el paciente, mantiene un **estado clínico explícito**,
+consulta **conocimiento vivo con procedencia**, y escala con un **Safety Governor
+determinista**. El LLM (Phi-3.5) **no puede bajar** una decisión de seguridad más fuerte.
 
-## What problem it solves
+> **No es un dispositivo médico.** No sustituye a un clínico.
 
-After surgery, patients need timely follow-up. Clinicians cannot call everyone.
-LIMEN provides always-available Spanish voice follow-up that is **evidence-aware**,
-**traceable (TRAZA)**, and **conservative on risk** (false negatives on RED are
-treated as more severe than false positives).
+**Repositorio:** https://github.com/HCHAPS404/LIMEN · **Licencia:** [MIT](LICENSE)
 
-## Demo / screenshots
+---
 
-Demo script and shot list: [`docs/submission/DEMO_SCRIPT.md`](docs/submission/DEMO_SCRIPT.md),
-[`docs/submission/VIDEO_SHOT_LIST.md`](docs/submission/VIDEO_SHOT_LIST.md).
+## Empieza aquí (elige tu camino)
 
-Screenshots / video: `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO` /
-see [`docs/submission/SCREENSHOT_REGISTER.md`](docs/submission/SCREENSHOT_REGISTER.md).
+| Nivel | Tiempo orientativo | Qué obtienes | Ir a |
+| --- | --- | --- | --- |
+| **0 · Solo leer** | 5 min | Qué es LIMEN y cómo está armado | [Qué es](#qué-es) · [Arquitectura](#arquitectura-en-30-segundos) |
+| **1 · Demo local (stubs)** | ~10–15 min | UI + API sin GPU ni Ollama | [Nivel 1](#nivel-1--demo-local-con-stubs) |
+| **2 · Recorrido de producto** | ~15 min | Login → conocimiento → llamada → TRAZA | [docs/OPERATOR_WALKTHROUGH.md](docs/OPERATOR_WALKTHROUGH.md) |
+| **3 · Runtime de competencia** | 30–90+ min* | STT/TTS/LLM/RAG reales | [Nivel 3](#nivel-3--runtime-de-competencia) |
+| **4 · Evaluaciones** | variable | Tests y artefactos generados | [Nivel 4](#nivel-4--calidad-y-evaluaciones) |
+| **Docs completas** | — | Índice de toda la documentación | [docs/README.md](docs/README.md) |
 
-## Architecture
+\*Primera vez con descargas de modelos; luego más rápido. Medición G2 (worktree limpio, caches calientes): **293.85 s** — [`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md). Clon estricto en máquina fría: aún `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE`.
 
-Modular monolith: React browser UI + FastAPI + domain packages under `limen/`.
+---
+
+## Qué es
+
+Después de una cirugía, el paciente necesita seguimiento. LIMEN ofrece una
+llamada de voz en el navegador que:
+
+1. Escucha y transcribe (STT).
+2. Actualiza un **estado clínico tipado** (`KNOWN_*`, `UNKNOWN`, `CONFLICTING`).
+3. Recupera evidencia del corpus del cliente (RAG híbrido + procedencia).
+4. Evalúa riesgo con el **Safety Governor** (autoridad).
+5. Responde en voz (TTS) sin inventar protocolos.
+6. Deja **TRAZA** auditable (turnos, seguridad, evidencia, tiempos).
+
+Principio no negociable: **`unknown != normal`**. Lo no dicho permanece `UNKNOWN`.
+
+---
+
+## Arquitectura en 30 segundos
+
+Monolito modular: **React (Vite)** + **FastAPI** + paquetes de dominio en `limen/`.
 
 ```text
-Browser (mic, VAD, playback)
-  → WebSocket voice
-  → Faster-Whisper STT
+Navegador (micrófono, VAD, reproducción)
+  → WebSocket de voz
+  → Faster-Whisper STT          (stub en Nivel 1)
   → ClinicalState + Uncertainty
-  → Hybrid RAG (E5 + Qdrant + FTS5 + RRF)
-  → Safety Governor (authoritative)
-  → Phi-3.5 or deterministic templates
-  → Piper TTS → browser
-  → TRAZA + SQLite metrics
+  → RAG híbrido (E5 + Qdrant + FTS5 + RRF)
+  → Safety Governor (autoritativo)
+  → Phi-3.5 / plantillas deterministas
+  → Piper TTS → navegador       (stub en Nivel 1)
+  → TRAZA + métricas en SQLite
 ```
 
-Diagrams: [`docs/submission/ARCHITECTURE.md`](docs/submission/ARCHITECTURE.md) ·
+Diagramas de entrega: [`docs/submission/ARCHITECTURE.md`](docs/submission/ARCHITECTURE.md) ·
 [`DECISION_FLOW.md`](docs/submission/DECISION_FLOW.md) ·
 [`KNOWLEDGE_FLOW.md`](docs/submission/KNOWLEDGE_FLOW.md) ·
 [`TRAZA.md`](docs/submission/TRAZA.md)
 
-Full SoT: [`ARCHITECTURE.md`](ARCHITECTURE.md), [`BACKEND.md`](BACKEND.md),
-[`FRONTEND.md`](FRONTEND.md).
+Fuentes de verdad de ingeniería: [`ARCHITECTURE.md`](ARCHITECTURE.md) ·
+[`BACKEND.md`](BACKEND.md) · [`FRONTEND.md`](FRONTEND.md)
 
-## Key safety principle
+**¿Hay que desplegar en Vercel + otro host?** No es requisito del diseño de
+competencia. El camino canónico es **clonar y correr en local** (`make bootstrap`,
+`make run` / `make run-challenge`). Un deploy cloud es opcional y no sustituye el
+runtime local de voz/modelos.
 
-**`unknown != normal`.** Missing information stays `UNKNOWN`.
+---
 
-**The LLM cannot downgrade deterministic safety.** Phi-3.5 phrases replies under
-trusted application state; `SafetyGovernor.enforce_floor` owns
-GREEN / YELLOW / RED and escalation.
+## Requisitos previos
 
-Official **model-only** advisory benchmark (not LIMEN full-system recall):
+| | Nivel 1 (stubs) | Nivel 3 (challenge) |
+| --- | --- | --- |
+| OS | Linux / macOS / WSL2 | Mismo |
+| Python | **3.11+** | 3.11+ |
+| Node | **20+** | 20+ |
+| Red | Para instalar deps | + descargas HF / Ollama |
+| GPU NVIDIA | No | Recomendada (STT CUDA) |
+| Ollama | No | Sí (`phi3.5`) |
+| Docker | No | No |
 
-| Model | Macro F1 | RED recall | RED FN |
+---
+
+## Nivel 1 — Demo local con stubs
+
+Objetivo: que **cualquiera** clone el repo y vea la app en minutos, sin GPU.
+
+### 1. Clonar e instalar
+
+```bash
+git clone https://github.com/HCHAPS404/LIMEN.git
+cd LIMEN
+cp .env.example .env
+make bootstrap
+```
+
+`make bootstrap` crea `.venv`, instala dependencias Python/JS y deja la cuenta
+demo lista (ver `.env.example`).
+
+### 2. Arrancar API y web (dos terminales)
+
+```bash
+# Terminal A — API :8000
+make run
+
+# Terminal B — UI :5173
+make dev-web
+```
+
+Abre **http://127.0.0.1:5173/**
+
+### 3. Entrar
+
+| Campo | Valor (demo local) |
+| --- | --- |
+| Email | `demo@limen.local` |
+| Password | `limen-demo-2026` |
+
+Esos valores son **solo demo local**, no credenciales de producción.
+
+### 4. Qué probar en stubs
+
+- Landing + login / registro  
+- `/knowledge` — consola de documentos (ciclo de vida según providers stub)  
+- `/call` — UI de sesión (STT/TTS stub: no esperes latencia real de voz)  
+- `/sessions` y `/trace/:callId` — auditoría  
+
+Guía paso a paso ampliada: [`docs/GETTING_STARTED.md`](docs/GETTING_STARTED.md) ·
+recorrido de producto: [`docs/OPERATOR_WALKTHROUGH.md`](docs/OPERATOR_WALKTHROUGH.md)
+
+### Si algo falla (Nivel 1)
+
+| Síntoma | Qué mirar |
+| --- | --- |
+| UI carga pero login falla / “no conecta” | ¿`make run` está activo? `curl http://127.0.0.1:8000/health` |
+| Proxy Vite `ECONNREFUSED :8000` | Arranca la API **antes** o reinicia `make dev-web` cuando la API ya escuche |
+| `make bootstrap` falla | Python 3.11+, Node 20+, red; borra `.venv` y reintenta |
+| Puerto ocupado | Cambia `APP_PORT` o libera 8000/5173 |
+
+---
+
+## Nivel 2 — Recorrido de producto (demo humana)
+
+Sigue el guion operativo (español, ~15 min):
+
+→ **[`docs/OPERATOR_WALKTHROUGH.md`](docs/OPERATOR_WALKTHROUGH.md)**
+
+Guion de video de competencia:
+
+→ [`docs/submission/DEMO_SCRIPT.md`](docs/submission/DEMO_SCRIPT.md) ·
+[`VIDEO_SHOT_LIST.md`](docs/submission/VIDEO_SHOT_LIST.md)
+
+Estado de capturas/video: aún hay marcadores `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`
+(ver [`SCREENSHOT_REGISTER.md`](docs/submission/SCREENSHOT_REGISTER.md)).
+
+---
+
+## Nivel 3 — Runtime de competencia
+
+Stack real: Faster-Whisper + Piper + Ollama Phi-3.5 + embeddings E5 + Qdrant local.
+
+Detalle completo: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md) ·
+[`docs/VOICE_RUNTIME.md`](docs/VOICE_RUNTIME.md)
+
+```bash
+cp .env.example .env
+# Opcional corpus oficial:
+# export LIMEN_DATASET_PATH=/ruta/absoluta/al/dataset
+
+make bootstrap
+make prepare-voice                 # Whisper + Piper
+make prepare-llm-bench PULL=1      # ollama pull phi3.5
+make prepare-knowledge             # semilla determinista
+# make prepare-official-knowledge  # PDFs oficiales (si tienes dataset)
+make verify-challenge-environment  # debe imprimir READY_FOR_CHALLENGE_RUNTIME=TRUE
+make run-challenge                 # API + web con perfil challenge
+```
+
+Preflight de voz: `make verify-voice-environment` · API con libs CUDA: ver
+`make dev-api-voice` / `scripts/run_voice_api.py`.
+
+---
+
+## Nivel 4 — Calidad y evaluaciones
+
+```bash
+make verify                     # lint + types + tests (embeddings stub en CI)
+make verify-phase7              # E2E golden (ruta stub)
+make verify-challenge-eval      # escenarios de challenge + artefactos
+make verify-submission-evidence # busca FINAL_EVIDENCE_REQUIRED pendientes
+make verify-rag-stub            # RAG determinista
+```
+
+Artefactos generados viven en `docs/*.generated.md` y `runtime/evals/`.
+**Las métricas del README solo se actualizan desde esos scripts** — no se inventan.
+
+---
+
+## Cobertura de requisitos del challenge
+
+| Requisito | LIMEN |
+| --- | --- |
+| Conversación de voz adaptativa | `/call` + WebSocket + ConversationContext |
+| RAG | HybridEvidenceRetriever (E5 + FTS5 + RRF) |
+| Upload en vivo | `/knowledge` + API de ciclo de vida |
+| Borrado / olvido | Purga léxica + vectorial |
+| Trazabilidad | UI TRAZA + `GET /api/traces/{id}` |
+| Escalada | SafetyGovernor RED + artefacto |
+| Resumen estructurado | Al finalizar la llamada |
+| Español | UI + prompts paciente |
+| Voz browser / API | Faster-Whisper + Piper (stubs en Nivel 1) |
+| Repo público + MIT | Este repo |
+| Setup reproducible | `Makefile` + `.env.example` |
+
+---
+
+## Seguridad (principio clave)
+
+**El LLM no puede degradar la seguridad determinista.**  
+`SafetyGovernor.enforce_floor` posee GREEN / YELLOW / RED y la escalada.
+
+Benchmark **solo-modelo** (no es recall del sistema completo LIMEN):
+
+| Modelo | Macro F1 | RED recall | RED FN |
 | --- | ---: | ---: | ---: |
 | llama3.2:1b | 0.303 | 0.000 | 24/24 |
 | llama3.2:3b | 0.197 | 0.000 | 24/24 |
 | **phi3.5** | **0.445** | **0.375** | **15/24** |
 
-Source: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
+Fuente: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
 
-## Features
+---
 
-- Adaptive Spanish voice conversation (browser mic → STT → TTS)
-- Hybrid RAG with provenance
-- Live knowledge upload / delete / forget (admin console)
-- Deterministic escalation + structured call summary
-- TRAZA decision timeline
-- Challenge runtime profile (`LIMEN_RUNTIME_PROFILE=challenge`)
+## Métricas (honestas)
 
-## Challenge requirements coverage
-
-| Requirement | LIMEN |
+| Métrica | Estado |
 | --- | --- |
-| Adaptive voice conversation | `/call` + WS stream + ConversationContext |
-| RAG | HybridEvidenceRetriever (E5 + FTS5 + RRF) |
-| Live upload | `/knowledge` + knowledge API lifecycle |
-| Delete / forget | Deletion service purges lexical + vector indexes |
-| Traceability | TRAZA UI + `/api/traces/{id}` |
-| Escalation | SafetyGovernor RED + persisted artifact |
-| Structured summary | Call finish → summary endpoint/UI |
-| Spanish | Product UI + patient prompts (CO-oriented) |
-| Regional robustness | Eval scenarios; no hard-coded challenge slang branches |
-| Voice browser / API | Faster-Whisper + Piper; stubs for CI |
-| Public repository | This repo + MIT license |
-| Dependencies | `pyproject.toml`, `apps/web/package.json`, `.env.example` |
+| Voz P50 / P95 (speech-end → primer audio en browser) | **UNMEASURED** — `FINAL_EVIDENCE_REQUIRED:G4_P50` / `G4_P95` |
+| Tokens in/out | Por turno si el provider reporta; a menudo null |
+| Llamadas LLM / consultas RAG | Instrumentadas por turno |
+| Coste / llamada | `FINAL_EVIDENCE_REQUIRED:COST_CALL` |
 
-## Quick start (development stubs OK)
+Proxies “TTS-ready” en servidor **no** son la latencia oficial del challenge.
 
-```bash
-cp .env.example .env
-make bootstrap
-make run          # API :8000
-make dev-web      # Web :5173
-```
+---
 
-Demo login (from `.env.example`): `demo@limen.local` / `limen-demo-2026`
-
-## Challenge runtime (real stack)
-
-### System prerequisites (before G2 timer)
-
-Python 3.11+, Node 20+, Ollama running, NVIDIA GPU/driver for CUDA STT, network
-for first-time model pulls. Docker not required.
-
-```bash
-cp .env.example .env
-# optional: export LIMEN_DATASET_PATH=/absolute/path/to/official/dataset
-
-make bootstrap
-make prepare-voice
-make prepare-llm-bench PULL=1
-make prepare-knowledge
-make verify-challenge-environment   # READY_FOR_CHALLENGE_RUNTIME=TRUE
-make run-challenge                  # API + web
-```
-
-Measured clean-worktree bootstrap (host caches may be warm): **293.85 s** —
-[`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md).  
-Strict fresh-machine clone: `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE`.
-
-More: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md).
-
-## Knowledge management
-
-- Seed: `make prepare-knowledge`
-- Official PDFs: `LIMEN_DATASET_PATH=... make prepare-official-knowledge`  
-  Discovered **107**; smoke indexed **8** (not 107/107 yet) —
-  `FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`
-- Live G5: admin UI `/knowledge` —
-  `FINAL_EVIDENCE_REQUIRED:G5_UI`
-
-## Voice
-
-faster-whisper-small (CUDA float16) · Piper `es_MX-claude-high` · browser VAD ·
-WebSocket barge-in / stale-response protection.
-
-Official challenge latency (speech-end → browser playback start):
-
-| | |
-| --- | --- |
-| P50 | `FINAL_EVIDENCE_REQUIRED:G4_P50` |
-| P95 | `FINAL_EVIDENCE_REQUIRED:G4_P95` |
-
-Server TTS-ready proxies are **not** official challenge latency.
-
-## Safety / escalation
-
-Deterministic rules + structured findings → SafetyDecision → templates/Phi under
-floor → validator. RED cannot be downgraded by generative output.
-
-## TRAZA / observability
-
-`/trace/:callId` reconstructs extraction, retrieval, safety, response, and voice
-events without chain-of-thought. Challenge-critical timings are preserved.
-
-## Metrics
-
-| Metric | Status |
-| --- | --- |
-| Voice P50 / P95 (browser) | UNMEASURED — `FINAL_EVIDENCE_REQUIRED:G4_P50` / `G4_P95` |
-| Input / output tokens | Per-turn when provider reports usage; often null today |
-| LLM calls / RAG queries | Instrumented per turn/call |
-| Cost / call | `FINAL_EVIDENCE_REQUIRED:COST_CALL` (SOURCE_REQUIRED) |
-
-## Model selection
-
-Primary runtime LLM: **Phi-3.5 Mini via Ollama** (`phi3.5`).  
-Safety authority: **Safety Governor**, not Phi.  
-Details: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
-
-## Testing
-
-```bash
-make verify                  # lint, types, tests (stub embeddings)
-make verify-challenge-eval   # PHASE 8 challenge scenarios
-make verify-phase7           # golden E2E (stub CI path)
-make verify-submission-evidence  # unresolved FINAL_EVIDENCE_REQUIRED markers
-```
-
-## Project structure
+## Estructura del repositorio
 
 ```text
-apps/api     FastAPI
-apps/web     React + Vite UI
-limen/       Domain packages
-evals/       Challenge / RAG / LLM / voice evaluations
-tests/       unit · integration · safety
-docs/        architecture, ADRs, generated metrics, submission/
-scripts/     bootstrap, prepare-*, verify-*
+apps/api/          FastAPI (HTTP + WebSocket)
+apps/web/          React + Vite (Clinical Editorial Glass)
+limen/             Dominios: clinical, safety, knowledge, conversation, voice, tracing…
+evals/             Evaluaciones challenge / RAG / LLM / voz
+tests/             unit · integration · safety
+docs/              Onboarding, ADRs, métricas generadas, paquete submission/
+scripts/           bootstrap, prepare-*, verify-*, measure-*
+runtime/           DB, vectores, audio, logs (gitignored)
+ARCHITECTURE.md    SoT arquitectura
+BACKEND.md         SoT backend
+FRONTEND.md        SoT frontend
 ```
 
-## Limitations
+Índice documental: **[`docs/README.md`](docs/README.md)**
 
-Not a medical device; local-model language limits; browser voice P50/P95 still
-unmeasured; safety rules need broader clinical validation; knowledge quality
-depends on corpus; full official PDF ingest not verified at 107/107; human
-clinical validation is outside hackathon scope.
+---
 
-## Reproducibility
+## Conocimiento
 
-Challenge profile forces real providers (no stub READY). Evaluation artifacts are
-generated under `docs/*.generated.md` and `runtime/evals/`. Submission package:
-[`docs/submission/`](docs/submission/). Final polish queue:
-[`docs/FINAL_POLISH_REGISTER.md`](docs/FINAL_POLISH_REGISTER.md).
+| Acción | Cómo |
+| --- | --- |
+| Semilla determinista | `make prepare-knowledge` |
+| PDFs oficiales | `LIMEN_DATASET_PATH=… make prepare-official-knowledge` |
+| UI en vivo | `/knowledge` (upload / list / delete / forget) |
 
-## License
+Descubiertos **107** PDFs en corpus oficial; smoke indexado **8** (no 107/107) —
+`FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`.  
+Evidencia G5 UI: [`docs/G5_LIVE_KNOWLEDGE.generated.md`](docs/G5_LIVE_KNOWLEDGE.generated.md).
 
-MIT — see [`LICENSE`](LICENSE). Third-party models/tools:
-[`docs/submission/ATTRIBUTION.md`](docs/submission/ATTRIBUTION.md).
+---
 
-## Repository
+## Entrega / submission
 
-https://github.com/HCHAPS404/LIMEN
+Paquete de competencia: [`docs/submission/`](docs/submission/)  
+Checklist: [`docs/submission/SUBMISSION_CHECKLIST.md`](docs/submission/SUBMISSION_CHECKLIST.md)  
+Informe: [`docs/submission/FINAL_REPORT.md`](docs/submission/FINAL_REPORT.md)  
+Cola de polish: [`docs/FINAL_POLISH_REGISTER.md`](docs/FINAL_POLISH_REGISTER.md)
+
+```bash
+make verify-submission-evidence
+python scripts/phase9_secret_scan.py
+```
+
+---
+
+## Limitaciones
+
+- No es dispositivo médico; sin validación clínica formal de hackathon.
+- Límites de modelos locales (idioma / alucinación contenida por safety + RAG).
+- P50/P95 de voz en browser aún sin medir.
+- Ingestión completa 107/107 del corpus oficial no verificada.
+- Calidad del conocimiento depende del corpus del cliente.
+
+---
+
+## Licencia y atribución
+
+MIT — [`LICENSE`](LICENSE).  
+Modelos y herramientas de terceros: [`docs/submission/ATTRIBUTION.md`](docs/submission/ATTRIBUTION.md).
+
+---
+
+## Ayuda rápida de Make
+
+```bash
+make help
+```
+
+Targets más usados: `bootstrap`, `run`, `dev-web`, `run-challenge`,
+`verify-challenge-environment`, `verify`, `prepare-knowledge`, `prepare-voice`.

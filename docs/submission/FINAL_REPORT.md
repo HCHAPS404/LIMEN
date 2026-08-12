@@ -50,6 +50,12 @@ under `limen/`. Vendor SDKs stay inside provider adapters.
 
 Submission diagram: [`docs/submission/ARCHITECTURE.md`](ARCHITECTURE.md).
 
+**Local presentation layer (cold start for any clone):** progressive README
+levels + [`docs/GETTING_STARTED.md`](../GETTING_STARTED.md) +
+[`docs/OPERATOR_WALKTHROUGH.md`](../OPERATOR_WALKTHROUGH.md). Canonical doc
+index: [`docs/README.md`](../README.md). Challenge runtime remains local
+(`make run-challenge`); cloud split-hosting is not required by the architecture.
+
 ## 6. Clinical decision architecture
 
 Pipeline:

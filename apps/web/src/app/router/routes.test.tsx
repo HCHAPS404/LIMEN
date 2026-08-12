@@ -60,6 +60,9 @@ describe("application shell routing", () => {
       screen.getByRole("link", { name: "Conocimiento" }),
     ).toBeInTheDocument();
     expect(
+      screen.getByRole("link", { name: /Ir a la landing de LIMEN|Go to LIMEN landing/i }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole("button", { name: /iniciar llamada|start call/i }),
     ).toBeInTheDocument();
   });
@@ -194,9 +197,14 @@ describe("application shell routing", () => {
       );
     });
     expect(
-      await screen.findByText("SIN EVALUAR", {}, { timeout: 3000 }),
+      await screen.findByText(/contexto en vivo|live context/i, {}, { timeout: 3000 }),
     ).toBeInTheDocument();
     expect(screen.getByText(/sin turnos|no turns/i)).toBeInTheDocument();
+    expect(
+      screen.getAllByText(
+        /aún no hay decisión|no safety decision|sin evaluar|unassessed/i,
+      ).length,
+    ).toBeGreaterThan(0);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 

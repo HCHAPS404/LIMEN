@@ -32,10 +32,14 @@ describe("Button", () => {
       </MemoryRouter>,
     );
 
-    // Slot merges the variant classes onto the link. Teal glass + ice text
-    // (theme-aware) stays legible; avoid arbitrary text-[var(...)] utilities.
+    // Slot merges the variant classes onto the link. Teal glass + ink-on-accent
+    // stays legible in both themes; avoid arbitrary text-[var(...)] utilities.
     const link = screen.getByRole("link", { name: /enter workspace/i });
-    expect(link).toHaveClass("bg-action-glass", "text-ice", "backdrop-blur-[18px]");
+    expect(link).toHaveClass(
+      "bg-action-glass",
+      "text-ink-on-accent",
+      "backdrop-blur-[18px]",
+    );
     expect(link.className).not.toMatch(/text-\[var\(/);
   });
 

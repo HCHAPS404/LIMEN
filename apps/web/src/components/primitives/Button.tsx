@@ -30,13 +30,13 @@ const base =
 
 const variants: Record<ButtonVariant, string> = {
   inverse:
-    "border-action-glass-border bg-action-glass font-semibold text-ice " +
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[18px] " +
-    "[&_*]:text-ice hover:border-action-glass-border hover:bg-action-glass-hover",
+    "border-action-glass-border bg-action-glass font-semibold text-ink-on-accent " +
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-[18px] " +
+    "[&_*]:text-ink-on-accent hover:border-action-glass-border hover:bg-action-glass-hover",
   primary:
-    "border-action-glass-border bg-action-glass font-semibold text-ice " +
-    "shadow-[inset_0_1px_0_rgba(255,255,255,0.14)] backdrop-blur-[18px] " +
-    "[&_*]:text-ice hover:border-action-glass-border hover:bg-action-glass-hover",
+    "border-action-glass-border bg-action-glass font-semibold text-ink-on-accent " +
+    "shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] backdrop-blur-[18px] " +
+    "[&_*]:text-ink-on-accent hover:border-action-glass-border hover:bg-action-glass-hover",
   secondary:
     "border-glass-border bg-[var(--glass-surface)] text-ice backdrop-blur-[14px] " +
     "hover:border-[var(--glass-border-strong)] hover:bg-[var(--glass-surface-strong)]",

@@ -5,13 +5,14 @@ import { Metric } from "../../components/data/Metric";
 import { RiskBadge } from "../../components/data/RiskBadge";
 import { EmptyState } from "../../components/feedback/EmptyState";
 import { useCallStore } from "../../state/call-store";
+import { translateSafetyReason } from "../traceability/translateSafetyReason";
 import { ClinicalStateGrid } from "./ClinicalStateGrid";
-import { humanizeSafetyReason } from "./safetyReasonEs";
 
 /** Read-only mirror of the live session. Every value comes from the session
  *  event stream; absent data shows as not measured rather than as a default. */
 export function LiveContextPanel() {
   const { t } = useTranslation("call");
+  const { t: tTrace } = useTranslation("trace");
   const risk = useCallStore((state) => state.risk);
   const escalated = useCallStore((state) => state.escalated);
   const reasons = useCallStore((state) => state.safetyReasons);
@@ -51,8 +52,8 @@ export function LiveContextPanel() {
         {reasons.length > 0 && (
           <ul className="m-0 flex list-none flex-col gap-1 p-0">
             {reasons.map((reason) => (
-              <li key={reason} className="type-body-s tabular text-text-2">
-                {humanizeSafetyReason(reason)}
+              <li key={reason} className="type-body-s text-text-2">
+                {translateSafetyReason(reason, tTrace)}
               </li>
             ))}
           </ul>
@@ -64,12 +65,14 @@ export function LiveContextPanel() {
           label={t("live.openUnknowns")}
           value={unknowns}
           hint={t("live.openUnknownsHint")}
+          emptyHint={tTrace("metrics.notMeasured")}
           tone="intelligence"
         />
         <Metric
           label={t("live.sourcesCited")}
           value={evidence.length > 0 ? evidence.length : null}
           hint={t("live.sourcesCitedHint")}
+          emptyHint={tTrace("metrics.notMeasured")}
           tone="evidence"
         />
       </div>

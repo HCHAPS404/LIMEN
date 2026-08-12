@@ -2,6 +2,11 @@
 
 Canonical competition deliverables live here.
 
+**Onboarding for humans cloning the repo** (not only judges):  
+start at the root [README](../../README.md), then [docs/GETTING_STARTED.md](../GETTING_STARTED.md)  
+and [docs/OPERATOR_WALKTHROUGH.md](../OPERATOR_WALKTHROUGH.md).  
+Full documentation index: [docs/README.md](../README.md).
+
 | Artifact | Path |
 | --- | --- |
 | Architecture diagram | [ARCHITECTURE.md](ARCHITECTURE.md) |

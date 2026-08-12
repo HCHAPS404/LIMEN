@@ -1,7 +1,12 @@
 import { BookOpen } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import type { EvidenceChunk } from "../../api/types";
 import { cn } from "../../lib/cn";
+
+function citationText(chunk: EvidenceChunk): string {
+  return (chunk.text || chunk.text_preview || "").trim();
+}
 
 /** Evidence keeps document, page, and version provenance visible. The chunk text
  *  is retrieved content and is rendered as quoted data, never as instructions. */
@@ -14,6 +19,10 @@ export function EvidenceCitation({
   showText?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation("trace");
+  const body = citationText(chunk);
+  const version = chunk.version ?? 1;
+
   return (
     <figure
       className={cn(
@@ -34,17 +43,17 @@ export function EvidenceCitation({
         </span>
         <span className="type-body-s tabular text-text-3">
           {chunk.page !== null && chunk.page !== undefined
-            ? `p. ${chunk.page}`
-            : "page unknown"}
-          {` · v${chunk.version}`}
-          {` · score ${chunk.score.toFixed(2)}`}
+            ? t("evidence.page", { page: chunk.page })
+            : t("evidence.pageUnknown")}
+          {` · ${t("evidence.version", { version })}`}
+          {` · ${t("evidence.score", { score: chunk.score.toFixed(2) })}`}
         </span>
       </figcaption>
-      {showText && (
+      {showText && body ? (
         <blockquote className="type-body-s m-0 border-l border-glass-border pl-3 text-text-2">
-          {chunk.text}
+          {body}
         </blockquote>
-      )}
+      ) : null}
     </figure>
   );
 }

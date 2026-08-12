@@ -68,15 +68,18 @@ type Palette = {
   base: [number, number, number];
   soft: [number, number, number];
   white: [number, number, number];
+  ground: [number, number, number];
 };
 
 function paletteForRole(role: VoiceRole, styles: CSSStyleDeclaration): Palette {
   const white = parseCssColor(styles.getPropertyValue("--limen-white"));
+  const ground = parseCssColor(styles.getPropertyValue("--limen-bg-0"));
   if (role === "patient") {
     return {
       base: parseCssColor(styles.getPropertyValue("--limen-voice-patient")),
       soft: parseCssColor(styles.getPropertyValue("--limen-voice-patient-soft")),
       white,
+      ground,
     };
   }
   if (role === "agent") {
@@ -84,6 +87,7 @@ function paletteForRole(role: VoiceRole, styles: CSSStyleDeclaration): Palette {
       base: parseCssColor(styles.getPropertyValue("--limen-voice-agent")),
       soft: parseCssColor(styles.getPropertyValue("--limen-voice-agent-soft")),
       white,
+      ground,
     };
   }
   if (role === "processing") {
@@ -91,12 +95,14 @@ function paletteForRole(role: VoiceRole, styles: CSSStyleDeclaration): Palette {
       base: parseCssColor(styles.getPropertyValue("--limen-ice")),
       soft: parseCssColor(styles.getPropertyValue("--limen-text-2")),
       white,
+      ground,
     };
   }
   return {
     base: parseCssColor(styles.getPropertyValue("--limen-voice-idle")),
     soft: parseCssColor(styles.getPropertyValue("--limen-text-3")),
     white,
+    ground,
   };
 }
 
@@ -164,20 +170,57 @@ export function VoiceOrb({
 
       context.clearRect(0, 0, width, height);
 
-      const glowOuter = Math.min(width, height) * 0.48;
+      const isAgent = role === "agent";
+      const ember = mixRgb(palette.base, palette.ground, 0.58);
+      const glowOuter = Math.min(width, height) * (isAgent ? 0.62 : 0.48);
+      const glowAlpha =
+        role === "idle"
+          ? 0.07
+          : isAgent
+            ? 0.26 + energy * 0.32
+            : 0.14 + energy * 0.3;
+
+      if (isAgent) {
+        // Wide atmospheric wash — ember that dissolves into the navy canvas.
+        const washOuter = Math.min(width, height) * 0.78;
+        const wash = context.createRadialGradient(
+          cx,
+          cy,
+          radius * 0.18,
+          cx,
+          cy,
+          washOuter,
+        );
+        wash.addColorStop(0, rgba(palette.base, 0.12 + energy * 0.14));
+        wash.addColorStop(0.35, rgba(ember, 0.1 + energy * 0.08));
+        wash.addColorStop(0.68, rgba(ember, 0.035));
+        wash.addColorStop(1, rgba(palette.ground, 0));
+        context.beginPath();
+        context.arc(cx, cy, washOuter, 0, Math.PI * 2);
+        context.fillStyle = wash;
+        context.fill();
+      }
+
       const glow = context.createRadialGradient(
         cx,
         cy,
-        radius * 0.12,
+        radius * 0.1,
         cx,
         cy,
         glowOuter,
       );
-      const glowAlpha = role === "idle" ? 0.07 : 0.14 + energy * 0.3;
-      glow.addColorStop(0, rgba(palette.base, glowAlpha));
-      glow.addColorStop(0.42, rgba(palette.soft, glowAlpha * 0.38));
-      glow.addColorStop(0.72, rgba(palette.soft, glowAlpha * 0.1));
-      glow.addColorStop(1, rgba(palette.soft, 0));
+      if (isAgent) {
+        glow.addColorStop(0, rgba(palette.soft, glowAlpha * 0.7));
+        glow.addColorStop(0.28, rgba(palette.base, glowAlpha * 0.55));
+        glow.addColorStop(0.55, rgba(ember, glowAlpha * 0.28));
+        glow.addColorStop(0.8, rgba(ember, glowAlpha * 0.08));
+        glow.addColorStop(1, rgba(palette.ground, 0));
+      } else {
+        glow.addColorStop(0, rgba(palette.base, glowAlpha));
+        glow.addColorStop(0.42, rgba(palette.soft, glowAlpha * 0.38));
+        glow.addColorStop(0.72, rgba(palette.soft, glowAlpha * 0.1));
+        glow.addColorStop(1, rgba(palette.soft, 0));
+      }
       context.beginPath();
       context.arc(cx, cy, glowOuter, 0, Math.PI * 2);
       context.fillStyle = glow;
@@ -219,12 +262,17 @@ export function VoiceOrb({
         const scale = 0.82 + energy * 0.24;
         const px = cx + x1 * radius * scale;
         const py = cy + y1 * radius * scale;
-        const towardWhite = Math.min(1, depth * 0.5 + energy * 0.45);
-        const rgb = mixRgb(palette.base, palette.white, towardWhite);
+        const towardWhite = Math.min(
+          1,
+          depth * (isAgent ? 0.28 : 0.5) + energy * (isAgent ? 0.2 : 0.45),
+        );
+        const rgb = mixRgb(palette.base, isAgent ? palette.soft : palette.white, towardWhite);
         const alpha =
           role === "idle"
             ? 0.24 + depth * 0.5
-            : 0.38 + depth * 0.5 + energy * 0.22;
+            : isAgent
+              ? 0.42 + depth * 0.4 + energy * 0.18
+              : 0.38 + depth * 0.5 + energy * 0.22;
 
         projected.push({
           x: px,
@@ -245,8 +293,8 @@ export function VoiceOrb({
           const c = projected[Math.min(projected.length - 1, i + 27)];
           if (a.z < -0.2) continue;
           context.strokeStyle = rgba(
-            mixRgb(palette.base, palette.white, 0.4),
-            role === "idle" ? 0.07 : 0.11 + energy * 0.14,
+            mixRgb(palette.base, isAgent ? palette.soft : palette.white, isAgent ? 0.25 : 0.4),
+            role === "idle" ? 0.07 : isAgent ? 0.14 + energy * 0.16 : 0.11 + energy * 0.14,
           );
           context.beginPath();
           context.moveTo(a.x, a.y);

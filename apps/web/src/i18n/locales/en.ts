@@ -30,6 +30,23 @@ export const en: Resources = {
       cancel: "Cancel",
       close: "Close",
     },
+    risk: {
+      label: {
+        green: "Green",
+        yellow: "Yellow",
+        orange: "Orange",
+        red: "Red",
+        unassessed: "Unassessed",
+      },
+      meaning: {
+        green: "Expected recovery",
+        yellow: "Uncertain — review",
+        orange: "Elevated concern",
+        red: "Escalate to clinician",
+        unassessed: "No safety decision yet",
+      },
+      sr: "Clinical risk {{label}}: {{meaning}}",
+    },
   },
 
   shell: {
@@ -44,6 +61,7 @@ export const en: Resources = {
     rail: {
       collapse: "Collapse navigation",
       expand: "Expand navigation",
+      home: "Go to LIMEN landing",
     },
     routes: {
       call: {
@@ -199,6 +217,26 @@ export const en: Resources = {
       tagline:
         "Voice-first postoperative follow-up with explicit uncertainty, evidence provenance, and deterministic escalation.",
       license: "MIT licensed",
+      copyright: "LIMEN",
+      columns: {
+        product: "Product",
+        access: "Access",
+        legal: "Legal",
+      },
+      links: {
+        howItWorks: "How it works",
+        security: "Data and security",
+        status: "Current state",
+        signIn: "Sign in",
+        signUp: "Create account",
+        enter: "Enter workspace",
+        license: "MIT license",
+      },
+      note: {
+        title: "LIMEN",
+        handle: "clinical workspace",
+        body: "Voice, provenance-backed evidence, and deterministic escalation in one decision record.",
+      },
     },
   },
 
@@ -391,10 +429,332 @@ export const en: Resources = {
     recent: "Recent calls",
     emptyEvents: "No recorded steps",
     loadError: "Could not load trace",
+    callNotFound: "Call {{callId}} was not found.",
     escalated: "Escalated",
     emptyInspectTitle: "No step selected",
     emptyInspectBody:
-      "Pick a timeline step to see the decision, the evidence behind it, and the measured cost of that turn.",
+      "Pick a timeline step to see what happened, which evidence was used, and any measurements for that step.",
+    sequence: "Step {{sequence}} · {{time}}",
+    statusOk: "OK",
+    statusError: "Error",
+    statusSkipped: "Skipped",
+    sections: {
+      whatHappened: "What happened",
+      detail: "Detail",
+      safety: "Safety decision",
+      escalated: "Human clinical attention was requested.",
+      reasons: "Activated rules",
+      evidence: "Cited evidence",
+      measurements: "Measurements for this step",
+      facts: "Step facts",
+      noExtra:
+        "This step has no cost metrics. The description and timestamp are the full record.",
+    },
+    evidence: {
+      page: "p. {{page}}",
+      pageUnknown: "page unknown",
+      version: "v{{version}}",
+      score: "score {{score}}",
+    },
+    metrics: {
+      duration: "Duration",
+      durationHint: "Time for this operation",
+      latency: "Latency",
+      latencyHint: "Turn round trip",
+      clinical: "Clinical",
+      clinicalHint: "State extraction",
+      uncertainty: "Uncertainty",
+      uncertaintyHint: "Certainty analysis",
+      retrieval: "Retrieval",
+      retrievalHint: "Evidence search",
+      safety: "Safety",
+      safetyHint: "Risk evaluation",
+      generation: "Generation",
+      generationHint: "Model response",
+      dense: "Dense",
+      denseHint: "Vector retrieval",
+      lexical: "Lexical",
+      lexicalHint: "Keyword retrieval",
+      fusion: "Fusion",
+      fusionHint: "Hybrid merge",
+      llmCalls: "Model calls",
+      llmCallsHint: "LLM invocations",
+      inputTokens: "Input tokens",
+      inputTokensHint: "Prompt tokens",
+      outputTokens: "Output tokens",
+      outputTokensHint: "Completion tokens",
+      ragQueries: "RAG queries",
+      ragQueriesHint: "Corpus searches",
+      evidenceSelected: "Chunks",
+      evidenceSelectedHint: "Selected evidence",
+      estCost: "Est. cost",
+      estCostHint: "Estimated from token usage",
+      voiceLatency: "Voice latency",
+      voiceLatencyHint: "Audio response",
+      stt: "Transcription",
+      sttHint: "STT duration",
+      tts: "Speech synthesis",
+      ttsHint: "TTS duration",
+      notMeasured: "Not measured on this step",
+    },
+    facts: {
+      provider: "Provider",
+      model: "Model",
+      persona: "Voice persona",
+      voice_id: "Voice id",
+      assistant_display_name: "Assistant name",
+      patient_alias: "Patient alias",
+      turn_seq: "Turn number",
+      turn_id: "Turn id",
+      bytes: "Audio bytes",
+      audio_bytes: "Audio bytes",
+      confidence: "Confidence",
+      stt_confidence: "Transcription confidence",
+      transcript_preview: "Transcript preview",
+      fallback_reason: "Fallback reason",
+      error: "Error",
+      message: "Message",
+      finding_count: "Findings",
+      chunk_count: "Chunks",
+      selected_chunk_ids: "Selected chunks",
+      intent: "Intent",
+      question: "Pending question",
+      answer_preview: "Answer preview",
+      true: "Yes",
+      false: "No",
+    },
+    categories: {
+      call: "Call",
+      patient: "Patient",
+      clinical: "Clinical",
+      uncertainty: "Uncertainty",
+      retrieval: "Evidence",
+      safety: "Safety",
+      response: "Response",
+      escalation: "Escalation",
+      error: "Error",
+      voice: "Voice",
+      transcription: "Transcription",
+      speechSynthesis: "Speech synthesis",
+      conversation: "Conversation",
+      reasoning: "Reasoning",
+      knowledge: "Knowledge",
+      step: "Step",
+    },
+    events: {
+      call_started: {
+        title: "Call started",
+        summary: "The follow-up session opened and is ready to capture voice.",
+      },
+      call_completed: {
+        title: "Call ended",
+        summary: "The session closed. Final risk and escalation stay on record.",
+      },
+      turn_received: {
+        title: "Patient spoke",
+        summary: "A patient voice or text turn was received.",
+      },
+      turn_processing_started: {
+        title: "Turn processing started",
+        summary: "The system is analyzing what was said to update clinical state.",
+      },
+      turn_completed: {
+        title: "Turn completed",
+        summary: "This listen–reason–respond cycle finished.",
+      },
+      clinical_extraction_started: {
+        title: "Clinical extraction in progress",
+        summary: "Findings are being read from what the patient said.",
+      },
+      clinical_extraction_completed: {
+        title: "Clinical extraction ready",
+        summary: "Clinical state was updated with detected findings.",
+      },
+      clinical_state_updated: {
+        title: "Clinical state updated",
+        summary: "The session clinical chart changed (findings and certainty).",
+      },
+      clinical_uncertainty_completed: {
+        title: "Uncertainty analysis",
+        summary: "What is clear, unknown, or conflicting was marked.",
+      },
+      retrieval_started: {
+        title: "Evidence search started",
+        summary: "The client clinical corpus was queried to support the reply.",
+      },
+      retrieval_dense_completed: {
+        title: "Vector search ready",
+        summary: "Semantic similarity retrieval finished.",
+      },
+      retrieval_lexical_completed: {
+        title: "Keyword search ready",
+        summary: "Lexical (keyword) retrieval finished.",
+      },
+      retrieval_fusion_completed: {
+        title: "Evidence fusion ready",
+        summary: "Dense and lexical results were combined.",
+      },
+      retrieval_evidence_selected: {
+        title: "Evidence selected",
+        summary: "Corpus excerpts were chosen to ground the reply.",
+      },
+      safety_evaluation_completed: {
+        title: "Safety evaluation",
+        summary: "The safety governor set risk level and whether to escalate.",
+      },
+      response_generation_started: {
+        title: "Generating reply",
+        summary: "The assistant is composing the spoken reply.",
+      },
+      response_generation_completed: {
+        title: "Assistant reply",
+        summary: "The reply that plays to the patient is ready.",
+      },
+      response_fallback: {
+        title: "Fallback reply",
+        summary: "A deterministic reply was used because generation was unavailable.",
+      },
+      voice_mic_requested: {
+        title: "Microphone requested",
+        summary: "The browser asked for permission to capture patient voice.",
+      },
+      voice_mic_granted: {
+        title: "Microphone granted",
+        summary: "Microphone permission is available; the session can listen.",
+      },
+      voice_speech_started: {
+        title: "Patient started speaking",
+        summary: "Voice was detected on the microphone.",
+      },
+      voice_speech_ended: {
+        title: "Patient stopped speaking",
+        summary: "The voice segment ended; the turn can be sent.",
+      },
+      voice_audio_upload_completed: {
+        title: "Audio uploaded",
+        summary: "The patient audio segment reached the server.",
+      },
+      voice_playback_started: {
+        title: "Playback started",
+        summary: "The patient begins hearing the assistant reply.",
+      },
+      voice_playback_completed: {
+        title: "Playback finished",
+        summary: "The assistant reply finished playing.",
+      },
+      voice_interrupted: {
+        title: "Reply interrupted",
+        summary: "The patient spoke while the assistant was answering.",
+      },
+      voice_patient_cutoff: {
+        title: "Patient voice cut off",
+        summary: "The patient voice segment ended early.",
+      },
+      voice_false_barge_in: {
+        title: "False interruption discarded",
+        summary: "Noise or a false positive was not treated as a real barge-in.",
+      },
+      stt_started: {
+        title: "Transcription started",
+        summary: "Patient audio is being converted to text.",
+      },
+      stt_completed: {
+        title: "Transcription ready",
+        summary: "The patient turn is text and ready for clinical reasoning.",
+      },
+      tts_started: {
+        title: "Speech synthesis started",
+        summary: "The assistant reply is being converted to audio.",
+      },
+      tts_first_audio: {
+        title: "First reply audio",
+        summary: "The first audible fragment of the reply arrived.",
+      },
+      tts_completed: {
+        title: "Speech synthesis ready",
+        summary: "Full reply audio is available.",
+      },
+      conversation_context_built: {
+        title: "Conversation context built",
+        summary: "Context for this turn was prepared for the assistant.",
+      },
+      conversation_pending_question: {
+        title: "Pending question",
+        summary: "The assistant left an open question for the next turn.",
+      },
+      conversation_question_answered: {
+        title: "Question answered",
+        summary: "The patient answered a pending question.",
+      },
+      conversation_response_interrupted: {
+        title: "Conversational reply interrupted",
+        summary: "The in-progress reply was cut by an interruption.",
+      },
+      conversation_intent_pending: {
+        title: "Intent under analysis",
+        summary: "What the patient intends to communicate is being interpreted.",
+      },
+      conversation_intent_completed: {
+        title: "Intent determined",
+        summary: "Detected intent for this turn is clear.",
+      },
+      escalation_artifact_persisted: {
+        title: "Escalation record saved",
+        summary: "The escalation artifact was persisted for clinical follow-up.",
+      },
+      provider_error: {
+        title: "Provider error",
+        summary: "An external service failed; details stay on this step.",
+      },
+      patient_statement: {
+        title: "Patient statement",
+        summary: "Patient text or voice for this turn.",
+      },
+      clinical_extraction: {
+        title: "Clinical extraction",
+        summary: "Findings were extracted from the patient turn.",
+      },
+      uncertainty: {
+        title: "Clinical uncertainty",
+        summary: "Certainty, unknowns, and conflicts were evaluated.",
+      },
+      retrieval: {
+        title: "Evidence retrieval",
+        summary: "The client clinical corpus was queried.",
+      },
+      safety_evaluation: {
+        title: "Safety evaluation",
+        summary: "Risk and escalation need were set.",
+      },
+      response: {
+        title: "Reply",
+        summary: "Assistant reply for this turn.",
+      },
+      escalation: {
+        title: "Escalation",
+        summary: "A clinical escalation was triggered or recorded.",
+      },
+      session_end: {
+        title: "Session end",
+        summary: "The follow-up call was closed.",
+      },
+      unknown: {
+        title: "Recorded step",
+        summary: "Audit event without a specific label yet.",
+      },
+    },
+    reasons: {
+      noRule: "No alert rule triggered",
+      noYellowFindings: "No yellow findings in state",
+      generativeDefault: "Assisted reply (safety floor)",
+      expectedRecovery: "Expected recovery",
+      yellowFever: "Text pattern: fever",
+      yellowNausea: "Text pattern: nausea",
+      yellowPattern: "Caution pattern (yellow)",
+      redPattern: "Urgency pattern (red)",
+      stateFinding: "State finding: {{detail}}",
+      overrideBlocked: "Generation cannot lower severity",
+    },
   },
 
   sessions: {
