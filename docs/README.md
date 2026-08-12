@@ -16,10 +16,12 @@
 
 ## Onboarding local
 
-1. **[GETTING_STARTED.md](GETTING_STARTED.md)** — Clonar, bootstrap, stubs, troubleshooting.  
+1. **[GETTING_STARTED.md](GETTING_STARTED.md)** — Clonar, OS (Linux/macOS/WSL2), bootstrap, troubleshooting.  
 2. **[OPERATOR_WALKTHROUGH.md](OPERATOR_WALKTHROUGH.md)** — Recorrido de producto de 15 minutos.  
 3. **[CHALLENGE_RUNTIME.md](CHALLENGE_RUNTIME.md)** — Perfil `challenge`, modelos reales, G2.  
 4. **[VOICE_RUNTIME.md](VOICE_RUNTIME.md)** — STT/TTS, CUDA, preflight de voz.
+
+Diagnóstico rápido: `make doctor` · humo con API/UI arriba: `make smoke-local`.
 
 ---
 

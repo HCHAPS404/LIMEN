@@ -1,4 +1,5 @@
 .PHONY: bootstrap run dev-api dev-web lint typecheck test verify format help \
+	doctor smoke-local \
 	verify-rag-real verify-rag-stub install-embeddings-cpu cold-start-report \
 	verify-llm-environment prepare-llm-bench verify-llm-bench \
 	verify-official-dataset verify-llm-bench-official \
@@ -8,9 +9,29 @@
 	verify-challenge-environment run-challenge verify-phase7 \
 	verify-challenge-eval verify-submission-evidence
 
-PYTHON ?= .venv/bin/python
-PIP ?= .venv/bin/pip
-UV ?= $(shell if [ -x .venv/bin/uv ]; then echo .venv/bin/uv; elif command -v uv >/dev/null 2>&1; then command -v uv; else echo uv; fi)
+# Cross-platform venv paths: Linux/macOS/WSL → .venv/bin; native Windows → .venv/Scripts
+ifeq ($(OS),Windows_NT)
+  PYTHON ?= .venv/Scripts/python.exe
+  PIP ?= .venv/Scripts/pip.exe
+  UV_BIN ?= .venv/Scripts/uv.exe
+  # Windows host interpreter for creating the venv (Git Bash / Make).
+  HOST_PYTHON ?= py -3
+else
+  PYTHON ?= .venv/bin/python
+  PIP ?= .venv/bin/pip
+  UV_BIN ?= .venv/bin/uv
+  HOST_PYTHON ?= python3
+endif
+
+# Prefer project venv; fall back so `make doctor` works on a cold clone.
+RUN_PY = $(shell \
+	if [ -f .venv/bin/python ]; then echo .venv/bin/python; \
+	elif [ -f .venv/Scripts/python.exe ]; then echo .venv/Scripts/python.exe; \
+	elif command -v python3 >/dev/null 2>&1; then echo python3; \
+	elif command -v python >/dev/null 2>&1; then echo python; \
+	else echo python3; fi)
+
+UV ?= $(shell if [ -x "$(UV_BIN)" ]; then echo $(UV_BIN); elif command -v uv >/dev/null 2>&1; then command -v uv; else echo uv; fi)
 NPM ?= npm
 TMPDIR_LOCAL ?= $(CURDIR)/.tmp
 # Opt-in: INSTALL_EMBEDDINGS=0 skips CPU torch + sentence-transformers during bootstrap.
@@ -26,11 +47,15 @@ EMBEDDING_MODEL_PATH ?= $(shell \
 
 help:
 	@echo "LIMEN — progressive paths:"
-	@echo "  Level 1 stubs:   make bootstrap && make run  (+ make dev-web)"
+	@echo "  Level 1 stubs:   make doctor && make bootstrap && make run  (+ make dev-web)"
+	@echo "                   make smoke-local"
 	@echo "  Level 3 challenge: make prepare-voice prepare-llm-bench prepare-knowledge"
 	@echo "                     make verify-challenge-environment && make run-challenge"
+	@echo "  OS: Linux, macOS, Windows via WSL2 (native Windows = best-effort / Git Bash)"
 	@echo ""
 	@echo "LIMEN targets:"
+	@echo "  make doctor                 - cross-platform readiness (READY_STUBS / challenge hint)"
+	@echo "  make smoke-local            - HTTP smoke vs running API (:8000) + web (:5173)"
 	@echo "  make bootstrap              - create .venv, install deps (CPU embeddings by default)"
 	@echo "  make run                    - alias for make dev-api"
 	@echo "  make run-challenge          - PHASE 7 challenge runtime (API+web, real stack)"
@@ -57,8 +82,18 @@ help:
 	@echo "  make install-embeddings-cpu - CPU-first torch + sentence-transformers"
 	@echo "  make cold-start-report      - print measured/UNMEASURED cold-start phases"
 
+doctor:
+	$(RUN_PY) scripts/doctor.py
+
+smoke-local:
+	$(RUN_PY) scripts/smoke_local.py $(ARGS)
+
 bootstrap:
-	@if [ ! -d .venv ]; then python3 -m venv .venv; fi
+	@if [ ! -d .venv ]; then \
+		if command -v python3 >/dev/null 2>&1; then python3 -m venv .venv; \
+		elif command -v py >/dev/null 2>&1; then py -3 -m venv .venv; \
+		else python -m venv .venv; fi; \
+	fi
 	$(PIP) install -U pip
 	$(PIP) install -e ".[dev]"
 	@if [ "$(INSTALL_EMBEDDINGS)" = "1" ]; then \
@@ -66,7 +101,7 @@ bootstrap:
 	else \
 		echo "Skipping embeddings install (INSTALL_EMBEDDINGS=0)"; \
 	fi
-	@if command -v uv >/dev/null 2>&1 || [ -x .venv/bin/uv ]; then \
+	@if command -v uv >/dev/null 2>&1 || [ -x "$(UV_BIN)" ]; then \
 		$(UV) pip install -e ".[dev]" || true; \
 		$(UV) lock 2>/dev/null || true; \
 	fi
@@ -74,7 +109,11 @@ bootstrap:
 	cd apps/web && $(NPM) install
 
 install-embeddings-cpu:
-	@if [ ! -d .venv ]; then python3 -m venv .venv; fi
+	@if [ ! -d .venv ]; then \
+		if command -v python3 >/dev/null 2>&1; then python3 -m venv .venv; \
+		elif command -v py >/dev/null 2>&1; then py -3 -m venv .venv; \
+		else python -m venv .venv; fi; \
+	fi
 	$(PYTHON) scripts/install_embeddings_cpu.py
 
 run: dev-api

@@ -29,24 +29,46 @@ En **Nivel challenge** (después):
 
 ## 2. Requisitos del sistema
 
+### Sistemas operativos
+
+| OS | Stubs (Nivel 1) | Challenge (Nivel 3) | Notas |
+| --- | --- | --- | --- |
+| Linux (Ubuntu 22.04+/Debian, Fedora, Arch, …) | Sí | Sí | Camino canónico |
+| macOS 13+ (Apple Silicon o Intel) | Sí | Sí | Whisper/Piper en CPU es lo habitual |
+| Windows 10/11 **con WSL2** (Ubuntu) | Sí | Sí | **Recomendado en Windows** — mismo `make` que Linux |
+| Windows nativo (cmd / PowerShell puro) | Best-effort | No recomendado | Make + rutas `.venv\Scripts`; voz/CUDA frágiles |
+
+Scripts de diagnóstico (`scripts/doctor.py`, `scripts/smoke_local.py`) usan solo stdlib y
+rutas `pathlib` (Linux / macOS / Windows). El `Makefile` detecta `.venv/bin` vs
+`.venv/Scripts`.
+
 ### Obligatorios (Nivel 1)
 
 - **Git**
-- **Python 3.11+** (`python3 --version`)
+- **GNU Make** (`make --version`)
+- **Python 3.11+** (`python3 --version` · en Windows/WSL igual)
 - **Node.js 20+** y **npm** (`node --version`)
 - Espacio en disco para `.venv` y `node_modules` (orden de ~1–3 GB en stubs; mucho más con modelos)
 
 ### Opcionales (Nivel 3)
 
 - **Ollama** instalado y corriendo (`ollama serve`)
-- **NVIDIA GPU + drivers** para Faster-Whisper en CUDA
+- **NVIDIA GPU + drivers** para Faster-Whisper en CUDA (Linux/WSL)
 - Red estable para primera descarga de modelos (Hugging Face, Ollama)
+- Dataset oficial Tech Sphere montado vía `LIMEN_DATASET_PATH` (opcional; G5 no lo requiere)
 
 ### No requerido
 
 - Docker
 - Cuenta cloud
 - Deploy en Vercel (el camino canónico es local)
+
+### Windows — WSL2 en corto
+
+1. Instala WSL2 + Ubuntu desde Microsoft Store / `wsl --install`.
+2. Dentro de Ubuntu: instala `build-essential` (trae `make`), Python 3.11+, Node 20+.
+3. Clona el repo **dentro del filesystem de WSL** (`~/Projects/...`), no desde `/mnt/c/...` si puedes evitarlo (I/O lento).
+4. Sigue el mismo flujo Linux: `cp .env.example .env` → `make doctor` → `make bootstrap`.
 
 ---
 
@@ -57,7 +79,7 @@ git clone https://github.com/HCHAPS404/LIMEN.git
 cd LIMEN
 ```
 
-Comprueba que estás en la rama que quieras usar (p. ej. `main` o una rama de feature mergeada).
+Comprueba que estás en la rama que quieras usar (p. ej. `main`).
 
 ---
 
@@ -65,6 +87,7 @@ Comprueba que estás en la rama que quieras usar (p. ej. `main` o una rama de fe
 
 ```bash
 cp .env.example .env
+# Windows cmd (nativo): copy .env.example .env
 ```
 
 El `.env.example` ya trae defaults de **desarrollo con stubs**.  
@@ -84,15 +107,17 @@ CORS por defecto incluye `http://localhost:5173` y `http://127.0.0.1:5173`.
 
 ---
 
-## 5. Bootstrap
+## 5. Doctor + Bootstrap
 
 ```bash
+make doctor      # READY_STUBS=TRUE/FALSE — qué falta en el host
 make bootstrap
+make doctor      # re-check tras instalar
 ```
 
-Esto suele:
+`make bootstrap` suele:
 
-1. Crear `.venv` si no existe  
+1. Crear `.venv` si no existe (Linux/macOS: `.venv/bin`; Windows: `.venv/Scripts`)  
 2. Instalar dependencias Python del proyecto  
 3. Instalar deps del frontend (`apps/web`)  
 4. Preparar runtime paths / cuenta demo  
@@ -102,12 +127,14 @@ Si `INSTALL_EMBEDDINGS=0 make bootstrap`, puedes omitir torch/sentence-transform
 ### Verificar el entorno mínimo
 
 ```bash
+make doctor
+# Linux/macOS/WSL:
 .venv/bin/python --version
-cd apps/web && npm --version && cd ../..
-curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/health || true
+# Windows nativo (si aplica):
+# .venv\Scripts\python.exe --version
 ```
 
-(El `curl` fallará hasta que arranques la API.)
+Tras arrancar API + web: `make smoke-local` (debe imprimir `SMOKE_LOCAL=PASS`).
 
 ---
 
@@ -118,7 +145,8 @@ curl -sS -o /dev/null -w "%{http_code}\n" http://127.0.0.1:8000/health || true
 ```bash
 cd /ruta/a/LIMEN
 make run
-# equivalente: .venv/bin/python -m uvicorn apps.api.main:app --reload --host 127.0.0.1 --port 8000
+# Linux/macOS/WSL:
+# .venv/bin/python -m uvicorn apps.api.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
 Espera a ver algo como: `Uvicorn running on http://127.0.0.1:8000`
@@ -126,7 +154,14 @@ Espera a ver algo como: `Uvicorn running on http://127.0.0.1:8000`
 Comprueba:
 
 ```bash
+make smoke-local --skip-web   # si aún no levantaste la UI; o:
 curl -sS http://127.0.0.1:8000/health | python -m json.tool
+```
+
+```bash
+make smoke-local
+# solo API:
+make smoke-local ARGS='--skip-web'
 ```
 
 Debes ver `"status": "ok"` y, en stubs, providers stub listados.
@@ -142,6 +177,12 @@ make dev-web
 Abre: **http://127.0.0.1:5173/**
 
 Vite hace proxy de `/api` y `/health` hacia `:8000`. Si la API no está arriba, verás errores de proxy (`ECONNREFUSED`) en la consola de Vite — **no es un bug de React**: arranca la API.
+
+Luego:
+
+```bash
+make smoke-local
+```
 
 ---
 
@@ -159,6 +200,8 @@ Siguiente: [OPERATOR_WALKTHROUGH.md](OPERATOR_WALKTHROUGH.md).
 
 ```bash
 make help                 # lista de targets
+make doctor               # qué falta en el host
+make smoke-local          # API+web ya corriendo
 make verify               # lint + types + tests (ruta stub)
 make prepare-knowledge    # semilla de documentos (útil antes de probar RAG real)
 make run-challenge        # solo cuando el preflight challenge esté READY

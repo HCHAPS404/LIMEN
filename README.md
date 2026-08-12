@@ -76,15 +76,27 @@ runtime local de voz/modelos.
 
 ## Requisitos previos
 
+### Sistemas operativos soportados
+
+| Plataforma | Nivel 1 (stubs) | Nivel 3 (challenge / voz real) |
+| --- | --- | --- |
+| **Linux** (Ubuntu/Debian, Fedora, Arch, …) | Soportado | Soportado (CUDA NVIDIA recomendada) |
+| **macOS** (Apple Silicon / Intel) | Soportado | Soportado; STT suele ir por CPU |
+| **Windows vía WSL2** (Ubuntu) | **Camino recomendado en Windows** | Igual que Linux en WSL |
+| Windows nativo (cmd/PowerShell) | Best-effort (Git Bash + Make) | No recomendado para voz/CUDA |
+
+Herramientas comunes: **Git**, **GNU Make**, **Python 3.11+**, **Node.js 20+**.  
+En Windows usa **WSL2** para el mismo flujo `make …` que en Linux.
+
 | | Nivel 1 (stubs) | Nivel 3 (challenge) |
 | --- | --- | --- |
-| OS | Linux / macOS / WSL2 | Mismo |
-| Python | **3.11+** | 3.11+ |
-| Node | **20+** | 20+ |
 | Red | Para instalar deps | + descargas HF / Ollama |
-| GPU NVIDIA | No | Recomendada (STT CUDA) |
+| GPU NVIDIA | No | Recomendada (STT CUDA en Linux/WSL) |
 | Ollama | No | Sí (`phi3.5`) |
 | Docker | No | No |
+
+**Diagnóstico:** `make doctor` → imprime `READY_STUBS=TRUE/FALSE`.  
+**Humo con servidores arriba:** `make smoke-local`.
 
 ---
 
@@ -97,7 +109,8 @@ Objetivo: que **cualquiera** clone el repo y vea la app en minutos, sin GPU.
 ```bash
 git clone https://github.com/HCHAPS404/LIMEN.git
 cd LIMEN
-cp .env.example .env
+cp .env.example .env          # Windows cmd: copy .env.example .env
+make doctor                   # opcional pero útil en máquina nueva
 make bootstrap
 ```
 
@@ -114,9 +127,16 @@ make run
 make dev-web
 ```
 
+### 3. Verificar humo
+
+```bash
+make smoke-local
+# SMOKE_LOCAL=PASS  → API :8000 y web :5173 responden
+```
+
 Abre **http://127.0.0.1:5173/**
 
-### 3. Entrar
+### 4. Entrar
 
 | Campo | Valor (demo local) |
 | --- | --- |
@@ -125,7 +145,7 @@ Abre **http://127.0.0.1:5173/**
 
 Esos valores son **solo demo local**, no credenciales de producción.
 
-### 4. Qué probar en stubs
+### 5. Qué probar en stubs
 
 - Landing + login / registro  
 - `/knowledge` — consola de documentos (ciclo de vida según providers stub)  
@@ -139,9 +159,11 @@ recorrido de producto: [`docs/OPERATOR_WALKTHROUGH.md`](docs/OPERATOR_WALKTHROUG
 
 | Síntoma | Qué mirar |
 | --- | --- |
-| UI carga pero login falla / “no conecta” | ¿`make run` está activo? `curl http://127.0.0.1:8000/health` |
-| Proxy Vite `ECONNREFUSED :8000` | Arranca la API **antes** o reinicia `make dev-web` cuando la API ya escuche |
-| `make bootstrap` falla | Python 3.11+, Node 20+, red; borra `.venv` y reintenta |
+| No sabes qué falta | `make doctor` |
+| UI carga pero login falla / “no conecta” | ¿`make run` activo? `make smoke-local` |
+| Proxy Vite `ECONNREFUSED :8000` | Arranca la API **antes** o reinicia `make dev-web` |
+| `make bootstrap` falla | Python 3.11+, Node 20+, Make, red; borra `.venv` y reintenta |
+| Windows: `make` no existe | Usa **WSL2** o instala Make + Git Bash |
 | Puerto ocupado | Cambia `APP_PORT` o libera 8000/5173 |
 
 ---
@@ -168,6 +190,19 @@ Stack real: Faster-Whisper + Piper + Ollama Phi-3.5 + embeddings E5 + Qdrant loc
 
 Detalle completo: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md) ·
 [`docs/VOICE_RUNTIME.md`](docs/VOICE_RUNTIME.md)
+
+### Reloj G2 (≤15 min) — qué cuenta y qué no
+
+La compuerta G2 cronometra el **levantamiento documentado**, no la instalación del sistema operativo.
+
+| Fuera del cronómetro (prerrequisitos del host) | Dentro del procedimiento del README |
+| --- | --- |
+| Instalar Python 3.11+, Node 20+, Git, GNU Make | `cp .env.example .env` |
+| Instalar Ollama y dejarlo corriendo | `make bootstrap` |
+| Drivers NVIDIA (si usas CUDA) | `make prepare-voice` / `prepare-llm-bench` / `prepare-knowledge` |
+| (Opcional) montar dataset oficial | `make verify-challenge-environment` → `make run-challenge` |
+
+En Windows, prepara **WSL2 + Ubuntu** antes de arrancar el reloj.
 
 ```bash
 cp .env.example .env

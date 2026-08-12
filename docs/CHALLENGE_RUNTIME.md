@@ -24,14 +24,16 @@ CI/development keep stubs. Stubs under challenge profile fail readiness.
 
 ## One evaluator path (G2)
 
-System prerequisites (install **before** the timer): Python 3.11+, Node 20+,
-Ollama running, NVIDIA driver/GPU for CUDA STT, network for first-time pulls.
+System prerequisites (install **before** the G2 timer): Python 3.11+, Node 20+,
+GNU Make, Git, Ollama running, NVIDIA driver/GPU for CUDA STT (Linux/WSL),
+network for first-time pulls. On Windows use **WSL2 + Ubuntu** (same commands).
 
 ```bash
 cp .env.example .env
 # optional official corpus:
 # export LIMEN_DATASET_PATH=/absolute/path/to/official/dataset
 
+make doctor                        # READY_STUBS / challenge hints
 make bootstrap
 make prepare-voice                 # Whisper + Piper (HF download, deterministic)
 make prepare-llm-bench PULL=1      # ollama pull phi3.5
@@ -40,6 +42,8 @@ make prepare-knowledge             # deterministic seed doc
 # make prepare-official-knowledge
 make verify-challenge-environment  # READY_FOR_CHALLENGE_RUNTIME=TRUE/FALSE
 make run-challenge                 # API + Vite with challenge profile
+# with API+web up:
+# make smoke-local
 ```
 
 Clean-worktree measurement:
