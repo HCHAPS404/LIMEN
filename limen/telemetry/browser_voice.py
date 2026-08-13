@@ -57,6 +57,8 @@ def parse_playback_sample(
     raw = metrics.get("challenge_voice_e2e_ms")
     if raw is None:
         raw = metrics.get("voice_response_latency_ms")
+    if not isinstance(raw, (int, float, str)):
+        return None
     try:
         e2e_ms = float(raw)
     except (TypeError, ValueError):
