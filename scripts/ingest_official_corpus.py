@@ -441,7 +441,11 @@ def retrieval_smoke_http(base_url: str) -> list[dict[str, Any]]:
                 {
                     "probe": name,
                     "query": query,
-                    "hit_count": len(evidence) if isinstance(evidence, list) else body.get("hit_count"),
+                    "hit_count": (
+                        len(evidence)
+                        if isinstance(evidence, list)
+                        else body.get("hit_count")
+                    ),
                 }
             )
     return out
@@ -562,7 +566,8 @@ def _write_docs(result: dict[str, Any]) -> None:
         f"Failed: **{ingest.get('documents_failed')}**",
         f"Duplicates (already AVAILABLE / content-hash): **{ingest.get('documents_duplicate')}**",
         f"Accounted (indexed + duplicate): **{accounted} / {discovered}**",
-        f"Corpus filenames AVAILABLE: **{matching if matching is not None else 'n/a'} / {discovered}**",
+        f"Corpus filenames AVAILABLE: **"
+        f"{matching if matching is not None else 'n/a'} / {discovered}**",
         f"Full corpus closed: **{'yes' if full_closed else 'no'}**",
         f"Chunks produced: **{ingest.get('chunks_produced')}**",
         f"Duration (s): **{ingest.get('duration_s')}**",

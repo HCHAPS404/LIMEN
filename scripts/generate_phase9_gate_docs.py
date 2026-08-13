@@ -38,7 +38,8 @@ def write_g4(evidence: dict[str, Any]) -> Path:
         f"Barge-in: **{evidence.get('barge_in', 'UNVERIFIED')}**",
         f"RED voice escalation: **{evidence.get('red_voice', 'UNVERIFIED')}**",
         f"Valid browser samples N: **{evidence.get('valid_n', 'UNMEASURED')}**",
-        f"Warm N (exclude first playback/call): **{evidence.get('warm_n', evidence.get('valid_n', 'UNMEASURED'))}**",
+        f"Warm N (exclude first playback/call): **"
+        f"{evidence.get('warm_n', evidence.get('valid_n', 'UNMEASURED'))}**",
         f"Cold first turn: **{evidence.get('cold_ms', 'UNMEASURED')}**",
         f"Warm P50 (speech-end→playback): **{evidence.get('p50_ms', 'UNMEASURED')}**",
         f"Warm P95: **{evidence.get('p95_ms', 'UNMEASURED')}**",

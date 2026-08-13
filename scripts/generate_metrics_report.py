@@ -107,10 +107,9 @@ def collect_report(database: Database) -> dict[str, Any]:
     voice_p95 = challenge_voice.get("warm_p95_ms")
     voice_n = int(challenge_voice.get("warm_n") or 0)
     if voice_status == "not_implemented" and voice_latencies:
-        if len(voice_latencies) < 3:
-            voice_status = "insufficient_samples"
-        else:
-            voice_status = "measured"
+        voice_status = (
+            "insufficient_samples" if len(voice_latencies) < 3 else "measured"
+        )
         voice_p50 = p50(voice_latencies)
         voice_p95 = p95(voice_latencies)
         voice_n = len(voice_latencies)
@@ -307,7 +306,8 @@ def render_cost_markdown(report: dict[str, Any]) -> str:
             f"- Model: `{cost.get('equivalent_model')}`",
             f"- List price: ${cost.get('equivalent_input_usd_per_1m')} / "
             f"${cost.get('equivalent_output_usd_per_1m')} per 1M tokens (input / output)",
-            f"- Source: {cost.get('equivalent_price_source')} (as of {cost.get('equivalent_price_as_of')})",
+            f"- Source: {cost.get('equivalent_price_source')} "
+            f"(as of {cost.get('equivalent_price_as_of')})",
             f"- Total equivalent over harvested tokens: **${total_txt}**",
             f"- Equivalent per call (calls with tokens): **${per_call_txt}**",
             "",

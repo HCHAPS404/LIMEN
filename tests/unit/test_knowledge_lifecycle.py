@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 from limen.knowledge.chunking import chunk_pages, content_hash_text, stable_chunk_id
-from limen.knowledge.ingestion import storage_basename
 from limen.knowledge.contracts import KnowledgeStatus
+from limen.knowledge.ingestion import storage_basename
 from limen.knowledge.lifecycle import InvalidStatusTransition, assert_transition, can_transition
 from limen.persistence.repositories.knowledge import sha256_bytes
 
