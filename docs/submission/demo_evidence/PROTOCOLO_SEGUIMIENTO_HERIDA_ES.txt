@@ -1,0 +1,33 @@
+# Protocolo de seguimiento de herida quirúrgica (demo LIMEN)
+
+Documento de referencia para demostración. No sustituye indicación médica presencial.
+
+## Objetivo
+
+Orientar el seguimiento telefónico o por voz en las primeras 72 horas tras cirugía
+abdominal menor (ejemplo: apendicectomía sin complicaciones).
+
+## Preguntas recomendadas en cada contacto
+
+1. ¿Ha tenido fiebre mayor a 38 °C?
+2. ¿La herida está más roja, caliente o con secreción maloliente?
+3. ¿El dolor es progresivo o controlable con la analgesia indicada?
+4. ¿Puede caminar y alimentarse según lo indicado al alta?
+
+## Cuidados generales de herida
+
+- Mantener la zona limpia y seca según indicación del equipo quirúrgico.
+- No retirar puntos ni grapas por cuenta propia.
+- Evitar inmersión en piscina o bañera hasta autorización clínica.
+- Reportar aumento súbito de volumen, calor local o drenaje purulento.
+
+## Cuándo reforzar vigilancia (amarillo clínico)
+
+- Dolor que sube de intensidad respecto al día anterior.
+- Enrojecimiento que se extiende más de un centímetro alrededor de la herida.
+- Temperatura entre 37,5 °C y 38 °C sin otros signos de alarma.
+
+## Nota
+
+Este protocolo es material de conocimiento vivo para LIMEN. Ante duda, priorizar
+evaluación presencial.

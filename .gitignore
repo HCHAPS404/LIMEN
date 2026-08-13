@@ -69,3 +69,8 @@ logs/
 
 # Lock alternatives (uv.lock is committed)
 package-lock.json.bak
+
+# Personal video speaking notes (not part of the public submission package)
+docs/submission/DEMO_GUION_ES.md
+docs/submission/*GUION*.md
+docs/submission/local_video/

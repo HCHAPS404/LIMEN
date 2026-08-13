@@ -7,17 +7,17 @@ the documented challenge bootstrap path. Does not invent timings.
 SYSTEM PREREQUISITES (timer does NOT include installing these):
   - Python 3.11+
   - Node.js 20+ / npm
-  - Ollama installed + daemon reachable (for challenge READY)
+  - GNU Make, Git
+  - Ollama installed + daemon reachable + ``ollama pull phi3.5`` already done
   - NVIDIA driver + CUDA-capable GPU (challenge STT cuda)
-  - Network for pip / npm / Hugging Face / Ollama pulls when uncached
+  - Optional: warm Hugging Face cache for Whisper/Piper (first download is host setup)
 
-PROJECT BOOTSTRAP (timed):
+PROJECT BOOTSTRAP (timed — matches README ``make lift``):
+  cp .env.example .env
   make bootstrap
-  make prepare-voice
-  make prepare-llm-bench PULL=1
-  make prepare-knowledge
-  make verify-challenge-environment
-  make run-challenge (health probe only unless --full-start)
+  make prepare-voice SKIP_FIXTURES=1
+  make prepare-llm-bench
+  make run-challenge (health probe; preflight runs once inside this command)
 
 Usage:
   python scripts/measure_g2_bootstrap.py
@@ -93,7 +93,7 @@ def main() -> int:
     parser.add_argument(
         "--skip-run",
         action="store_true",
-        help="Do not start run-challenge; stop after verify-challenge-environment",
+        help="Do not start run-challenge; stop after prepare-llm-bench",
     )
     parser.add_argument(
         "--keep-worktree",
@@ -260,7 +260,7 @@ def main() -> int:
         return 1
 
     stage = _run(
-        ["make", "prepare-voice"],
+        ["make", "prepare-voice", "SKIP_FIXTURES=1"],
         cwd=worktree,
         env=env,
         timeout=1200,
@@ -269,35 +269,13 @@ def main() -> int:
     stages.append(stage)
 
     stage = _run(
-        ["make", "prepare-llm-bench", "PULL=1"],
-        cwd=worktree,
-        env=env,
-        timeout=900,
-    )
-    stage["name"] = "make_prepare_llm"
-    stages.append(stage)
-
-    stage = _run(
-        ["make", "prepare-knowledge"],
+        ["make", "prepare-llm-bench"],
         cwd=worktree,
         env=env,
         timeout=120,
     )
-    stage["name"] = "make_prepare_knowledge"
+    stage["name"] = "make_prepare_llm"
     stages.append(stage)
-
-    stage = _run(
-        ["make", "verify-challenge-environment"],
-        cwd=worktree,
-        env=env,
-        timeout=300,
-    )
-    stage["name"] = "verify_challenge_environment"
-    stages.append(stage)
-    ready = "READY_FOR_CHALLENGE_RUNTIME=TRUE" in (
-        stage.get("stdout_tail", "") + stage.get("stderr_tail", "")
-    )
-    report["READY_FOR_CHALLENGE_RUNTIME"] = ready
 
     health: dict[str, Any] | None = None
     urls = {
@@ -306,9 +284,11 @@ def main() -> int:
         "openapi": "http://127.0.0.1:8000/docs",
     }
     report["urls"] = urls
+    ready = False
 
-    if not args.skip_run and ready:
+    if not args.skip_run:
         # Start challenge stack briefly and probe health.
+        # Preflight runs once inside run-challenge (do not verify twice).
         log_path = worktree / "runtime" / "logs" / "g2_run_challenge.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         t0 = time.perf_counter()
@@ -330,6 +310,7 @@ def main() -> int:
                     health = json.loads(body)
                     if resp.status == 200:
                         health_ok = True
+                        ready = True
                         break
             except Exception:  # noqa: BLE001
                 time.sleep(2)
@@ -344,11 +325,25 @@ def main() -> int:
             }
         )
         report["health"] = health
+        report["READY_FOR_CHALLENGE_RUNTIME"] = ready
         proc.terminate()
         try:
             proc.wait(timeout=30)
         except subprocess.TimeoutExpired:
             proc.kill()
+    else:
+        stage = _run(
+            ["make", "verify-challenge-environment"],
+            cwd=worktree,
+            env=env,
+            timeout=300,
+        )
+        stage["name"] = "verify_challenge_environment"
+        stages.append(stage)
+        ready = "READY_FOR_CHALLENGE_RUNTIME=TRUE" in (
+            stage.get("stdout_tail", "") + stage.get("stderr_tail", "")
+        )
+        report["READY_FOR_CHALLENGE_RUNTIME"] = ready
 
     total_s = time.perf_counter() - t_all
     success = ready and all(
@@ -361,11 +356,9 @@ def main() -> int:
             "make_bootstrap",
             "make_prepare_voice",
             "make_prepare_llm",
-            "make_prepare_knowledge",
-            "verify_challenge_environment",
         }
     )
-    report["total_s"] = round(total_s, 2)
+
     report["total_min"] = round(total_s / 60.0, 2)
     report["g2_le_15_min"] = total_s <= 15 * 60
     report["success"] = success

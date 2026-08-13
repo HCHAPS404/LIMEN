@@ -6,7 +6,8 @@
 	prepare-voice verify-voice-environment verify-voice verify-voice-real \
 	dev-api-voice \
 	prepare-knowledge prepare-official-knowledge measure-g2-bootstrap \
-	verify-challenge-environment run-challenge verify-phase7 \
+	verify-challenge-environment run-challenge lift \
+	verify-phase7 \
 	verify-challenge-eval verify-submission-evidence
 
 # Cross-platform venv paths: Linux/macOS/WSL → .venv/bin; native Windows → .venv/Scripts
@@ -37,6 +38,8 @@ TMPDIR_LOCAL ?= $(CURDIR)/.tmp
 # Opt-in: INSTALL_EMBEDDINGS=0 skips CPU torch + sentence-transformers during bootstrap.
 INSTALL_EMBEDDINGS ?= 1
 INGEST ?= 0
+# G2 lift skips eval WAV fixtures (not required to run the app).
+SKIP_FIXTURES ?= 0
 # Optional local E5 checkout (relative project cache). Hub id used when unset.
 EMBEDDING_MODEL_PATH ?= $(shell \
 	if [ -f $(CURDIR)/.cache/models/multilingual-e5-small/model.safetensors ]; then \
@@ -49,14 +52,15 @@ help:
 	@echo "LIMEN — progressive paths:"
 	@echo "  Level 1 stubs:   make doctor && make bootstrap && make run  (+ make dev-web)"
 	@echo "                   make smoke-local"
-	@echo "  Level 3 challenge: make prepare-voice prepare-llm-bench prepare-knowledge"
-	@echo "                     make verify-challenge-environment && make run-challenge"
+	@echo "  G2 (≤15 min):    cp .env.example .env && make lift"
+	@echo "  Level 3 extra:   make prepare-knowledge / prepare-official-knowledge"
 	@echo "  OS: Linux, macOS, Windows via WSL2 (native Windows = best-effort / Git Bash)"
 	@echo ""
 	@echo "LIMEN targets:"
 	@echo "  make doctor                 - cross-platform readiness (READY_STUBS / challenge hint)"
 	@echo "  make smoke-local            - HTTP smoke vs running API (:8000) + web (:5173)"
 	@echo "  make bootstrap              - create .venv, install deps (CPU embeddings by default)"
+	@echo "  make lift                   - G2 timed path: bootstrap + voice assets + challenge stack"
 	@echo "  make run                    - alias for make dev-api"
 	@echo "  make run-challenge          - PHASE 7 challenge runtime (API+web, real stack)"
 	@echo "  make verify-challenge-environment - READY_FOR_CHALLENGE_RUNTIME preflight"
@@ -216,7 +220,21 @@ prepare-voice:
 	@echo "PHASE 6.1/6.2 prepare voice extras + CUDA12 libs + Piper/Whisper + fixtures"
 	$(PIP) install -e ".[voice]"
 	$(PYTHON) scripts/prepare_voice.py
-	$(PYTHON) scripts/generate_voice_fixtures.py
+	@if [ "$(SKIP_FIXTURES)" = "1" ]; then \
+		echo "Skipping voice fixtures (SKIP_FIXTURES=1)"; \
+	else \
+		$(PYTHON) scripts/generate_voice_fixtures.py; \
+	fi
+
+# G2 timed lift (prereqs already on the host — see README).
+# run-challenge already runs challenge preflight once; do not verify twice.
+lift:
+	@if [ ! -f .env ]; then cp .env.example .env; fi
+	$(MAKE) bootstrap
+	$(MAKE) prepare-voice SKIP_FIXTURES=1
+	$(MAKE) prepare-llm-bench
+	@echo "Starting challenge stack (API :8000 + web :5173)"
+	LIMEN_RUNTIME_PROFILE=challenge $(PYTHON) scripts/run_challenge.py
 
 verify-voice-environment:
 	@echo "PHASE 6.2 real voice environment preflight (CUDA preferred)"

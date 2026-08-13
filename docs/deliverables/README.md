@@ -10,5 +10,5 @@ Canonical competition package moved to **`docs/submission/`**.
 | Video / demo | [`../submission/DEMO_SCRIPT.md`](../submission/DEMO_SCRIPT.md) + shot list |
 | Checklist | [`../submission/SUBMISSION_CHECKLIST.md`](../submission/SUBMISSION_CHECKLIST.md) |
 
-G1 remains **PARTIAL** until demo video + screenshots are attached
-(`FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`).
+G1 remains **PARTIAL** until the YouTube URL replaces `PEGAR_ID_AQUI` and
+screenshots are attached. Placeholder: **https://youtu.be/PEGAR_ID_AQUI**

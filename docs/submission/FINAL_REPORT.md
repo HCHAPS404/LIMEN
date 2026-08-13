@@ -199,7 +199,8 @@ challenge-critical gates are closed.
 
 Script: [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).  
 Shot list: [`VIDEO_SHOT_LIST.md`](VIDEO_SHOT_LIST.md).  
-Actual video: `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`  
+Actual video: **https://youtu.be/PEGAR_ID_AQUI**  
+(Replace `PEGAR_ID_AQUI` with the unlisted YouTube ID when editing is done.)  
 Screenshots: [`SCREENSHOT_REGISTER.md`](SCREENSHOT_REGISTER.md)
 
 ## 20. Conclusion

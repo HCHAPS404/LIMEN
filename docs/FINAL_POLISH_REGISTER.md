@@ -8,7 +8,7 @@ in PHASE 10.**
 - G4 human browser mic → audible playback (multi-turn)
 - G4 official speech-end→playback P50/P95 (`FINAL_EVIDENCE_REQUIRED:G4_P50/P95`)
 - G5 admin UI upload→use→delete→forget confirmation — **DONE** 2026-08-09 (operator UI + API evidence PASS)
-- Demo video recording (`FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`)
+- Demo video recording — placeholder **https://youtu.be/PEGAR_ID_AQUI**
 - Optional but recommended: strict cold clone G2 (`FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE`)
 
 ## P1 — scoring / truthfulness

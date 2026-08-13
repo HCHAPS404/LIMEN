@@ -10,6 +10,22 @@ determinista**. El LLM (Phi-3.5) **no puede bajar** una decisión de seguridad m
 
 **Repositorio:** https://github.com/HCHAPS404/LIMEN · **Licencia:** [MIT](LICENSE)
 
+## Entregables (Tech Sphere)
+
+| Entregable | Enlace |
+| --- | --- |
+| Informe final | [`docs/submission/FINAL_REPORT.md`](docs/submission/FINAL_REPORT.md) |
+| Diagrama de arquitectura | [`docs/submission/ARCHITECTURE.md`](docs/submission/ARCHITECTURE.md) |
+| Flujo de decisión | [`docs/submission/DECISION_FLOW.md`](docs/submission/DECISION_FLOW.md) |
+| **Video demo** (YouTube oculto) | **https://youtu.be/PEGAR_ID_AQUI** |
+
+Cuando el corte final esté listo: sustituye `PEGAR_ID_AQUI` por el ID del video
+(YouTube → Compartir → no listado). El mismo marcador está en el informe y en
+`docs/submission/VIDEO_SHOT_LIST.md`.
+
+**LLM y voz (runtime de competencia):** Ollama **Phi-3.5** · STT **Faster-Whisper small** ·
+TTS **Piper** `es_MX-claude-high`. RAG: **multilingual-e5-small** + Qdrant + FTS5.
+
 ---
 
 ## Empieza aquí (elige tu camino)
@@ -17,13 +33,16 @@ determinista**. El LLM (Phi-3.5) **no puede bajar** una decisión de seguridad m
 | Nivel | Tiempo orientativo | Qué obtienes | Ir a |
 | --- | --- | --- | --- |
 | **0 · Solo leer** | 5 min | Qué es LIMEN y cómo está armado | [Qué es](#qué-es) · [Arquitectura](#arquitectura-en-30-segundos) |
-| **1 · Demo local (stubs)** | ~10–15 min | UI + API sin GPU ni Ollama | [Nivel 1](#nivel-1--demo-local-con-stubs) |
+| **1 · Demo local (stubs)** | ~10 min | UI + API sin GPU ni Ollama | [Nivel 1](#nivel-1--demo-local-con-stubs) |
 | **2 · Recorrido de producto** | ~15 min | Login → conocimiento → llamada → TRAZA | [docs/OPERATOR_WALKTHROUGH.md](docs/OPERATOR_WALKTHROUGH.md) |
-| **3 · Runtime de competencia** | 30–90+ min* | STT/TTS/LLM/RAG reales | [Nivel 3](#nivel-3--runtime-de-competencia) |
+| **3 · Runtime de competencia (G2)** | **≤15 min** | STT/TTS/LLM/RAG reales | [G2 · cronómetro](#g2--levantamiento-15-minutos) |
 | **4 · Evaluaciones** | variable | Tests y artefactos generados | [Nivel 4](#nivel-4--calidad-y-evaluaciones) |
 | **Docs completas** | — | Índice de toda la documentación | [docs/README.md](docs/README.md) |
 
-\*Primera vez con descargas de modelos; luego más rápido. Medición G2 (worktree limpio, caches calientes): **293.85 s** — [`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md). Clon estricto en máquina fría: aún `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE`.
+Medición G2 previa (camino largo, caches calientes): **293.85 s** —
+[`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md). El camino
+documentado ahora es `make lift` (sin `PULL=1`, sin verify duplicado, sin fixtures
+de eval). Primera descarga de modelos = prerrequisito de host, no del cronómetro.
 
 ---
 
@@ -179,47 +198,67 @@ Guion de video de competencia:
 → [`docs/submission/DEMO_SCRIPT.md`](docs/submission/DEMO_SCRIPT.md) ·
 [`VIDEO_SHOT_LIST.md`](docs/submission/VIDEO_SHOT_LIST.md)
 
-Estado de capturas/video: aún hay marcadores `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`
-(ver [`SCREENSHOT_REGISTER.md`](docs/submission/SCREENSHOT_REGISTER.md)).
+Video (YouTube oculto, sustituir ID): **https://youtu.be/PEGAR_ID_AQUI**
 
 ---
 
-## Nivel 3 — Runtime de competencia
+## G2 — Levantamiento ≤15 minutos
+
+Este es el **único procedimiento que el jurado debe cronometrar**.
+
+Abre **http://127.0.0.1:5173/** · login `demo@limen.local` / `limen-demo-2026`.
+
+### Antes del cronómetro (host)
+
+Instala una vez, como el sistema operativo — **no cuenta** en los 15 minutos:
+
+- Python **3.11+**, Node.js **20+**, Git, GNU Make
+- **Ollama** instalado, `ollama serve` en marcha, y **`ollama pull phi3.5`** ya hecho
+- Drivers NVIDIA si usarás STT en CUDA (Linux/WSL)
+- Windows: **WSL2 + Ubuntu** ya listo
+- Opcional: primera descarga Hugging Face de Whisper/Piper (`make prepare-voice`) para no pagar HF dentro del reloj
+
+### Dentro del cronómetro
+
+```bash
+git clone https://github.com/HCHAPS404/LIMEN.git
+cd LIMEN
+cp .env.example .env
+make lift
+```
+
+`make lift` = `bootstrap` + assets de voz (sin fixtures de eval) + chequeo de Phi
+(sin `ollama pull`) + `run-challenge`. El preflight corre **una sola vez** al arrancar.
+
+Listo cuando respondan:
+
+- API: http://127.0.0.1:8000/health
+- UI: http://127.0.0.1:5173/
+
+Medición previa del camino más largo (incluye verify duplicado y fixtures): **293.85 s**
+([`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md)) — ya **< 15 min**.
+El camino `lift` recorta ese procedimiento; no se inventa un tiempo nuevo aquí.
+
+Corpus oficial y `make prepare-knowledge` **no** forman parte de G2.
+
+---
+
+## Nivel 3 — Runtime de competencia (detalle)
 
 Stack real: Faster-Whisper + Piper + Ollama Phi-3.5 + embeddings E5 + Qdrant local.
 
-Detalle completo: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md) ·
+Detalle: [`docs/CHALLENGE_RUNTIME.md`](docs/CHALLENGE_RUNTIME.md) ·
 [`docs/VOICE_RUNTIME.md`](docs/VOICE_RUNTIME.md)
 
-### Reloj G2 (≤15 min) — qué cuenta y qué no
-
-La compuerta G2 cronometra el **levantamiento documentado**, no la instalación del sistema operativo.
-
-| Fuera del cronómetro (prerrequisitos del host) | Dentro del procedimiento del README |
-| --- | --- |
-| Instalar Python 3.11+, Node 20+, Git, GNU Make | `cp .env.example .env` |
-| Instalar Ollama y dejarlo corriendo | `make bootstrap` |
-| Drivers NVIDIA (si usas CUDA) | `make prepare-voice` / `prepare-llm-bench` / `prepare-knowledge` |
-| (Opcional) montar dataset oficial | `make verify-challenge-environment` → `make run-challenge` |
-
-En Windows, prepara **WSL2 + Ubuntu** antes de arrancar el reloj.
+Si `make lift` ya dejó el stack arriba, no hace falta repetir nada. Comandos sueltos:
 
 ```bash
-cp .env.example .env
-# Opcional corpus oficial:
-# export LIMEN_DATASET_PATH=/ruta/absoluta/al/dataset
-
-make bootstrap
-make prepare-voice                 # Whisper + Piper
-make prepare-llm-bench PULL=1      # ollama pull phi3.5
-make prepare-knowledge             # semilla determinista
-# make prepare-official-knowledge  # PDFs oficiales (si tienes dataset)
-make verify-challenge-environment  # debe imprimir READY_FOR_CHALLENGE_RUNTIME=TRUE
-make run-challenge                 # API + web con perfil challenge
+make prepare-knowledge             # semilla RAG (después de G2 / para demo)
+# make prepare-official-knowledge  # PDFs oficiales (LIMEN_DATASET_PATH)
+make smoke-local                   # API+web ya corriendo
 ```
 
-Preflight de voz: `make verify-voice-environment` · API con libs CUDA: ver
-`make dev-api-voice` / `scripts/run_voice_api.py`.
+Preflight de voz: `make verify-voice-environment` · API con libs CUDA: `make dev-api-voice`.
 
 ---
 
@@ -278,11 +317,71 @@ Fuente: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
 | Métrica | Estado |
 | --- | --- |
 | Voz P50 / P95 (speech-end → primer audio en browser) | **UNMEASURED** — `FINAL_EVIDENCE_REQUIRED:G4_P50` / `G4_P95` |
-| Tokens in/out | Por turno si el provider reporta; a menudo null |
-| Llamadas LLM / consultas RAG | Instrumentadas por turno |
-| Coste / llamada | `FINAL_EVIDENCE_REQUIRED:COST_CALL` |
+| Tokens in/out | Por turno si Ollama/el provider los reporta; a menudo `null` |
+| Llamadas LLM / consultas RAG | Instrumentadas por turno (TRAZA) |
+| Coste API local | **$0** medido (Ollama + Whisper + Piper en máquina) |
+| Coste equivalente API (extrapolación) | Ver [presupuesto de tokens](#presupuesto-de-tokens-y-contexto) — `FINAL_EVIDENCE_REQUIRED:COST_CALL` hasta fijar fuente de precio en el informe |
 
 Proxies “TTS-ready” en servidor **no** son la latencia oficial del challenge.
+
+---
+
+## Presupuesto de tokens y contexto
+
+LIMEN **no** manda el transcript entero al modelo. La continuidad es un
+`ConversationContext` acotado (estado clínico + seguridad + últimos turnos),
+no una ventana de chat ilimitada. Cada cuenta ve solo **sus** llamadas
+(`account_id`); el historial vive en `runtime/` (gitignored) y un clon arranca vacío.
+
+### Límites de runtime (código / `.env.example`)
+
+| Recurso | Valor | Dónde |
+| --- | --- | --- |
+| Ventana reciente al LLM | **6** turnos (`CONVERSATION_RECENT_TURNS`) | Continuidad; cada turno se recorta a ~240 caracteres |
+| Presupuesto de contexto conversacional | **1800** tokens (`CONVERSATION_CONTEXT_TOKEN_BUDGET`) | Configurado; el recorte efectivo hoy es por nº de turnos |
+| Completions por turno (paciente) | **`max_tokens=320`** | `limen/conversation/response.py` |
+| Default Ollama `num_predict` | **256** (`LLM_MAX_TOKENS`) | Settings; el turno de voz usa 320 |
+| Evidencia RAG por turno | hasta **5** chunks (`FINAL_TOP_K`) | Híbrido E5 + FTS5 + RRF |
+| Duración máxima de llamada | **15 min** | Cierre por `max_duration` |
+| Idle | aviso ~**150 s**, cuelga ~**90 s** después | Ciclo de vida de la sesión |
+| Contexto nativo Phi-3.5 (Ollama) | **131 072** tokens | Capacidad del modelo; LIMEN **no** la usa entera |
+
+STT/TTS **no** consumen tokens de LLM. Safety Governor y plantillas degradadas
+pueden responder **sin** invocación al modelo.
+
+### Consumo teórico de LLM por llamada (Phi-3.5, challenge)
+
+Estimación de **prompt + completion** a partir de los techos anteriores
+(system prompt ~0.6–0.9 k tokens + estado + 6 turnos cortos + ≤5 chunks).
+No es una medición de sesión; TRAZA registra el uso real cuando el provider lo envía.
+
+| Escenario | Turnos LLM | Tokens entrada (aprox.) | Tokens salida (aprox.) | Total (aprox.) |
+| --- | ---: | ---: | ---: | ---: |
+| Mínimo (saludo + 1 pregunta; o turno en plantilla) | 0–1 | 0–1 200 | 0–120 | **0–1 300** |
+| Típico demo (4–8 turnos con RAG) | 4–8 | 5 000–12 000 | 400–1 600 | **6 000–14 000** |
+| Techo de sesión (15 min, ~12–18 turnos con evidencia) | 12–18 | 15 000–28 000 | 1 500–4 000 | **~18 000–32 000** |
+
+Una llamada RED puede ser **más corta** (escala y cierra) y a la vez más
+barata en tokens que un seguimiento largo GREEN/YELLOW.
+
+### Coste equivalente si el mismo volumen corriera en API
+
+Runtime de competencia: **local → coste de API = $0**.  
+Para comparar con un despliegue cloud, extrapolación con precios públicos
+**GPT-4o mini** (OpenAI, ago 2026, USD / 1M tokens: input **0.15**, output **0.60**).
+Fuente a verificar en el informe; no es una factura de LIMEN.
+
+| Escenario | Tokens (aprox.) | Equivalente API (USD / llamada) |
+| --- | --- | ---: |
+| Mínimo | ~1 000 in + 80 out | **~$0.0002** |
+| Típico demo | ~8 000 in + 800 out | **~$0.0017** |
+| Techo 15 min | ~24 000 in + 2 500 out | **~$0.005** |
+
+A **1 000 llamadas/mes** en el escenario típico: **~$1.7** solo de LLM
+(sin STT/TTS cloud). Hardware local (GPU/CPU) es el coste real del challenge.
+
+Cuando Ollama reporta `prompt_tokens` / `completion_tokens`, TRAZA los guarda
+por turno. Números de esta sección son **presupuesto de diseño**, no P50 medido.
 
 ---
 

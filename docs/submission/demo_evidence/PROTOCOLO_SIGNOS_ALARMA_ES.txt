@@ -1,0 +1,29 @@
+# Protocolo de signos de alarma postoperatorios (demo LIMEN)
+
+Documento sintético de demostración. No es una guía clínica oficial.
+
+## Signos que requieren escalada inmediata (rojo)
+
+Indicar búsqueda de atención de urgencias si el paciente reporta:
+
+- Dificultad para respirar o sensación de ahogo.
+- Dolor torácico intenso de inicio súbito.
+- Sangrado abundante que empapa apósitos de forma continua.
+- Confusión aguda, desmayo o incapacidad para despertar.
+- Vómito incoercible con imposibilidad de retener líquidos.
+
+## Signos que ameritan reevaluación pronta (amarillo)
+
+- Fiebre ≥ 38 °C.
+- Secreción purulenta o maloliente por la herida.
+- Dolor abdominal que empeora a pesar de analgesia.
+- Hinchazón marcada de una pierna con dolor al caminar.
+
+## Mensaje al paciente
+
+LIMEN debe comunicar con claridad el siguiente paso (auto-cuidado, reconsulta o
+urgencia) sin minimizar síntomas de alarma y sin inventar tratamientos.
+
+## Identificador de demostración
+
+PROTOCOLO_ALARMAS_LIMEN_2026 — útil para citar procedencia en TRAZA.

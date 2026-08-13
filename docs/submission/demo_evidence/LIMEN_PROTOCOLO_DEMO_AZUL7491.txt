@@ -1,0 +1,15 @@
+PROTOCOLO DE DEMOSTRACIÓN LIMEN — AZUL7491
+============================================
+
+Documento sintético para prueba de conocimiento vivo (Tech Sphere Challenge).
+NO es una guía clínica real. NO reemplaza indicación médica.
+
+Identificador único: AZUL7491
+
+Indicación de demostración:
+- Según el protocolo AZUL7491, el vendaje de la herida quirúrgica de demostración
+  se cambia cada 72 horas, salvo que el equipo clínico indique otra frecuencia.
+
+Recordatorio:
+- Ante dificultad respiratoria, sangrado abundante o fiebre alta, el paciente debe
+  buscar atención de urgencias. Este documento no modifica reglas de seguridad.

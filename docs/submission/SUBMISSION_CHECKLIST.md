@@ -28,7 +28,7 @@
 - [x] Prompts/config appendix linked
 - [x] Process / phases documented
 - [ ] Screenshots inserted (`SCREENSHOT_REGISTER.md`)
-- [ ] Demo video linked `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`
+- [ ] Demo video linked — **https://youtu.be/PEGAR_ID_AQUI**
 
 ## 04 Demo video + questions
 
@@ -36,7 +36,7 @@
 - [x] Question 1 draft
 - [x] Question 2 draft
 - [x] Shot list `VIDEO_SHOT_LIST.md`
-- [ ] Recorded video `FINAL_EVIDENCE_REQUIRED:DEMO_VIDEO`
+- [ ] Recorded video — **https://youtu.be/PEGAR_ID_AQUI**
 
 ## Gates
 
