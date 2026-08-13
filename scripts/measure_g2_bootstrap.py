@@ -22,6 +22,7 @@ PROJECT BOOTSTRAP (timed — matches README ``make lift``):
 Usage:
   python scripts/measure_g2_bootstrap.py
   python scripts/measure_g2_bootstrap.py --skip-run   # stop after preflight
+  python scripts/measure_g2_bootstrap.py --strict-clone  # git worktree + isolated pip/npm/HF
 """
 
 from __future__ import annotations
@@ -39,6 +40,14 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _port_in_use(port: int) -> bool:
+    import socket
+
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+        sock.settimeout(0.4)
+        return sock.connect_ex(("127.0.0.1", port)) == 0
 
 
 def _run(
@@ -110,10 +119,28 @@ def main() -> int:
         default=os.environ.get("LIMEN_DATASET_PATH", ""),
         help="Optional LIMEN_DATASET_PATH for the clean tree",
     )
+    parser.add_argument(
+        "--strict-clone",
+        action="store_true",
+        help=(
+            "Measure a git worktree from HEAD with pip/npm/HF caches isolated "
+            "inside the worktree. Ollama phi3.5 and system Python/Node stay host prereqs."
+        ),
+    )
     args = parser.parse_args()
+    if args.strict_clone:
+        args.from_head = True
 
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     worktree = args.worktree or (ROOT.parent / f"limen-g2-bootstrap-{stamp}")
+
+    if _port_in_use(8000) or _port_in_use(5173):
+        print(
+            "Ports 8000/5173 are in use. Stop the running challenge stack "
+            "before measuring G2 (otherwise health is not a cold start).",
+            file=sys.stderr,
+        )
+        return 1
 
     if worktree.exists():
         print(f"Worktree path exists: {worktree}", file=sys.stderr)
@@ -138,9 +165,18 @@ def main() -> int:
     if args.dataset_path:
         env["LIMEN_DATASET_PATH"] = args.dataset_path
     env["LIMEN_RUNTIME_PROFILE"] = "challenge"
-    # Prefer project-local HF cache inside worktree after clone.
-    env.setdefault("HF_HOME", str(worktree / ".cache" / "huggingface"))
-    env.setdefault("TMPDIR", str(worktree / ".tmp"))
+    cache_root = worktree / ".cache"
+    env["TMPDIR"] = str(worktree / ".tmp")
+    env["HF_HOME"] = str(cache_root / "huggingface")
+    if args.strict_clone:
+        env["HUGGINGFACE_HUB_CACHE"] = str(cache_root / "huggingface" / "hub")
+        env["HF_HUB_CACHE"] = str(cache_root / "huggingface" / "hub")
+        env["TRANSFORMERS_CACHE"] = str(cache_root / "huggingface" / "transformers")
+        env["PIP_CACHE_DIR"] = str(cache_root / "pip")
+        env["UV_CACHE_DIR"] = str(cache_root / "uv")
+        env["NPM_CONFIG_CACHE"] = str(cache_root / "npm")
+        env["npm_config_cache"] = str(cache_root / "npm")
+        env["XDG_CACHE_HOME"] = str(cache_root)
 
     report: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),
@@ -167,9 +203,24 @@ def main() -> int:
             "source_ref": subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
             ).strip(),
+            "strict_clone": bool(args.strict_clone),
+            "isolated_caches": (
+                ["pip", "npm", "huggingface", "xdg"] if args.strict_clone else []
+            ),
+            "host_prereqs_not_timed": [
+                "python3",
+                "node/npm",
+                "ollama + phi3.5 already pulled",
+                "nvidia driver + CUDA GPU",
+            ],
             "note": (
-                "Host package caches (pip/npm/ollama/HF) may still be warm. "
-                "Documented as cached vs cold per stage when detectable."
+                "Strict clone: git worktree from HEAD; pip/npm/HF caches empty in the worktree. "
+                "Ollama weights and system interpreters are host prerequisites (not timed)."
+                if args.strict_clone
+                else (
+                    "Host package caches (pip/npm/ollama/HF) may still be warm. "
+                    "Documented as cached vs cold per stage when detectable."
+                )
             ),
         },
         "stages": stages,
@@ -228,8 +279,11 @@ def main() -> int:
             _write_report(report, total_s=time.perf_counter() - t_all, success=False)
             return 1
 
-    # Ensure TMPDIR exists inside clean tree.
+    # Ensure TMPDIR / isolated caches exist inside clean tree.
     (worktree / ".tmp").mkdir(parents=True, exist_ok=True)
+    (worktree / ".cache" / "pip").mkdir(parents=True, exist_ok=True)
+    (worktree / ".cache" / "npm").mkdir(parents=True, exist_ok=True)
+    (worktree / ".cache" / "huggingface").mkdir(parents=True, exist_ok=True)
     env["TMPDIR"] = str(worktree / ".tmp")
     env["HF_HOME"] = str(worktree / ".cache" / "huggingface")
 

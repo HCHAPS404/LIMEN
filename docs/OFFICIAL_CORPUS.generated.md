@@ -2,12 +2,20 @@
 
 Corpus root: `/home/hell/Projects/TechSphere2026-Official/dataset`
 Resolved via: `LIMEN_DATASET_PATH`
+Ingest mode: `direct`
 Documents discovered: **107**
-Indexed: **8**
+Indexed (new AVAILABLE this run): **1**
 Failed: **0**
-Duplicates (content-hash): **0**
-Chunks produced: **357**
-Duration (s): **81.23**
+Duplicates (already AVAILABLE / content-hash): **106**
+Accounted (indexed + duplicate): **107 / 107**
+Corpus filenames AVAILABLE: **107 / 107**
+Full corpus closed: **yes**
+Chunks produced: **77**
+Duration (s): **21.0**
+
+## Extra AVAILABLE (not in official corpus)
+
+_None, or not counted in this mode._
 
 ## Retrieval smoke
 

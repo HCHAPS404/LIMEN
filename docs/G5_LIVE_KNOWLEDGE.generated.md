@@ -1,6 +1,7 @@
 # G5 Live Knowledge Evidence (generated)
 
-Generated: 2026-08-09T05:34:35.979789+00:00
+Generated: 2026-08-13T04:38:19.652023+00:00
+
 Admin UI used: **True**
 Upload: **PASS**
 AVAILABLE: **PASS**
@@ -9,13 +10,6 @@ Provenance: **{'document_id': '4404e820aab849b08df3578a28a57d7f', 'chunk_id': '2
 Deleted: **PASS**
 Forgotten: **PASS**
 G5 status: **PASS**
-
-## Operator UI (FINAL POLISH Round 1)
-
-- Confirmed: **true** (`runtime/evals/final_polish_r1/operator_confirm.json`)
-- Human fact exercised in browser: **LUNA-73** / protocol **ZXQ-921**
-  (`g5_zxq921_luna73.txt` upload → cite → delete → forget)
-- Companion API lifecycle with `--ui-confirmed`: unique fact below (PASS)
 
 ```json
 {

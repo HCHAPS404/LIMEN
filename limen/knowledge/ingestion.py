@@ -20,6 +20,22 @@ from limen.telemetry.logging import get_telemetry_logger, log_event
 
 _log = get_telemetry_logger("limen.knowledge")
 
+# Linux NAME_MAX is 255 bytes; original PDF titles in the official corpus can exceed that
+# when prefixed with document_id. Keep the on-disk basename short; source_name stays human.
+_MAX_STORAGE_BASENAME = 180
+
+
+def storage_basename(document_id: str, source_name: str) -> str:
+    """Stable short on-disk name. Provenance uses source_name, not this basename."""
+    suffix = Path(source_name).suffix.lower()
+    if not suffix or len(suffix.encode("utf-8")) > 16:
+        suffix = ".bin"
+    name = f"{document_id}{suffix}"
+    encoded = name.encode("utf-8")
+    if len(encoded) > _MAX_STORAGE_BASENAME:
+        name = f"{document_id}.bin"
+    return name
+
 
 class DuplicateDocumentError(ValueError):
     def __init__(self, existing: dict[str, Any]) -> None:
@@ -78,7 +94,7 @@ class KnowledgeIngestionService:
             sha256=digest,
         )
         document_id = document["document_id"]
-        target = storage_dir / f"{document_id}_{safe_name}"
+        target = storage_dir / storage_basename(document_id, safe_name)
         target.write_bytes(payload)
         self._repository.set_storage_path(account_id, document_id, str(target))
         processing = self._repository.mark_processing(account_id, document_id)

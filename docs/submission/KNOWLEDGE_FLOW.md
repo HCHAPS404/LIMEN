@@ -34,8 +34,8 @@ flowchart LR
 | Item | Status |
 | --- | --- |
 | Official PDFs discovered | **107** (`docs/OFFICIAL_CORPUS.generated.md`) |
-| Smoke indexed | **8** (0 failed, 357 chunks) |
-| Full 107/107 ingestion | `FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL` |
+| Indexed AVAILABLE | **107 / 107** (direct ingest; API stopped) |
+| Full 107/107 ingestion | **yes** |
 
 Live G5 human admin-console confirmation: **PASS** (2026-08-09 operator UI + generated evidence)
 

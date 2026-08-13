@@ -5,18 +5,18 @@ in PHASE 10.**
 
 ## P0 — gate / eliminatory evidence
 
-- G4 human browser mic → audible playback (multi-turn)
-- G4 official speech-end→playback P50/P95 (`FINAL_EVIDENCE_REQUIRED:G4_P50/P95`)
+- G4 human browser mic → audible playback (multi-turn) — **DONE** 2026-08-09
+- G4 official speech-end→playback P50/P95 — **DONE** 2026-08-12 (warm N=84; 6457 / 19103 ms; `docs/G4_VOICE_GATE.generated.md`)
 - G5 admin UI upload→use→delete→forget confirmation — **DONE** 2026-08-09 (operator UI + API evidence PASS)
-- Demo video recording — placeholder **https://youtu.be/PEGAR_ID_AQUI**
-- Optional but recommended: strict cold clone G2 (`FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE`)
+- Demo video recording — **DONE** **https://youtu.be/CAO7SUBaV2s**
+- Optional but recommended: strict cold clone G2 — **DONE** 2026-08-12 (`docs/G2_BOOTSTRAP.generated.md`; 290.52s PASS; git worktree HEAD; pip/npm/HF isolated)
 
 ## P1 — scoring / truthfulness
 
-- Full official corpus 107/107 ingest verification (`FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`)
-- Real token usage populated in README metrics when provider reports it
-- Cost/call with verified price source (`FINAL_EVIDENCE_REQUIRED:COST_CALL`)
-- Screenshot package for final report
+- Full official corpus 107/107 ingest verification — **DONE** 2026-08-12 (`docs/OFFICIAL_CORPUS.generated.md`; 107/107 AVAILABLE, ingest directo)
+- Real token usage populated in README metrics when provider reports it — **DONE** 2026-08-12 (`docs/EVAL_RESULTS.generated.md`)
+- Cost/call with verified price source — **DONE** 2026-08-12 (`docs/COST_CALL.generated.md`; OpenAI list price 2026-08-12)
+- Screenshot package for final report — **DONE** 2026-08-12 (S01–S06 under `docs/submission/assets/`)
 - Public repo push confirmation (`FINAL_EVIDENCE_REQUIRED:PUBLIC_REPO_PUSH`)
 
 ## P2 — functional polish

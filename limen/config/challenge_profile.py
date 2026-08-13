@@ -30,6 +30,7 @@ CHALLENGE_ENV_DEFAULTS: dict[str, str] = {
     "STT_COMPUTE_TYPE": "float16",
     "STT_ALLOW_CPU_FALLBACK": "0",
     "TTS_PROVIDER": "piper",
+    "TTS_MODEL": "es_MX-claude-high",
     "TTS_VOICE": "es_MX-claude-high",
     "TTS_MODEL_PATH": str(ROOT / "runtime" / "models" / "piper"),
     "EMBEDDING_PROVIDER": "sentence-transformers",
@@ -76,6 +77,7 @@ def apply_runtime_profile(*, force: bool = False) -> str:
             force
             or current == ""
             or (key in _PROVIDER_KEYS and current.lower() == "stub")
+            or (key == "TTS_MODEL" and current.lower() in {"stub", "stub-tts"})
             or key not in os.environ
         ):
             os.environ[key] = value

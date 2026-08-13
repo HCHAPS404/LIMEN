@@ -49,3 +49,20 @@ def test_challenge_e2e_requires_playback() -> None:
     assert r.validate_invariants()
     assert abs((r.challenge_voice_e2e_ms or 0) - 1700.0) < 1e-6
     assert (r.challenge_voice_e2e_ms or 0) >= (r.stt_ms or 0)
+
+
+def test_cross_clock_tts_ready_does_not_invalidate_browser_e2e() -> None:
+    """Server tts_ready and browser playback_start are different clocks."""
+    r = VoiceTurnTimingRecord(sample_id="s1", turn_id="t1")
+    r.speech_end = 1.0
+    r.stt_start = 1.1
+    r.stt_end = 1.5
+    r.turn_processing_start = 1.5
+    r.turn_processing_end = 2.0
+    r.tts_start = 2.0
+    r.tts_ready = 9.0
+    r.audio_received_browser = 2.6
+    r.audio_playback_start = 2.7
+    assert r.validate_invariants()
+    assert r.valid
+    assert abs((r.challenge_voice_e2e_ms or 0) - 1700.0) < 1e-6

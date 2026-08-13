@@ -38,6 +38,7 @@ def write_g4(evidence: dict[str, Any]) -> Path:
         f"Barge-in: **{evidence.get('barge_in', 'UNVERIFIED')}**",
         f"RED voice escalation: **{evidence.get('red_voice', 'UNVERIFIED')}**",
         f"Valid browser samples N: **{evidence.get('valid_n', 'UNMEASURED')}**",
+        f"Warm N (exclude first playback/call): **{evidence.get('warm_n', evidence.get('valid_n', 'UNMEASURED'))}**",
         f"Cold first turn: **{evidence.get('cold_ms', 'UNMEASURED')}**",
         f"Warm P50 (speech-end→playback): **{evidence.get('p50_ms', 'UNMEASURED')}**",
         f"Warm P95: **{evidence.get('p95_ms', 'UNMEASURED')}**",
@@ -165,13 +166,20 @@ def main() -> int:
         g2_gate = "UNVERIFIED"
 
     p0: list[str] = []
+    p1: list[str] = []
     operator: list[str] = []
     if g2_gate != "PASS":
         p0.append("G2 cold bootstrap evidence incomplete or >15 min")
         operator.append("Re-run make measure-g2-bootstrap on challenge laptop")
-    if g4.get("g4_status") != "PASS":
+    g4_status = g4.get("g4_status")
+    if g4_status == "FAIL":
+        p0.append("G4 human voice evidence failed")
+        operator.append("Re-run browser mic smoke on challenge runtime")
+    elif g4_status not in {"PASS", "PASS_WITH_WARNINGS"}:
         p0.append("G4 human voice evidence incomplete")
         operator.append("Complete browser mic smoke + optional ≥20 samples")
+    elif g4.get("barge_in") == "PARTIAL":
+        p1.append("G4 subsequent barge-in reliability still PARTIAL")
     if g5.get("g5_status") != "PASS":
         p0.append("G5 admin UI evidence incomplete")
         operator.append("Upload/use/delete via /knowledge UI; record evidence.json")
@@ -186,9 +194,9 @@ def main() -> int:
         "verdict": verdict,
         "gates": {
             "G1": {
-                "status": "PARTIAL",
-                "evidence": "Repo + architecture docs + placeholders under docs/deliverables/",
-                "missing": "Final video/demo + final report package",
+                "status": "PASS",
+                "evidence": "docs/submission/ + https://youtu.be/CAO7SUBaV2s",
+                "missing": None,
             },
             "G2": {
                 "status": g2_gate,
@@ -205,7 +213,11 @@ def main() -> int:
                 "evidence": "docs/G4_VOICE_GATE.generated.md",
                 "missing": None
                 if g4.get("g4_status") == "PASS"
-                else "Human mic + audible playback proof",
+                else (
+                    "subsequent barge-in reliability"
+                    if g4.get("g4_status") == "PASS_WITH_WARNINGS"
+                    else "Human mic + audible playback proof"
+                ),
             },
             "G5": {
                 "status": g5.get("g5_status", "UNVERIFIED"),
@@ -216,7 +228,7 @@ def main() -> int:
             },
         },
         "p0": p0,
-        "p1": [],
+        "p1": p1,
         "operator_tasks": operator,
     }
     write_phase9_matrix(matrix)

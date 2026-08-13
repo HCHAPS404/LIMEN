@@ -16,9 +16,9 @@
 - [x] Decision flow — `docs/submission/DECISION_FLOW.md`
 - [x] Knowledge flow — `docs/submission/KNOWLEDGE_FLOW.md`
 - [x] TRAZA explanation — `docs/submission/TRAZA.md`
-- [ ] Exported PNG/SVG attached to report package  
-  `FINAL_EVIDENCE_REQUIRED:SHOT_ARCH_EXPORT`  
-  `FINAL_EVIDENCE_REQUIRED:SHOT_DECISION_EXPORT`
+- [x] Exported PNG/SVG attached to report package  
+  `docs/submission/assets/architecture.png`  
+  `docs/submission/assets/decision_flow.png`
 
 ## 03 Final report
 
@@ -27,8 +27,8 @@
 - [x] Official model-only limitations disclosed
 - [x] Prompts/config appendix linked
 - [x] Process / phases documented
-- [ ] Screenshots inserted (`SCREENSHOT_REGISTER.md`)
-- [ ] Demo video linked — **https://youtu.be/PEGAR_ID_AQUI**
+- [x] Screenshots inserted (`SCREENSHOT_REGISTER.md`) — S01–S06
+- [x] Demo video linked — **https://youtu.be/CAO7SUBaV2s**
 
 ## 04 Demo video + questions
 
@@ -36,30 +36,30 @@
 - [x] Question 1 draft
 - [x] Question 2 draft
 - [x] Shot list `VIDEO_SHOT_LIST.md`
-- [ ] Recorded video — **https://youtu.be/PEGAR_ID_AQUI**
+- [x] Recorded video — **https://youtu.be/CAO7SUBaV2s**
 
 ## Gates
 
 | Gate | Status | Evidence |
 | --- | --- | --- |
-| G1 | PARTIAL | Package draft; video/screenshots pending |
-| G2 | PASS* | `docs/G2_BOOTSTRAP.generated.md` (293.85s); strict clone `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE` |
+| G1 | PASS | Video **https://youtu.be/CAO7SUBaV2s**; package in `docs/submission/` |
+| G2 | PASS | `docs/G2_BOOTSTRAP.generated.md` (**290.52s**, git worktree HEAD, caches pip/npm/HF aisladas) |
 | G3 | PASS | phi3.5 / challenge profile |
-| G4 | PASS WITH WARNINGS | Operator browser confirm 2026-08-09; barge-in subsequent PARTIAL; P50/P95 unmeasured |
+| G4 | PASS WITH WARNINGS | Operator browser 2026-08-09; warm P50/P95 **6457 / 19103 ms** (N=84) in `docs/G4_VOICE_GATE.generated.md`; barge-in subsequent PARTIAL |
 | G5 | PASS | Operator UI confirm 2026-08-09 (LUNA-73 / ZXQ-921) + `docs/G5_LIVE_KNOWLEDGE.generated.md` |
 
-\*Host caches may have been warm during measurement.
+\*Host Python/Node/Ollama phi3.5/NVIDIA are prerequisites; project pip/npm/HF caches were isolated in the 290.52s run.
 
 ## Metrics
 
 | Metric | Status |
 | --- | --- |
-| Voice P50 | `FINAL_EVIDENCE_REQUIRED:G4_P50` |
-| Voice P95 | `FINAL_EVIDENCE_REQUIRED:G4_P95` |
-| Input/output tokens | Partial / often null from provider — disclose |
-| LLM calls | Measured per turn when instrumented |
-| RAG queries | Measured per turn when instrumented |
-| Cost/call | `FINAL_EVIDENCE_REQUIRED:COST_CALL` |
+| Voice P50 | **6457 ms** (warm N=84) — `docs/G4_VOICE_GATE.generated.md` |
+| Voice P95 | **19103 ms** (warm N=84) — `docs/G4_VOICE_GATE.generated.md` |
+| Input/output tokens | **204476 / 17593** (137 turns, 55 calls) — `docs/EVAL_RESULTS.generated.md` |
+| LLM calls | 189 |
+| RAG queries | 56 |
+| Cost/call | Local **$0** measured; equivalent GPT-4o mini **$0.00075** — `docs/COST_CALL.generated.md` |
 
 ## Pre-submit scans
 

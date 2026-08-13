@@ -84,7 +84,8 @@ class VoiceTurnTimingRecord:
         if self.llm_start is not None and self.llm_end is not None:
             _order("llm_start", self.llm_start, "llm_end", self.llm_end)
         _order("tts_start", self.tts_start, "tts_ready", self.tts_ready)
-        _order("tts_ready", self.tts_ready, "audio_playback_start", self.audio_playback_start)
+        # tts_ready is server perf_counter; audio_playback_start is browser
+        # performance.now(). Do not order those marks against each other.
         _order(
             "audio_received_browser",
             self.audio_received_browser,

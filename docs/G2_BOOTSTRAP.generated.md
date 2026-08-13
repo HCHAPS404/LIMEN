@@ -1,8 +1,8 @@
 # G2 Bootstrap Evidence (generated)
 
-Generated: 2026-08-09T04:09:35.861458+00:00
+Generated: 2026-08-13T04:15:46.582584+00:00
 Machine: `archlinux` (Linux-7.1.6-arch1-1-x86_64-with-glibc2.44)
-Total: **293.85s** (4.9 min)
+Total: **290.52s** (4.84 min)
 ≤15 min: **True**
 READY_FOR_CHALLENGE_RUNTIME: **True**
 G2 status: **PASS**
@@ -23,22 +23,32 @@ G2 status: **PASS**
   "no_venv": true,
   "no_node_modules": true,
   "no_runtime_db": true,
-  "source_ref": "9fa4b8f56cb45336d86fe47d7aaa63c22df9b301",
-  "note": "Measured from current working tree (excludes .venv/node_modules/runtime). Host pip/npm/ollama/HF caches may still be warm. Official jury clone requires these files to be committed.",
-  "source": "working_tree_rsync"
+  "source_ref": "ba80a1fe7b9a58de586505a00b8860e282a5a111",
+  "strict_clone": true,
+  "isolated_caches": [
+    "pip",
+    "npm",
+    "huggingface",
+    "xdg"
+  ],
+  "host_prereqs_not_timed": [
+    "python3",
+    "node/npm",
+    "ollama + phi3.5 already pulled",
+    "nvidia driver + CUDA GPU"
+  ],
+  "note": "Strict clone: git worktree from HEAD; pip/npm/HF caches empty in the worktree. Ollama weights and system interpreters are host prerequisites (not timed)."
 }
 ```
 
 ## Commands / stages
 
-- `sync_working_tree`: 39.46s ok=True — `rsync -a --delete --exclude .venv/ --exclude apps/web/node_modules/ --exclude runtime/ --exclude .tmp/ --exclude .cache/ --exclude .git/ /home/hell/Projects/LIMEN/ /home/hell/Projects/limen-g2-bootstrap-20260809T040935Z/`
+- `git_worktree`: 0.06s ok=True — `git worktree add --detach /home/hell/Projects/limen-g2-bootstrap-20260813T041546Z HEAD`
 - `copy_env`: 0.01s ok=True — `cp .env.example .env`
-- `make_bootstrap`: 115.29s ok=True — `make bootstrap`
-- `make_prepare_voice`: 88.61s ok=True — `make prepare-voice`
-- `make_prepare_llm`: 1.33s ok=True — `make prepare-llm-bench PULL=1`
-- `make_prepare_knowledge`: 0.39s ok=True — `make prepare-knowledge`
-- `verify_challenge_environment`: 48.61s ok=True — `make verify-challenge-environment`
-- `run_challenge_health`: 0.13s ok=True — `make run-challenge`
+- `make_bootstrap`: 135.33s ok=True — `make bootstrap`
+- `make_prepare_voice`: 80.04s ok=True — `make prepare-voice SKIP_FIXTURES=1`
+- `make_prepare_llm`: 0.97s ok=True — `make prepare-llm-bench`
+- `run_challenge_health`: 44.11s ok=True — `make run-challenge`
 
 ## URLs
 
@@ -51,14 +61,16 @@ G2 status: **PASS**
 {
   "status": "ok",
   "version": "0.1.0",
-  "app_env": "development",
+  "app_env": "challenge",
+  "runtime_profile": "challenge",
   "llm_provider": "ollama",
   "llm_model": "phi3.5",
   "degraded_llm_mode": false,
+  "stub_providers": [],
   "database": {
     "database": "ok",
     "schema_version": "5",
-    "path": "runtime/db/limen.db"
+    "path": "/home/hell/Projects/limen-g2-bootstrap-20260813T041546Z/runtime/db/limen.db"
   }
 }
 ```

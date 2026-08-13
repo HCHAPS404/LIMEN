@@ -27,6 +27,19 @@ if str(ROOT) not in sys.path:
 
 TEXT_DIR_NAMES = ("textos", "texts", "pdfs", "documents")
 SUPPORTED = {".pdf", ".txt", ".md", ".text"}
+_PURGE_STATUSES = frozenset({"FAILED", "UPLOADED", "PROCESSING"})
+
+
+def corpus_full_closed(
+    *,
+    discovered: int,
+    indexed: int,
+    duplicate: int,
+    failed: int,
+) -> bool:
+    """True when every discovered file is AVAILABLE (new or already hashed)."""
+    accounted = indexed + duplicate
+    return bool(discovered) and accounted == discovered and failed == 0
 
 
 def resolve_corpus_root() -> tuple[Path | None, str]:
@@ -105,6 +118,7 @@ def ingest_files(
         "pages_ocr": 0,
         "chunks_produced": 0,
         "failures": [],
+        "purge_errors": [],
         "duplicates": [],
         "duration_s": None,
         "dry_run": dry_run,
@@ -136,8 +150,43 @@ def ingest_files(
     reset_knowledge_job_runner_for_tests()
     get_knowledge_job_runner()
 
+    from limen.knowledge.deletion import KnowledgeDeletionService
+    from limen.knowledge.embeddings import build_embedding_provider
+    from limen.knowledge.vector_store import get_vector_store
+
+    embeddings = build_embedding_provider(settings)
+    vectors = get_vector_store(settings, dimensions=embeddings.dimensions)
+    deletion = KnowledgeDeletionService(knowledge, vector_store=vectors)
+
     t0 = time.perf_counter()
-    for path in selected:
+    available_names: set[str] = set()
+    for row in knowledge.list_documents(account.account_id):
+        status = str(row.get("status") or "")
+        name = str(row.get("source_name") or "")
+        if status == "AVAILABLE":
+            available_names.add(name)
+            continue
+        if status not in _PURGE_STATUSES:
+            continue
+        try:
+            deletion.delete(account_id=account.account_id, document_id=row["document_id"])
+        except Exception as exc:  # noqa: BLE001
+            report["purge_errors"].append(
+                {
+                    "file": name,
+                    "document_id": row.get("document_id"),
+                    "error": f"purge:{type(exc).__name__}:{exc}",
+                }
+            )
+
+    pending = [path for path in selected if path.name not in available_names]
+    already = [path for path in selected if path.name in available_names]
+    report["documents_duplicate"] += len(already)
+    for path in already:
+        report["duplicates"].append({"file": str(path), "reason": "already_available"})
+
+    for index, path in enumerate(pending, start=1):
+        print(f"[{index}/{len(pending)}] {path.name}", file=sys.stderr, flush=True)
         try:
             payload = path.read_bytes()
             doc = service.accept_upload(
@@ -180,8 +229,17 @@ def ingest_files(
                     "error": f"{type(exc).__name__}:{exc}",
                 }
             )
+    available_after = {
+        str(row.get("source_name") or "")
+        for row in knowledge.list_documents(account.account_id)
+        if row.get("status") == "AVAILABLE"
+    }
+    corpus_names = {path.name for path in files}
+    report["corpus_filenames_available"] = len(corpus_names & available_after)
+    report["extra_available_not_in_corpus"] = sorted(available_after - corpus_names)
     report["duration_s"] = round(time.perf_counter() - t0, 2)
     report["account_id"] = account.account_id
+    report["ingest_mode"] = "direct"
     return report
 
 
@@ -233,6 +291,162 @@ def retrieval_smoke(account_id: str) -> list[dict[str, Any]]:
     return out
 
 
+def ingest_files_http(
+    files: list[Path],
+    *,
+    base_url: str,
+    limit: int | None = None,
+) -> dict[str, Any]:
+    import httpx
+
+    from limen.config.settings import get_settings
+
+    settings = get_settings()
+    selected = files if limit is None else files[:limit]
+    report: dict[str, Any] = {
+        "documents_discovered": len(files),
+        "documents_selected": len(selected),
+        "documents_indexed": 0,
+        "documents_failed": 0,
+        "documents_duplicate": 0,
+        "chunks_produced": 0,
+        "failures": [],
+        "duplicates": [],
+        "duration_s": None,
+        "via_http": base_url,
+    }
+    t0 = time.perf_counter()
+    with httpx.Client(base_url=base_url.rstrip("/"), timeout=180.0) as client:
+        login = client.post(
+            "/api/auth/login",
+            json={"email": settings.demo_email, "password": settings.demo_password},
+        )
+        login.raise_for_status()
+        listed = client.get("/api/knowledge/documents")
+        listed.raise_for_status()
+        existing = listed.json()
+        for row in existing:
+            status = row.get("status")
+            if status not in {"FAILED", "UPLOADED", "PROCESSING"}:
+                continue
+            doc_id = row.get("document_id")
+            if not doc_id:
+                continue
+            deleted = client.delete(f"/api/knowledge/documents/{doc_id}")
+            if deleted.status_code >= 400:
+                report["failures"].append(
+                    {
+                        "file": row.get("source_name"),
+                        "document_id": doc_id,
+                        "error": f"purge_http_{deleted.status_code}",
+                    }
+                )
+        listed = client.get("/api/knowledge/documents")
+        listed.raise_for_status()
+        available_names = {
+            str(row.get("filename") or row.get("source_name") or "")
+            for row in listed.json()
+            if row.get("status") == "AVAILABLE"
+        }
+        pending = [path for path in selected if path.name not in available_names]
+        already = [path for path in selected if path.name in available_names]
+        report["documents_duplicate"] += len(already)
+        for path in already:
+            report["duplicates"].append({"file": str(path), "reason": "already_available"})
+        for index, path in enumerate(pending, start=1):
+            print(f"[{index}/{len(pending)}] {path.name}", flush=True)
+            with path.open("rb") as handle:
+                uploaded = client.post(
+                    "/api/knowledge/documents",
+                    files={"file": (path.name, handle, "application/pdf")},
+                )
+            if uploaded.status_code == 409:
+                report["documents_duplicate"] += 1
+                report["duplicates"].append({"file": str(path), "reason": "content_hash"})
+                continue
+            if uploaded.status_code >= 400:
+                report["documents_failed"] += 1
+                report["failures"].append(
+                    {
+                        "file": str(path),
+                        "error": f"http_{uploaded.status_code}:{uploaded.text[:300]}",
+                    }
+                )
+                continue
+            document = uploaded.json()
+            document_id = document.get("document_id")
+            status = document.get("status")
+            for _ in range(300):
+                detail = client.get(f"/api/knowledge/documents/{document_id}")
+                if detail.status_code >= 400:
+                    break
+                payload = detail.json()
+                status = payload.get("status")
+                if status == "AVAILABLE":
+                    report["documents_indexed"] += 1
+                    report["chunks_produced"] += int(payload.get("chunk_count") or 0)
+                    available_names.add(path.name)
+                    break
+                if status == "FAILED":
+                    report["documents_failed"] += 1
+                    report["failures"].append(
+                        {
+                            "file": str(path),
+                            "document_id": document_id,
+                            "status": status,
+                            "error": payload.get("failure_message"),
+                        }
+                    )
+                    break
+                time.sleep(1)
+            else:
+                report["documents_failed"] += 1
+                report["failures"].append(
+                    {
+                        "file": str(path),
+                        "document_id": document_id,
+                        "status": status,
+                        "error": "processing_timeout",
+                    }
+                )
+    report["duration_s"] = round(time.perf_counter() - t0, 2)
+    return report
+
+
+def retrieval_smoke_http(base_url: str) -> list[dict[str, Any]]:
+    import httpx
+
+    from limen.config.settings import get_settings
+
+    settings = get_settings()
+    probes = [
+        ("exact_es", "apendicitis aguda complicaciones postoperatorias"),
+        ("paraphrase_es", "después de la cirugía del apéndice qué signos de alarma vigilar"),
+        ("en_source_es_query", "dolor en la herida tras apendicectomía"),
+        ("no_evidence", "LIMEN_NO_EVIDENCE_FACT_ZZZ_9999_UNIQUE"),
+    ]
+    out: list[dict[str, Any]] = []
+    with httpx.Client(base_url=base_url.rstrip("/"), timeout=60.0) as client:
+        login = client.post(
+            "/api/auth/login",
+            json={"email": settings.demo_email, "password": settings.demo_password},
+        )
+        login.raise_for_status()
+        for name, query in probes:
+            response = client.get("/api/knowledge/retrieval-probe", params={"query": query})
+            response.raise_for_status()
+            body = response.json()
+            evidence = body.get("evidence") or body.get("chunks") or []
+            out.append(
+                {
+                    "probe": name,
+                    "query": query,
+                    "hit_count": len(evidence) if isinstance(evidence, list) else body.get("hit_count"),
+                }
+            )
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -260,6 +474,12 @@ def main() -> int:
         "--write-docs",
         action="store_true",
         help="Write docs/OFFICIAL_CORPUS.generated.md",
+    )
+    parser.add_argument(
+        "--via-http",
+        default=None,
+        metavar="BASE_URL",
+        help="Ingest through a running API (use when Qdrant is locked by run-challenge)",
     )
     args = parser.parse_args()
 
@@ -289,6 +509,14 @@ def main() -> int:
         result["ingest"] = ingest_files(files, limit=args.limit, dry_run=True)
         if not args.ingest:
             result["note"] = "Pass --ingest to index into the demo account."
+    elif args.via_http:
+        result["ingest"] = ingest_files_http(
+            files,
+            base_url=args.via_http,
+            limit=args.limit,
+        )
+        if args.smoke:
+            result["retrieval_smoke"] = retrieval_smoke_http(args.via_http)
     else:
         result["ingest"] = ingest_files(files, limit=args.limit, dry_run=False)
         account_id = result["ingest"].get("account_id")
@@ -300,7 +528,7 @@ def main() -> int:
     if args.write_docs:
         _write_docs(result)
     failed = int((result.get("ingest") or {}).get("documents_failed") or 0)
-    if args.ingest and failed and not result.get("ingest", {}).get("documents_indexed"):
+    if args.ingest and failed:
         return 2
     return 0
 
@@ -308,21 +536,52 @@ def main() -> int:
 def _write_docs(result: dict[str, Any]) -> None:
     docs = ROOT / "docs" / "OFFICIAL_CORPUS.generated.md"
     ingest = result.get("ingest") or {}
+    discovered = int(result.get("documents_discovered") or 0)
+    indexed = int(ingest.get("documents_indexed") or 0)
+    duplicate = int(ingest.get("documents_duplicate") or 0)
+    failed = int(ingest.get("documents_failed") or 0)
+    accounted = indexed + duplicate
+    full_closed = corpus_full_closed(
+        discovered=discovered,
+        indexed=indexed,
+        duplicate=duplicate,
+        failed=failed,
+    )
+    result["corpus_accounted"] = accounted
+    result["full_corpus_closed"] = full_closed
+    matching = ingest.get("corpus_filenames_available")
+    extra = ingest.get("extra_available_not_in_corpus") or []
     lines = [
         "# Official Corpus Preparation (generated)",
         "",
         f"Corpus root: `{result.get('corpus_root')}`",
         f"Resolved via: `{result.get('resolved_via')}`",
+        f"Ingest mode: `{ingest.get('ingest_mode') or ingest.get('via_http') or 'unknown'}`",
         f"Documents discovered: **{result.get('documents_discovered')}**",
-        f"Indexed: **{ingest.get('documents_indexed')}**",
+        f"Indexed (new AVAILABLE this run): **{ingest.get('documents_indexed')}**",
         f"Failed: **{ingest.get('documents_failed')}**",
-        f"Duplicates (content-hash): **{ingest.get('documents_duplicate')}**",
+        f"Duplicates (already AVAILABLE / content-hash): **{ingest.get('documents_duplicate')}**",
+        f"Accounted (indexed + duplicate): **{accounted} / {discovered}**",
+        f"Corpus filenames AVAILABLE: **{matching if matching is not None else 'n/a'} / {discovered}**",
+        f"Full corpus closed: **{'yes' if full_closed else 'no'}**",
         f"Chunks produced: **{ingest.get('chunks_produced')}**",
         f"Duration (s): **{ingest.get('duration_s')}**",
         "",
-        "## Retrieval smoke",
+        "## Extra AVAILABLE (not in official corpus)",
         "",
     ]
+    if extra:
+        for name in extra:
+            lines.append(f"- `{name}`")
+    else:
+        lines.append("_None, or not counted in this mode._")
+    lines.extend(
+        [
+            "",
+            "## Retrieval smoke",
+            "",
+        ]
+    )
     smoke = result.get("retrieval_smoke") or []
     if not smoke:
         lines.append("_Not run (pass `--smoke`)._")
@@ -330,7 +589,11 @@ def _write_docs(result: dict[str, Any]) -> None:
         lines.append(f"- `{row['probe']}`: hits={row['hit_count']} query={row['query']!r}")
     lines.append("")
     docs.write_text("\n".join(lines), encoding="utf-8")
+    out_json = ROOT / "runtime" / "evals" / "corpus" / "latest.json"
+    out_json.parent.mkdir(parents=True, exist_ok=True)
+    out_json.write_text(json.dumps(result, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"Wrote {docs}")
+    print(f"Wrote {out_json}")
 
 
 if __name__ == "__main__":

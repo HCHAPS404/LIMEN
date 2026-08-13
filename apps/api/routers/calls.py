@@ -39,6 +39,7 @@ from limen.persistence.repositories import (
     SqliteTraceRepository,
 )
 from limen.telemetry.aggregates import aggregate_call_metrics, turn_metrics_from_dict
+from limen.telemetry.browser_voice import blocking_e2e_reasons
 from limen.voice.audio_codec import AudioFormatError, normalize_transcript_text
 from limen.voice.pipeline import (
     compute_voice_response_latency_ms,
@@ -586,7 +587,9 @@ async def call_stream(websocket: WebSocket, call_id: str) -> None:
                                 "call.metrics",
                                 {**metrics_payload, "turn_seq": turn_seq_ack},
                             )
-                            if record.valid and latency is not None:
+                            if latency is not None and not blocking_e2e_reasons(
+                                record.invalid_reasons
+                            ):
                                 _record_voice_sample(
                                     service=service,
                                     account_id=account.account_id,

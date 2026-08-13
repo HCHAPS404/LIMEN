@@ -1,7 +1,7 @@
 # LIMEN — Final Report (Tech Sphere Challenge 2026)
 
 **Status:** Draft for submission package.  
-**G1:** remains PARTIAL until video + final screenshot package are attached.  
+**G1:** video **https://youtu.be/CAO7SUBaV2s**; screenshots S01–S06 in `docs/submission/assets/`.  
 Unresolved markers: search `FINAL_EVIDENCE_REQUIRED`.
 
 ---
@@ -48,7 +48,8 @@ It is **not** a medical device and **not** a replacement for a clinician.
 Modular monolith (`ARCHITECTURE.md`). Browser UI + FastAPI API + domain packages
 under `limen/`. Vendor SDKs stay inside provider adapters.
 
-Submission diagram: [`docs/submission/ARCHITECTURE.md`](ARCHITECTURE.md).
+Submission diagram: [`docs/submission/ARCHITECTURE.md`](ARCHITECTURE.md),
+export PNG: [`assets/architecture.png`](assets/architecture.png).
 
 **Local presentation layer (cold start for any clone):** progressive README
 levels + [`docs/GETTING_STARTED.md`](../GETTING_STARTED.md) +
@@ -66,17 +67,16 @@ CONFLICTING) → uncertainty → optional Hybrid RAG → Safety Governor floor �
 
 Principle: **`unknown != normal`**.
 
-Diagram: [`DECISION_FLOW.md`](DECISION_FLOW.md).
+Diagram: [`DECISION_FLOW.md`](DECISION_FLOW.md),
+export PNG: [`assets/decision_flow.png`](assets/decision_flow.png).
 
 ## 7. RAG / living knowledge
 
 Hybrid retrieval: multilingual-e5-small (384-d) + Qdrant cosine + SQLite FTS5 +
 RRF fusion. Knowledge lifecycle supports hot upload and verified deletion.
 
-Official corpus: **107 PDFs discovered**; smoke indexed **8** documents
-(0 failed, 357 chunks). Full 107/107 verification:
-
-`FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`
+Official corpus: **107/107 AVAILABLE** (direct ingest, API stopped).
+Source: `docs/OFFICIAL_CORPUS.generated.md`.
 
 Diagram: [`KNOWLEDGE_FLOW.md`](KNOWLEDGE_FLOW.md).
 
@@ -86,12 +86,15 @@ Diagram: [`KNOWLEDGE_FLOW.md`](KNOWLEDGE_FLOW.md).
 - TTS: Piper `es_MX-claude-high`  
 - Browser VAD, WebSocket streaming, barge-in / stale-response protection  
 
-Official challenge latency (speech-end → browser playback start):
+Official challenge latency (speech-end → browser playback start), harvested
+from TRAZA `voice.playback.started` (client clocks). Warm = exclude first
+playback per call. N(warm)=**84** (≥20). Source: `docs/G4_VOICE_GATE.generated.md`.
 
 | Metric | Value |
 | --- | --- |
-| P50 | `FINAL_EVIDENCE_REQUIRED:G4_P50` |
-| P95 | `FINAL_EVIDENCE_REQUIRED:G4_P95` |
+| P50 (warm) | **6457 ms** |
+| P95 (warm) | **19103 ms** |
+| Cold first-turn P50 | **8236 ms** |
 
 Do not substitute server TTS-ready proxies.
 
@@ -130,9 +133,9 @@ application state.
 | Official LLM advisory | OFFICIAL DATASET / MODEL-ONLY | Phi selected; RED recall 0.375 |
 | Challenge scenarios (PHASE 8) | STUB-ISOLATED providers, real Safety/RAG domains | 23 PASS / 0 FAIL / 25 total |
 | Real Phi targeted (PHASE 9) | REAL LLM + Safety | 7/7, 0 RED FN |
-| Voice browser gate | MANUAL_UNVERIFIED | G4 PARTIAL |
-| G5 admin UI | MANUAL_UNVERIFIED | G5 PARTIAL |
-| G2 bootstrap | Measured clean worktree (host caches may be warm) | 293.85s PASS; strict clone `FINAL_EVIDENCE_REQUIRED:G2_STRICT_CLONE` |
+| Voice browser gate | TRAZA harvest + operator 2026-08-09 | G4 PASS_WITH_WARNINGS (P50/P95 measured; barge-in subsequent PARTIAL) |
+| G5 admin UI | Operator UI 2026-08-09 | G5 PASS |
+| G2 bootstrap | Strict git worktree from HEAD; pip/npm/HF caches isolated | 290.52s PASS (`docs/G2_BOOTSTRAP.generated.md`) |
 
 ## 13. Observability / TRAZA
 
@@ -183,10 +186,9 @@ Risks remaining: rule coverage gaps, extraction errors, FP YELLOW, voice latency
 
 - Not a certified medical device; not a clinician replacement.
 - Local LLM language quality is bounded.
-- Official browser voice P50/P95 still UNMEASURED.
+- Official browser voice P50/P95 measured at 6457 / 19103 ms (warm N=84); still slow for a phone-like UX.
 - Deterministic safety rules need broader clinical validation.
 - Knowledge quality depends on corpus curation.
-- Full official PDF corpus ingestion not yet verified at 107/107.
 - Human clinical validation is outside hackathon scope.
 
 ## 18. Future work
@@ -199,16 +201,27 @@ challenge-critical gates are closed.
 
 Script: [`DEMO_SCRIPT.md`](DEMO_SCRIPT.md).  
 Shot list: [`VIDEO_SHOT_LIST.md`](VIDEO_SHOT_LIST.md).  
-Actual video: **https://youtu.be/PEGAR_ID_AQUI**  
-(Replace `PEGAR_ID_AQUI` with the unlisted YouTube ID when editing is done.)  
+Actual video: **https://youtu.be/CAO7SUBaV2s**  
 Screenshots: [`SCREENSHOT_REGISTER.md`](SCREENSHOT_REGISTER.md)
+
+| ID | File |
+| --- | --- |
+| Cover | [`../../assets/readme-cover.png`](../../assets/readme-cover.png) |
+| S01 Call | [`assets/S01_call.png`](assets/S01_call.png) |
+| S02 Knowledge | [`assets/S02_knowledge.png`](assets/S02_knowledge.png) |
+| S03 TRAZA | [`assets/S03_traza.png`](assets/S03_traza.png) |
+| S04 RED | [`assets/S04_red.png`](assets/S04_red.png) |
+| S05 Sessions | [`assets/S05_summary.png`](assets/S05_summary.png) |
+| S06 Diagnostics | [`assets/S06_health.png`](assets/S06_health.png) |
+| S09 Architecture | [`assets/architecture.png`](assets/architecture.png) |
+| S10 Decision | [`assets/decision_flow.png`](assets/decision_flow.png) |
 
 ## 20. Conclusion
 
 LIMEN demonstrates a complete challenge runtime: voice path, living knowledge,
 traceability, and a safety architecture that treats generative models as
-subordinate. Remaining submission work is evidence closure (human G4/G5, video,
-strict metrics) — not a redesign of the core.
+subordinate. Remaining human step: publish the submission commit
+(`FINAL_EVIDENCE_REQUIRED:PUBLIC_REPO_PUSH`).
 
 ---
 

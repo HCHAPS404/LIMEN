@@ -26,6 +26,6 @@ Approx total: 3–5 minutes excluding retakes.
 - Do not show `.env`, secrets, or absolute private paths.
 - Mark take IDs next to each shot when filming.
 
-Actual video (YouTube unlisted — replace ID when the edit is ready):
+Actual video (YouTube unlisted):
 
-**https://youtu.be/PEGAR_ID_AQUI**
+**https://youtu.be/CAO7SUBaV2s**

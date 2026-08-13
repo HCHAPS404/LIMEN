@@ -5,6 +5,8 @@ No chain-of-thought is logged or required.
 
 ## Decision Mermaid
 
+Exported PNG: [`assets/decision_flow.png`](assets/decision_flow.png).
+
 ```mermaid
 flowchart TD
   P[Patient utterance / STT text] --> X[Lexical clinical extraction]

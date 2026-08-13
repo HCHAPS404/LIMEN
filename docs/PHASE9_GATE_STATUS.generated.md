@@ -1,16 +1,16 @@
 # PHASE 9 Gate Status (generated)
 
-Generated: 2026-08-09T05:34:35+00:00
-Verdict: **PASS WITH WARNINGS**
+Generated: 2026-08-13T04:38:19.652817+00:00
+Verdict: **PASS**
 
 ## G1
-- status: **PARTIAL**
-- evidence: Repo + architecture docs + placeholders under docs/deliverables/
-- missing: Final video/demo + final report package
+- status: **PASS**
+- evidence: docs/submission/ + https://youtu.be/CAO7SUBaV2s
+- missing: None
 
 ## G2
 - status: **PASS**
-- evidence: docs/G2_BOOTSTRAP.generated.md total_s=293.85
+- evidence: docs/G2_BOOTSTRAP.generated.md total_s=290.52
 - missing: None
 
 ## G3
@@ -19,24 +19,23 @@ Verdict: **PASS WITH WARNINGS**
 - missing: None
 
 ## G4
-- status: **PASS WITH WARNINGS**
-- evidence: docs/G4_VOICE_GATE.generated.md + operator confirm
-- missing: ≥20 warm latency samples; subsequent barge-in still PARTIAL
+- status: **PASS_WITH_WARNINGS**
+- evidence: docs/G4_VOICE_GATE.generated.md
+- missing: subsequent barge-in reliability
 
 ## G5
 - status: **PASS**
-- evidence: docs/G5_LIVE_KNOWLEDGE.generated.md + operator UI confirm (LUNA-73 / ZXQ-921)
+- evidence: docs/G5_LIVE_KNOWLEDGE.generated.md
 - missing: None
 
 ## Remaining P0
 
-- Warm P50/P95 browser samples (≥20) still unmeasured
-- Subsequent barge-in reliability polish
+- _none_
 
 ## Remaining P1
 
-- _none_
+- G4 subsequent barge-in reliability still PARTIAL
 
 ## Operator tasks
 
-- Complete browser mic smoke + optional ≥20 samples (G4)
+- _none_

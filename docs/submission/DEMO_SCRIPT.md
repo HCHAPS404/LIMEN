@@ -39,7 +39,7 @@ artifact / summary shows escalation.
 6. Delete the document → **REMOVED**.
 7. Ask again — fact must be gone.
 
-`FINAL_EVIDENCE_REQUIRED:G5_UI` if this recording is the first human UI proof.
+G5 admin UI already confirmed PASS (2026-08-09); this section is the demo narrative, not a missing gate.
 
 ## I. Sessions / summary (20 s)
 

@@ -31,6 +31,16 @@ def _sticky_final_risk(prior: str | None, turn: Severity) -> str:
     return turn.name
 
 
+def _merge_voice_latency_samples(
+    prior: dict[str, Any],
+    fresh: dict[str, Any],
+) -> list[Any]:
+    """Keep playback samples recorded while a later turn was in flight."""
+    earlier = list(prior.get("voice_latencies_ms") or [])
+    later = list(fresh.get("voice_latencies_ms") or [])
+    return later if len(later) >= len(earlier) else earlier
+
+
 class CallService:
     def __init__(
         self,
@@ -216,10 +226,15 @@ class CallService:
         turns.append(result.metrics)
         sticky_escalate = result.safety.escalate or bool(row["escalated"])
         sticky_risk = _sticky_final_risk(row["final_risk"], result.safety.severity)
+        # Playback E2E samples may land while this turn is still in flight.
+        fresh_row = self._calls.get_call_row(account_id, call_id)
+        fresh_blob = self._load_call_metrics_blob(fresh_row) if fresh_row is not None else {}
+        voice_latencies = _merge_voice_latency_samples(prior, fresh_blob)
         call_agg = aggregate_call_metrics(
             [turn_metrics_from_dict(t) for t in turns],
             final_risk=sticky_risk,
             escalated=sticky_escalate,
+            voice_latencies_ms=voice_latencies,
         )
         conversation_json = (
             result.conversation.model_dump(mode="json") if result.conversation else {}
@@ -232,7 +247,7 @@ class CallService:
             "voice_persona": conversation.assistant_persona_id
             or prior.get("voice_persona")
             or "elena",
-            "voice_latencies_ms": prior.get("voice_latencies_ms") or [],
+            "voice_latencies_ms": voice_latencies,
             "voice_interruptions": prior.get("voice_interruptions") or 0,
             "stt_errors": prior.get("stt_errors") or 0,
             "tts_errors": prior.get("tts_errors") or 0,

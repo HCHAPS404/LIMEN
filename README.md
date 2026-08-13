@@ -1,5 +1,7 @@
 # ◈ LIMEN
 
+![LIMEN — seguimiento postoperatorio por voz](docs/assets/readme-cover.png)
+
 **Seguimiento postoperatorio por voz en el navegador** — Tech Sphere Challenge 2026.
 
 LIMEN conversa en español con el paciente, mantiene un **estado clínico explícito**,
@@ -17,11 +19,7 @@ determinista**. El LLM (Phi-3.5) **no puede bajar** una decisión de seguridad m
 | Informe final | [`docs/submission/FINAL_REPORT.md`](docs/submission/FINAL_REPORT.md) |
 | Diagrama de arquitectura | [`docs/submission/ARCHITECTURE.md`](docs/submission/ARCHITECTURE.md) |
 | Flujo de decisión | [`docs/submission/DECISION_FLOW.md`](docs/submission/DECISION_FLOW.md) |
-| **Video demo** (YouTube oculto) | **https://youtu.be/PEGAR_ID_AQUI** |
-
-Cuando el corte final esté listo: sustituye `PEGAR_ID_AQUI` por el ID del video
-(YouTube → Compartir → no listado). El mismo marcador está en el informe y en
-`docs/submission/VIDEO_SHOT_LIST.md`.
+| **Video demo** (YouTube oculto) | **https://youtu.be/CAO7SUBaV2s** |
 
 **LLM y voz (runtime de competencia):** Ollama **Phi-3.5** · STT **Faster-Whisper small** ·
 TTS **Piper** `es_MX-claude-high`. RAG: **multilingual-e5-small** + Qdrant + FTS5.
@@ -39,10 +37,10 @@ TTS **Piper** `es_MX-claude-high`. RAG: **multilingual-e5-small** + Qdrant + FTS
 | **4 · Evaluaciones** | variable | Tests y artefactos generados | [Nivel 4](#nivel-4--calidad-y-evaluaciones) |
 | **Docs completas** | — | Índice de toda la documentación | [docs/README.md](docs/README.md) |
 
-Medición G2 previa (camino largo, caches calientes): **293.85 s** —
-[`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md). El camino
-documentado ahora es `make lift` (sin `PULL=1`, sin verify duplicado, sin fixtures
-de eval). Primera descarga de modelos = prerrequisito de host, no del cronómetro.
+Medición G2 estricta (git worktree desde HEAD, caches pip/npm/HF aisladas):
+**290.52 s** — [`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md).
+Camino: `make lift` (sin `PULL=1`, sin verify duplicado, sin fixtures de eval).
+Python/Node/Ollama phi3.5 y driver NVIDIA son prerrequisitos de host, no del cronómetro.
 
 ---
 
@@ -198,7 +196,7 @@ Guion de video de competencia:
 → [`docs/submission/DEMO_SCRIPT.md`](docs/submission/DEMO_SCRIPT.md) ·
 [`VIDEO_SHOT_LIST.md`](docs/submission/VIDEO_SHOT_LIST.md)
 
-Video (YouTube oculto, sustituir ID): **https://youtu.be/PEGAR_ID_AQUI**
+Video (YouTube oculto): **https://youtu.be/CAO7SUBaV2s**
 
 ---
 
@@ -235,9 +233,9 @@ Listo cuando respondan:
 - API: http://127.0.0.1:8000/health
 - UI: http://127.0.0.1:5173/
 
-Medición previa del camino más largo (incluye verify duplicado y fixtures): **293.85 s**
-([`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md)) — ya **< 15 min**.
-El camino `lift` recorta ese procedimiento; no se inventa un tiempo nuevo aquí.
+Medición estricta (git worktree HEAD, caches pip/npm/HF aisladas): **290.52 s**
+([`docs/G2_BOOTSTRAP.generated.md`](docs/G2_BOOTSTRAP.generated.md)) — **< 15 min**.
+Python/Node/Ollama phi3.5 y GPU son prerrequisitos de host.
 
 Corpus oficial y `make prepare-knowledge` **no** forman parte de G2.
 
@@ -316,11 +314,11 @@ Fuente: [`docs/MODEL_SELECTION.md`](docs/MODEL_SELECTION.md).
 
 | Métrica | Estado |
 | --- | --- |
-| Voz P50 / P95 (speech-end → primer audio en browser) | **UNMEASURED** — `FINAL_EVIDENCE_REQUIRED:G4_P50` / `G4_P95` |
-| Tokens in/out | Por turno si Ollama/el provider los reporta; a menudo `null` |
-| Llamadas LLM / consultas RAG | Instrumentadas por turno (TRAZA) |
+| Voz P50 / P95 (speech-end → primer audio en browser) | **6457 ms / 19103 ms** (warm N=84; TRAZA `voice.playback.started`) — [`docs/G4_VOICE_GATE.generated.md`](docs/G4_VOICE_GATE.generated.md) |
+| Tokens in/out | Medidos en TRAZA cuando Ollama los reporta: **204 476 / 17 593** en 137 turnos (55 llamadas) |
+| Llamadas LLM / consultas RAG | 189 / 56 en el mismo harvest — [`docs/EVAL_RESULTS.generated.md`](docs/EVAL_RESULTS.generated.md) |
 | Coste API local | **$0** medido (Ollama + Whisper + Piper en máquina) |
-| Coste equivalente API (extrapolación) | Ver [presupuesto de tokens](#presupuesto-de-tokens-y-contexto) — `FINAL_EVIDENCE_REQUIRED:COST_CALL` hasta fijar fuente de precio en el informe |
+| Coste equivalente API | **$0.00075 / llamada** (GPT-4o mini list price sobre tokens TRAZA) — [`docs/COST_CALL.generated.md`](docs/COST_CALL.generated.md) |
 
 Proxies “TTS-ready” en servidor **no** son la latencia oficial del challenge.
 
@@ -366,22 +364,23 @@ barata en tokens que un seguimiento largo GREEN/YELLOW.
 
 ### Coste equivalente si el mismo volumen corriera en API
 
-Runtime de competencia: **local → coste de API = $0**.  
-Para comparar con un despliegue cloud, extrapolación con precios públicos
-**GPT-4o mini** (OpenAI, ago 2026, USD / 1M tokens: input **0.15**, output **0.60**).
-Fuente a verificar en el informe; no es una factura de LIMEN.
+Runtime de competencia: **local → coste de API = $0** (medido).  
+Equivalente cloud: precios públicos **GPT-4o mini** (OpenAI, 2026-08-12,
+USD / 1M tokens: input **0.15**, output **0.60**).
+Fuente: <https://openai.com/api/pricing/>. No es una factura de LIMEN.
 
-| Escenario | Tokens (aprox.) | Equivalente API (USD / llamada) |
+Harvest TRAZA (55 llamadas con tokens, 137 turnos): **204 476 in + 17 593 out**
+→ **$0.041227** total → **$0.00075 / llamada**.
+Detalle: [`docs/COST_CALL.generated.md`](docs/COST_CALL.generated.md).
+
+| Escenario | Base | Equivalente API (USD / llamada) |
 | --- | --- | ---: |
-| Mínimo | ~1 000 in + 80 out | **~$0.0002** |
-| Típico demo | ~8 000 in + 800 out | **~$0.0017** |
-| Techo 15 min | ~24 000 in + 2 500 out | **~$0.005** |
+| Medido (TRAZA, media) | 1492.5 in + 128.4 out por turno LLM; ~2.5 turnos/llamada | **$0.00075** |
+| Presupuesto mínimo (diseño) | ~1 000 in + 80 out | **~$0.0002** |
+| Presupuesto techo 15 min (diseño) | ~24 000 in + 2 500 out | **~$0.005** |
 
-A **1 000 llamadas/mes** en el escenario típico: **~$1.7** solo de LLM
+A **1 000 llamadas/mes** con la media medida: **~$0.75** solo de LLM
 (sin STT/TTS cloud). Hardware local (GPU/CPU) es el coste real del challenge.
-
-Cuando Ollama reporta `prompt_tokens` / `completion_tokens`, TRAZA los guarda
-por turno. Números de esta sección son **presupuesto de diseño**, no P50 medido.
 
 ---
 
@@ -413,8 +412,8 @@ FRONTEND.md        SoT frontend
 | PDFs oficiales | `LIMEN_DATASET_PATH=… make prepare-official-knowledge` |
 | UI en vivo | `/knowledge` (upload / list / delete / forget) |
 
-Descubiertos **107** PDFs en corpus oficial; smoke indexado **8** (no 107/107) —
-`FINAL_EVIDENCE_REQUIRED:OFFICIAL_CORPUS_FULL`.  
+Descubiertos **107** PDFs en corpus oficial; **107/107 AVAILABLE**
+(`docs/OFFICIAL_CORPUS.generated.md`, ingest directo con API detenida).
 Evidencia G5 UI: [`docs/G5_LIVE_KNOWLEDGE.generated.md`](docs/G5_LIVE_KNOWLEDGE.generated.md).
 
 ---
@@ -437,8 +436,7 @@ python scripts/phase9_secret_scan.py
 
 - No es dispositivo médico; sin validación clínica formal de hackathon.
 - Límites de modelos locales (idioma / alucinación contenida por safety + RAG).
-- P50/P95 de voz en browser aún sin medir.
-- Ingestión completa 107/107 del corpus oficial no verificada.
+- P50 de voz en browser ~6.5 s (warm); P95 ~19 s — local STT+Phi+Piper, no un proxy de servidor.
 - Calidad del conocimiento depende del corpus del cliente.
 
 ---

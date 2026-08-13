@@ -5,9 +5,23 @@ from __future__ import annotations
 import pytest
 
 from limen.knowledge.chunking import chunk_pages, content_hash_text, stable_chunk_id
+from limen.knowledge.ingestion import storage_basename
 from limen.knowledge.contracts import KnowledgeStatus
 from limen.knowledge.lifecycle import InvalidStatusTransition, assert_transition, can_transition
 from limen.persistence.repositories.knowledge import sha256_bytes
+
+
+def test_storage_basename_stays_under_name_max() -> None:
+    document_id = "5286bcf9322943b883feaeb1fe408bcd"
+    long_name = (
+        "Protocolo de recuperación mejorada después de cirugía (ERAS) atenúa el "
+        "estrés y acelera la recuperación en pacientes después de resección radical "
+        "por cáncer colorrectal- Experiencia en la Clínica Universitaria Colombia.pdf"
+    )
+    stored = storage_basename(document_id, long_name)
+    assert stored == f"{document_id}.pdf"
+    assert len(stored.encode("utf-8")) < 180
+    assert storage_basename(document_id, "guide.txt") == f"{document_id}.txt"
 
 
 def test_sha256_fingerprint_is_deterministic() -> None:

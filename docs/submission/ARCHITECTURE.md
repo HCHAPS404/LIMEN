@@ -9,6 +9,8 @@ Components named below exist in code (see consistency checklist at bottom).
 2. Export PNG/SVG for the jury package.
 3. Keep this Markdown as the source of truth.
 
+Exported PNG: [`assets/architecture.png`](assets/architecture.png).
+
 ## System architecture
 
 ```mermaid
