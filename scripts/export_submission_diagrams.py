@@ -35,8 +35,10 @@ def _extract(md_path: Path) -> list[str]:
 
 
 def _puppeteer_config(tmp_path: Path) -> Path | None:
-    chrome = shutil.which("google-chrome-stable") or shutil.which("google-chrome") or shutil.which(
-        "chromium"
+    chrome = (
+        shutil.which("google-chrome-stable")
+        or shutil.which("google-chrome")
+        or shutil.which("chromium")
     )
     if not chrome:
         return None
@@ -80,9 +82,7 @@ def main() -> int:
             mmd.write_text(blocks[index], encoding="utf-8")
             out = ASSETS / png_name
             if args.skip_render:
-                (ASSETS / f"{Path(png_name).stem}.mmd").write_text(
-                    blocks[index], encoding="utf-8"
-                )
+                (ASSETS / f"{Path(png_name).stem}.mmd").write_text(blocks[index], encoding="utf-8")
                 print(f"Wrote {ASSETS / f'{Path(png_name).stem}.mmd'}")
                 continue
             render = [

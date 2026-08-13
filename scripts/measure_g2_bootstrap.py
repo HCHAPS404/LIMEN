@@ -204,9 +204,7 @@ def main() -> int:
                 ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
             ).strip(),
             "strict_clone": bool(args.strict_clone),
-            "isolated_caches": (
-                ["pip", "npm", "huggingface", "xdg"] if args.strict_clone else []
-            ),
+            "isolated_caches": (["pip", "npm", "huggingface", "xdg"] if args.strict_clone else []),
             "host_prereqs_not_timed": [
                 "python3",
                 "node/npm",

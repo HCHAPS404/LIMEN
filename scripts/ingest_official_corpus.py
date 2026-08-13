@@ -442,9 +442,7 @@ def retrieval_smoke_http(base_url: str) -> list[dict[str, Any]]:
                     "probe": name,
                     "query": query,
                     "hit_count": (
-                        len(evidence)
-                        if isinstance(evidence, list)
-                        else body.get("hit_count")
+                        len(evidence) if isinstance(evidence, list) else body.get("hit_count")
                     ),
                 }
             )

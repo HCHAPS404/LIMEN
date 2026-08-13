@@ -99,17 +99,13 @@ def collect_report(database: Database) -> dict[str, Any]:
             }
         )
 
-    challenge_voice = aggregate_challenge_voice(
-        harvest_playback_samples(database.connection)
-    )
+    challenge_voice = aggregate_challenge_voice(harvest_playback_samples(database.connection))
     voice_status = str(challenge_voice.get("status") or "not_implemented")
     voice_p50 = challenge_voice.get("warm_p50_ms")
     voice_p95 = challenge_voice.get("warm_p95_ms")
     voice_n = int(challenge_voice.get("warm_n") or 0)
     if voice_status == "not_implemented" and voice_latencies:
-        voice_status = (
-            "insufficient_samples" if len(voice_latencies) < 3 else "measured"
-        )
+        voice_status = "insufficient_samples" if len(voice_latencies) < 3 else "measured"
         voice_p50 = p50(voice_latencies)
         voice_p95 = p95(voice_latencies)
         voice_n = len(voice_latencies)
@@ -336,9 +332,7 @@ def _write_g4_from_report(report: dict[str, Any]) -> None:
         "barge_in": "PARTIAL",
         "red_voice": "PASS",
         "g4_status": "PASS_WITH_WARNINGS",
-        "operator_notes": (
-            "G4 human confirmed 2026-08-09; barge-in subsequent still PARTIAL"
-        ),
+        "operator_notes": ("G4 human confirmed 2026-08-09; barge-in subsequent still PARTIAL"),
     }
     if prior.get("human_browser") != "PASS":
         prior = {**prior, **operator}
